@@ -1,0 +1,78 @@
+package net.fornwall.jelf;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+public class BasicTest {
+
+	private File testDir;
+
+	@Before
+	public void setUp() throws Exception {
+		testDir = new File(BasicTest.class.getResource(".").getFile());
+	}
+
+	private ElfFile parseFile(String name) throws ElfException, FileNotFoundException, IOException {
+		return new ElfFile(new RandomAccessFile(new File(testDir, name), "r"));
+	}
+
+	private static void assertSectionNames(ElfFile file, String... expectedSectionNames) throws IOException {
+		for (int i = 0; i < expectedSectionNames.length; i++) {
+			String expected = expectedSectionNames[i];
+			String actual = file.getSectionHeader(i).getName();
+			if (expected == null) {
+				Assert.assertNull(actual);
+			} else {
+				Assert.assertEquals(expected, actual);
+			}
+		}
+	}
+
+	@Test
+	public void testAndroidArmBinTset() throws ElfException, FileNotFoundException, IOException {
+		ElfFile file = parseFile("android_arm_tset");
+		Assert.assertEquals(ElfFile.CLASS_32, file.objectSize);
+		Assert.assertEquals(ElfFile.DATA_LSB, file.encoding);
+		Assert.assertEquals(ElfFile.FT_EXEC, file.file_type);
+		Assert.assertEquals(ElfFile.ARCH_ARM, file.arch);
+		Assert.assertEquals(32, file.ph_entry_size);
+		Assert.assertEquals(7, file.num_ph);
+		Assert.assertEquals(52, file.ph_offset);
+		Assert.assertEquals(40, file.sh_entry_size);
+		Assert.assertEquals(25, file.num_sh);
+		Assert.assertEquals(15856, file.sh_offset);
+		assertSectionNames(file, null, ".interp", ".dynsym", ".dynstr", ".hash", ".rel.dyn", ".rel.plt", ".plt", ".text");
+	}
+
+	@Test
+	public void testAndroidArmLibNcurses() throws ElfException, FileNotFoundException, IOException {
+		ElfFile file = parseFile("android_arm_libncurses");
+		Assert.assertEquals(ElfFile.CLASS_32, file.objectSize);
+		Assert.assertEquals(ElfFile.DATA_LSB, file.encoding);
+		Assert.assertEquals(ElfFile.FT_DYN, file.file_type);
+		Assert.assertEquals(ElfFile.ARCH_ARM, file.arch);
+	}
+
+	@Test
+	public void testLinxAmd64BinDash() throws ElfException, FileNotFoundException, IOException {
+		ElfFile file = parseFile("linux_amd64_bindash");
+		Assert.assertEquals(ElfFile.CLASS_64, file.objectSize);
+		Assert.assertEquals(ElfFile.DATA_LSB, file.encoding);
+		Assert.assertEquals(ElfFile.FT_DYN, file.file_type);
+		Assert.assertEquals(ElfFile.ARCH_X86_64, file.arch);
+		Assert.assertEquals(56, file.ph_entry_size);
+		Assert.assertEquals(9, file.num_ph);
+		Assert.assertEquals(64, file.ph_offset);
+		Assert.assertEquals(64, file.sh_entry_size);
+		Assert.assertEquals(27, file.num_sh);
+		Assert.assertEquals(119544, file.sh_offset);
+		assertSectionNames(file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash", ".dynsym");
+	}
+
+}
