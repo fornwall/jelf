@@ -125,7 +125,7 @@ public class ElfSectionHeader {
 	private final ElfFile elfHeader;
 
 	/** Reads the section header information located at offset. */
-	ElfSectionHeader(ElfParser parser, long offset) throws ElfException, IOException {
+	ElfSectionHeader(ElfParser parser, long offset) {
 		this.elfHeader = parser.elfFile;
 		parser.seek(offset);
 

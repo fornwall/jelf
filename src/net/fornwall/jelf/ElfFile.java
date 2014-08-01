@@ -1,8 +1,9 @@
 package net.fornwall.jelf;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 /**
  * <pre>
@@ -254,13 +255,29 @@ public class ElfFile {
 		return programHeaders[index].getValue();
 	}
 
-	public ElfFile(File file) throws ElfException, IOException {
-		this(new RandomAccessFile(file, "r"));
+	public static ElfFile fromFile(File file) throws ElfException, IOException {
+		byte[] buffer = new byte[(int) file.length()];
+		try (FileInputStream in = new FileInputStream(file)) {
+			int totalRead = 0;
+			while (totalRead < buffer.length) {
+				int readNow = in.read(buffer, totalRead, buffer.length - totalRead);
+				if (readNow == -1) {
+					throw new ElfException("Premature end of file");
+				} else {
+					totalRead += readNow;
+				}
+			}
+		}
+		return new ElfFile(new ByteArrayInputStream(buffer));
 	}
 
-	private ElfFile(RandomAccessFile file) throws ElfException, IOException {
+	public static ElfFile fromBytes(byte[] buffer) throws ElfException, IOException {
+		return new ElfFile(new ByteArrayInputStream(buffer));
+	}
+
+	public ElfFile(ByteArrayInputStream baos) throws ElfException, IOException {
 		byte[] ident = new byte[16];
-		parser = new ElfParser(this, file);
+		parser = new ElfParser(this, baos);
 
 		int bytesRead = parser.read(ident);
 		if (bytesRead != ident.length)

@@ -71,7 +71,7 @@ public class ElfSymbol {
 
 	private final ElfFile elfHeader;
 
-	ElfSymbol(ElfParser parser, long offset, int section_type) throws ElfException, IOException {
+	ElfSymbol(ElfParser parser, long offset, int section_type) {
 		this.elfHeader = parser.elfFile;
 		parser.seek(offset);
 		this.offset = offset;

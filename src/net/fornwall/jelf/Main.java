@@ -11,7 +11,7 @@ public class Main {
 		}
 
 		// Parse the file.
-		ElfFile elfFile = new ElfFile(new File(args[0]));
+		ElfFile elfFile = ElfFile.fromFile(new File(args[0]));
 		System.out.println("ELF File: " + args[0]);
 
 		System.out.println("ELF object size: " + ((elfFile.objectSize == 0) ? "Invalid Object Size" : (elfFile.objectSize == 1) ? "32-bit" : "64-bit"));

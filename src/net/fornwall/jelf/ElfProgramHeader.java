@@ -70,7 +70,7 @@ public class ElfProgramHeader {
 
 	private MemoizedObject<String> ptInterpreter;
 
-	ElfProgramHeader(ElfParser parser, long offset) throws IOException {
+	ElfProgramHeader(ElfParser parser, long offset) {
 		parser.seek(offset);
 		if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
 			// typedef struct {
@@ -119,10 +119,9 @@ public class ElfProgramHeader {
 				protected String computeValue() throws ElfException, IOException {
 					parser.seek(ElfProgramHeader.this.offset);
 					StringBuilder buffer = new StringBuilder();
-					byte b;
-					while ((b = parser.readByte()) != 0) {
+					int b;
+					while ((b = parser.readUnsignedByte()) != 0)
 						buffer.append((char) b);
-					}
 					return buffer.toString();
 				}
 			};

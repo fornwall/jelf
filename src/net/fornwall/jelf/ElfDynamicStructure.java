@@ -86,7 +86,7 @@ public class ElfDynamicStructure {
 	private MemoizedObject<ElfStringTable> dtStringTable;
 	private final int[] dtNeeded;
 
-	public ElfDynamicStructure(ElfParser parser, long offset, int size) throws IOException {
+	public ElfDynamicStructure(ElfParser parser, long offset, int size) {
 		parser.seek(offset);
 		int numEntries = size / 8;
 

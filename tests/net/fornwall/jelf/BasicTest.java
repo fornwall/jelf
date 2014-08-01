@@ -19,7 +19,7 @@ public class BasicTest {
 	}
 
 	private ElfFile parseFile(String name) throws ElfException, FileNotFoundException, IOException {
-		return new ElfFile(new File(testDir, name));
+		return ElfFile.fromFile(new File(testDir, name));
 	}
 
 	private static void assertSectionNames(ElfFile file, String... expectedSectionNames) throws IOException {
@@ -86,8 +86,8 @@ public class BasicTest {
 		Assert.assertEquals(ElfFile.ARCH_X86_64, file.arch);
 		Assert.assertEquals(56, file.ph_entry_size);
 		Assert.assertEquals(9, file.num_ph);
-		Assert.assertEquals(64, file.ph_offset);
 		Assert.assertEquals(64, file.sh_entry_size);
+		Assert.assertEquals(64, file.ph_offset);
 		Assert.assertEquals(27, file.num_sh);
 		Assert.assertEquals(119544, file.sh_offset);
 		assertSectionNames(file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash", ".dynsym");

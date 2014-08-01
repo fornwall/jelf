@@ -1,21 +1,22 @@
 package net.fornwall.jelf;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 /** Package internal class used for parsing ELF files. */
 class ElfParser {
 
 	final ElfFile elfFile;
-	private final RandomAccessFile fsFile;
+	private final ByteArrayInputStream fsFile;
 
-	ElfParser(ElfFile elfFile, RandomAccessFile fsFile) {
+	ElfParser(ElfFile elfFile, ByteArrayInputStream fsFile) {
 		this.elfFile = elfFile;
 		this.fsFile = fsFile;
 	}
 
-	public void seek(long offset) throws IOException {
-		fsFile.seek(offset);
+	public void seek(long offset) {
+		fsFile.reset();
+		if (fsFile.skip(offset) != offset) throw new ElfException("seeking outside file");
 	}
 
 	/**
@@ -33,61 +34,50 @@ class ElfParser {
 		return ((((long) byteSwap((int) arg)) << 32) | (((long) byteSwap((int) (arg >>> 32))) & 0xFFFFFFFF));
 	}
 
-	byte readByte() throws IOException {
-		return fsFile.readByte();
+	short readUnsignedByte() {
+		int val = fsFile.read();
+		if (val < 0) throw new ElfException("Trying to read outside file");
+		return (short) val;
 	}
 
-	short readUnsignedByte() throws IOException {
-		return (short) (fsFile.readByte() & 0x00FF);
-	}
-
-	short readShort() throws ElfException, IOException {
-		short val;
-		switch (elfFile.encoding) {
-		case ElfFile.DATA_LSB:
-			val = byteSwap(fsFile.readShort());
-			break;
-		case ElfFile.DATA_MSB:
-			val = fsFile.readShort();
-			break;
-		default:
-			throw new ElfException("Invalid encoding.");
-		}
+	short readShort() throws ElfException {
+		int ch1 = readUnsignedByte();
+		int ch2 = readUnsignedByte();
+		short val = (short) ((ch1 << 8) + (ch2 << 0));
+		if (elfFile.encoding == ElfFile.DATA_LSB) val = byteSwap(val);
 		return val;
 	}
 
-	int readInt() throws ElfException, IOException {
-		int val;
-		switch (elfFile.encoding) {
-		case ElfFile.DATA_LSB:
-			val = byteSwap(fsFile.readInt());
-			break;
-		case ElfFile.DATA_MSB:
-			val = fsFile.readInt();
-			break;
-		default:
-			throw new ElfException("Invalid encoding.");
-		}
+	int readInt() throws ElfException {
+		int ch1 = readUnsignedByte();
+		int ch2 = readUnsignedByte();
+		int ch3 = readUnsignedByte();
+		int ch4 = readUnsignedByte();
+		int val = ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+
+		if (elfFile.encoding == ElfFile.DATA_LSB) val = byteSwap(val);
 		return val;
 	}
 
-	long readLong() throws IOException {
-		long val;
-		switch (elfFile.encoding) {
-		case ElfFile.DATA_LSB:
-			val = byteSwap(fsFile.readLong());
-			break;
-		case ElfFile.DATA_MSB:
-			val = fsFile.readLong();
-			break;
-		default:
-			throw new ElfException("Invalid encoding.");
-		}
+	long readLong() {
+		int ch1 = readUnsignedByte();
+		int ch2 = readUnsignedByte();
+		int ch3 = readUnsignedByte();
+		int ch4 = readUnsignedByte();
+		int val1 = ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+		int ch5 = readUnsignedByte();
+		int ch6 = readUnsignedByte();
+		int ch7 = readUnsignedByte();
+		int ch8 = readUnsignedByte();
+		int val2 = ((ch5 << 24) + (ch6 << 16) + (ch7 << 8) + (ch8 << 0));
+
+		long val = ((long) (val1) << 32) + (val2 & 0xFFFFFFFFL);
+		if (elfFile.encoding == ElfFile.DATA_LSB) val = byteSwap(val);
 		return val;
 	}
 
 	/** Read four-byte int or eight-byte long depending on if {@link ElfFile#objectSize}. */
-	long readIntOrLong() throws IOException {
+	long readIntOrLong() {
 		return elfFile.objectSize == ElfFile.CLASS_32 ? readInt() : readLong();
 	}
 
