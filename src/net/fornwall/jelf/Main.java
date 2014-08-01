@@ -1,6 +1,6 @@
 package net.fornwall.jelf;
 
-import java.io.RandomAccessFile;
+import java.io.File;
 
 public class Main {
 
@@ -11,7 +11,7 @@ public class Main {
 		}
 
 		// Parse the file.
-		ElfFile elfFile = new ElfFile(new RandomAccessFile(args[0], "r"));
+		ElfFile elfFile = new ElfFile(new File(args[0]));
 		System.out.println("ELF File: " + args[0]);
 
 		System.out.println("ELF object size: " + ((elfFile.objectSize == 0) ? "Invalid Object Size" : (elfFile.objectSize == 1) ? "32-bit" : "64-bit"));

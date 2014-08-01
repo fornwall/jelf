@@ -1,5 +1,6 @@
 package net.fornwall.jelf;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -253,7 +254,11 @@ public class ElfFile {
 		return programHeaders[index].getValue();
 	}
 
-	public ElfFile(RandomAccessFile file) throws ElfException, IOException {
+	public ElfFile(File file) throws ElfException, IOException {
+		this(new RandomAccessFile(file, "r"));
+	}
+
+	private ElfFile(RandomAccessFile file) throws ElfException, IOException {
 		byte[] ident = new byte[16];
 		parser = new ElfParser(this, file);
 

@@ -3,7 +3,6 @@ package net.fornwall.jelf;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 import org.junit.Assert;
@@ -20,7 +19,7 @@ public class BasicTest {
 	}
 
 	private ElfFile parseFile(String name) throws ElfException, FileNotFoundException, IOException {
-		return new ElfFile(new RandomAccessFile(new File(testDir, name), "r"));
+		return new ElfFile(new File(testDir, name));
 	}
 
 	private static void assertSectionNames(ElfFile file, String... expectedSectionNames) throws IOException {
