@@ -292,7 +292,6 @@ public class ElfFile {
 		if (sh_string_ndx == /* SHN_XINDEX= */0xffff) {
 			throw new ElfException("e_shstrndx is SHN_XINDEX(0xffff), which is not supported yet"
 					+ " (the actual index of the section name string table section is contained in the sh_link field of the section header at index 0)");
-
 		}
 
 		sectionHeaders = MemoizedObject.uncheckedArray(num_sh);

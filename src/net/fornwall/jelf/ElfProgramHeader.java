@@ -16,16 +16,16 @@ import java.io.IOException;
  */
 public class ElfProgramHeader {
 
-	/** PT_NULL. Type defining that the array element is unused. Other member values are undefined. */
+	/** Type defining that the array element is unused. Other member values are undefined. */
 	public static final int PT_NULL = 0;
-	/** PT_LOAD. Type defining that the array element specifies a loadable segment. */
+	/** Type defining that the array element specifies a loadable segment. */
 	public static final int PT_LOAD = 1;
-	/** PT_DYNAMIC. The array element specifies dynamic linking information. */
+	/** The array element specifies dynamic linking information. */
 	public static final int PT_DYNAMIC = 2;
 	/**
-	 * PT_INTERP. The array element specifies the location and size of a null-terminated path name to invoke as an
-	 * interpreter. Meaningful only for executable files (though it may occur for shared objects); it may not occur more
-	 * than once in a file. If it is present, it must precede any loadable segment entry.
+	 * The array element specifies the location and size of a null-terminated path name to invoke as an interpreter.
+	 * Meaningful only for executable files (though it may occur for shared objects); it may not occur more than once in
+	 * a file. If it is present, it must precede any loadable segment entry.
 	 */
 	public static final int PT_INTERP = 3;
 	/** The array element specifies the location and size of auxiliary information. */
@@ -127,44 +127,7 @@ public class ElfProgramHeader {
 				}
 			};
 			break;
-		// case ELFSectionHeader.TYPE_NULL:
-		// break;
-		// case ELFSectionHeader.TYPE_PROGBITS:
-		// break;
-		// case ELFSectionHeader.TYPE_SYMTBL:
-		// case ELFSectionHeader.TYPE_DYNSYM:
-		// break;
-		// case ELFSectionHeader.TYPE_STRTBL:
-		// // Setup the string table.
-		// final int strTableOffset = section_offset;
-		// final int strTableSize = size;
-		// stringTable = new MemoizedObject() {
-		// public Object computeValue() {
-		// return new ELFStringTableImpl(strTableOffset,
-		// strTableSize);
-		// }
-		// };
-		// new ELFStringTableImpl(offset, file_size);
-		// break;
-		// case ELFSectionHeader.TYPE_RELO_EXPLICIT:
-		// break;
-		// case ELFSectionHeader.TYPE_HASH:
-		// break;
-		// case ELFSectionHeader.TYPE_DYNAMIC:
-		// break;
-		// case ELFSectionHeader.TYPE_NOTE:
-		// break;
-		// case ELFSectionHeader.TYPE_NOBITS:
-		// break;
-		// case ELFSectionHeader.TYPE_RELO:
-		// break;
-		// case ELFSectionHeader.TYPE_SHLIB:
-		// break;
-		// default:
-		// break;
-		// }
 		}
-		//
 	}
 
 	@Override
