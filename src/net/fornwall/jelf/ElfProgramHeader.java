@@ -71,7 +71,7 @@ public class ElfProgramHeader {
 	private MemoizedObject<String> ptInterpreter;
 
 	ElfProgramHeader(ElfParser parser, long offset) throws IOException {
-		parser.fsFile.seek(offset);
+		parser.seek(offset);
 		if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
 			// typedef struct {
 			// Elf32_Word p_type;
@@ -117,7 +117,7 @@ public class ElfProgramHeader {
 			ptInterpreter = new MemoizedObject<String>() {
 				@Override
 				protected String computeValue() throws ElfException, IOException {
-					parser.fsFile.seek(ElfProgramHeader.this.offset);
+					parser.seek(ElfProgramHeader.this.offset);
 					StringBuilder buffer = new StringBuilder();
 					byte b;
 					while ((b = parser.readByte()) != 0) {

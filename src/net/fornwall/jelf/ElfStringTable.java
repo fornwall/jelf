@@ -10,9 +10,9 @@ public class ElfStringTable {
 
 	/** Reads all the strings from [offset, length]. */
 	ElfStringTable(ElfParser parser, long offset, int length) throws ElfException, IOException {
-		parser.fsFile.seek(offset);
+		parser.seek(offset);
 		data = new byte[length];
-		int bytesRead = parser.fsFile.read(data);
+		int bytesRead = parser.read(data);
 		if (bytesRead != length)
 			throw new ElfException("Error reading string table (read " + bytesRead + "bytes - expected to " + "read " + data.length + "bytes)");
 

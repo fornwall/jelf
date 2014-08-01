@@ -16,7 +16,7 @@ public class ElfHashTable {
 	private int chains[];
 
 	ElfHashTable(ElfParser parser, long offset, int length) throws ElfException, IOException {
-		parser.fsFile.seek(offset);
+		parser.seek(offset);
 		num_buckets = parser.readInt();
 		num_chains = parser.readInt();
 

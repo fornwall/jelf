@@ -5,12 +5,17 @@ import java.io.RandomAccessFile;
 
 /** Package internal class used for parsing ELF files. */
 class ElfParser {
+
 	final ElfFile elfFile;
-	final RandomAccessFile fsFile;
+	private final RandomAccessFile fsFile;
 
 	ElfParser(ElfFile elfFile, RandomAccessFile fsFile) {
 		this.elfFile = elfFile;
 		this.fsFile = fsFile;
+	}
+
+	public void seek(long offset) throws IOException {
+		fsFile.seek(offset);
 	}
 
 	/**
@@ -113,6 +118,10 @@ class ElfParser {
 			}
 		}
 		throw new ElfException("Cannot find segment for address " + Long.toHexString(address));
+	}
+
+	public int read(byte[] data) throws IOException {
+		return fsFile.read(data);
 	}
 
 }

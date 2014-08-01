@@ -255,7 +255,9 @@ public class ElfFile {
 
 	public ElfFile(RandomAccessFile file) throws ElfException, IOException {
 		byte[] ident = new byte[16];
-		int bytesRead = file.read(ident);
+		parser = new ElfParser(this, file);
+
+		int bytesRead = parser.read(ident);
 		if (bytesRead != ident.length)
 			throw new ElfException("Error reading elf header (read " + bytesRead + "bytes - expected to read " + ident.length + "bytes)");
 
@@ -271,7 +273,6 @@ public class ElfFile {
 		// ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
 		// ident[9-15] // EI_PAD, currently unused.
 
-		parser = new ElfParser(this, file);
 		file_type = parser.readShort();
 		arch = parser.readShort();
 		version = parser.readInt();

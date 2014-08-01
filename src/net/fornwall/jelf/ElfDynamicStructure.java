@@ -87,7 +87,7 @@ public class ElfDynamicStructure {
 	private final int[] dtNeeded;
 
 	public ElfDynamicStructure(ElfParser parser, long offset, int size) throws IOException {
-		parser.fsFile.seek(offset);
+		parser.seek(offset);
 		int numEntries = size / 8;
 
 		List<Integer> dtNeededList = new ArrayList<>();
