@@ -3,6 +3,7 @@ package net.fornwall.jelf;
 import java.io.IOException;
 
 public class ElfSymbol {
+
 	/** Binding specifying that local symbols are not visible outside the object file that contains its definition. */
 	public static final int BINDING_LOCAL = 0;
 	/** Binding specifying that global symbols are visible to all object files being combined. */
@@ -54,7 +55,7 @@ public class ElfSymbol {
 	private final int section_type;
 
 	/** Offset from the beginning of the file to this symbol. */
-	private final long offset;
+	public final long offset;
 
 	private final ElfFile elfHeader;
 
@@ -99,11 +100,6 @@ public class ElfSymbol {
 	/** Returns the symbol type. */
 	public int getType() {
 		return info & 0x0F;
-	}
-
-	/** Returns the location from the beginning of the file to the symbol. */
-	public long getOffset() {
-		return offset;
 	}
 
 	/** Returns the name of the symbol or null if the symbol has no name. */

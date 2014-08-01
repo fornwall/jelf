@@ -4,21 +4,27 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /**
+ * <pre>
+ * http://man7.org/linux/man-pages/man5/elf.5.html
  * http://en.wikipedia.org/wiki/Executable_and_Linkable_Format
- * 
  * http://www.ibm.com/developerworks/library/l-dynamic-libraries/
- * 
  * http://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf
  * 
  * Elf64_Addr, Elf64_Off, Elf64_Xword, Elf64_Sxword: 8 bytes
- * 
- * Elf64_Word, Elf64_Sword:
- * 
- * 4 bytes Elf64_Half: 2 bytes
- * 
- * http://man7.org/linux/man-pages/man5/elf.5.html
+ * Elf64_Word, Elf64_Sword: 4 bytes
+ * Elf64_Half: 2 bytes
+ * </pre>
  */
 public class ElfFile {
+
+	/** Relocatable file type. */
+	public static final int FT_REL = 1;
+	/** Executable file type. */
+	public static final int FT_EXEC = 2;
+	/** Shared object file type. */
+	public static final int FT_DYN = 3;
+	/** Core file file type. */
+	public static final int FT_CORE = 4;
 
 	/** 32-bit objects. */
 	public static final byte CLASS_32 = 1;
@@ -29,17 +35,6 @@ public class ElfFile {
 	public static final byte DATA_LSB = 1;
 	/** MSB data encoding. */
 	public static final byte DATA_MSB = 2;
-
-	/** No file type. */
-	public static final int FT_NONE = 0;
-	/** Relocatable file type. */
-	public static final int FT_REL = 1;
-	/** Executable file type. */
-	public static final int FT_EXEC = 2;
-	/** Shared object file type. */
-	public static final int FT_DYN = 3;
-	/** Core file file type. */
-	public static final int FT_CORE = 4;
 
 	/** No architecture type. */
 	public static final int ARCH_NONE = 0;
@@ -63,10 +58,7 @@ public class ElfFile {
 
 	private final ElfParser parser;
 
-	/**
-	 * Returns a byte identifying the size of objects used for this ELF file. The byte will be either CLASS_INVALID,
-	 * CLASS_32 or CLASS_64.
-	 */
+	/** Byte identifying the size of objects, either {@link #CLASS_32} or {link {@value #CLASS_64} . */
 	public final byte objectSize;
 
 	/**
@@ -77,7 +69,7 @@ public class ElfFile {
 
 	/** Identifies the object file type. One of the FT_* constants in the class. */
 	public final short file_type; // Elf32_Half
-	/** The required architecture. */
+	/** The required architecture. One of the ARCH_* constants in the class. */
 	public final short arch; // Elf32_Half
 	/** Version */
 	public final int version; // Elf32_Word
@@ -96,58 +88,36 @@ public class ElfFile {
 	public short eh_size; // Elf32_Half
 	/** e_phentsize. Size of one entry in the file's program header table in bytes. All entries are the same size. */
 	public final short ph_entry_size; // Elf32_Half
-	/** Number of entries in the program header table, 0 if no entries. */
+	/** e_phnum. Number of {@link ElfProgramHeader} entries in the program header table, 0 if no entries. */
 	public final short num_ph; // Elf32_Half
 	/** Section header entry size in bytes. */
 	public final short sh_entry_size; // Elf32_Half
 	/** Number of entries in the section header table, 0 if no entries. */
 	public final short num_sh; // Elf32_Half
 	/**
-	 * Index into the section header table associated with the section name string table. SH_UNDEF if there is no
-	 * section name string table.
+	 * Elf{32,64}_Ehdr#e_shstrndx. Index into the section header table associated with the section name string table.
+	 * SH_UNDEF if there is no section name string table.
 	 */
 	private short sh_string_ndx; // Elf32_Half
 
 	/** MemoizedObject array of section headers associated with this ELF file. */
-	private MemoizedObject[] sectionHeaders;
+	private MemoizedObject<ElfSectionHeader>[] sectionHeaders;
 	/** MemoizedObject array of program headers associated with this ELF file. */
-	private MemoizedObject[] programHeaders;
+	private MemoizedObject<ElfProgramHeader>[] programHeaders;
 
 	/** Used to cache symbol table lookup. */
 	private ElfSectionHeader symbolTableSection;
 	/** Used to cache dynamic symbol table lookup. */
 	private ElfSectionHeader dynamicSymbolTableSection;
-	/** Used to cache hash table lookup. */
-	private ElfHashTable hashTable;
 
-	/** Returns a file type which is defined by the file type constants. */
-	public short getFileType() {
-		return file_type;
-	}
-
-	/** Returns one of the architecture constants. */
-	public short getArch() {
-		return arch;
-	}
-
-	/** Returns the size of a section header. */
-	public short getSectionHeaderSize() {
-		return sh_entry_size;
-	}
-
-	/** Returns the number of section headers. */
-	public short getNumberOfSectionHeaders() {
-		return num_sh;
-	}
-
-	// public short getProgramHeaderSize() { return ph_entry_size; }
+	private ElfSectionHeader dynamicLinkSection;
 
 	/**
 	 * Returns the section header at the specified index. The section header at index 0 is defined as being a undefined
 	 * section.
 	 */
 	public ElfSectionHeader getSectionHeader(int index) throws ElfException, IOException {
-		return (ElfSectionHeader) sectionHeaders[index].getValue();
+		return sectionHeaders[index].getValue();
 	}
 
 	/** Returns the section header string table associated with this ELF file. */
@@ -172,31 +142,10 @@ public class ElfFile {
 		// header with the name "tableName". We can ignore entry 0
 		// since it is defined as being undefined.
 		ElfSectionHeader sh = null;
-		for (int i = 1; i < getNumberOfSectionHeaders(); i++) {
+		for (int i = 1; i < num_sh; i++) {
 			sh = getSectionHeader(i);
-			if (tableName.equals(sh.getName())) {
-				return sh.getStringTable();
-			}
+			if (tableName.equals(sh.getName())) return sh.getStringTable();
 		}
-		return null;
-	}
-
-	/**
-	 * Returns the hash table associated with this ELF file, or null if one does not exist. NOTE: Currently the
-	 * ELFHashTable does not work so this method will always return null.
-	 */
-	public ElfHashTable getHashTable() {
-		// if (hashTable != null) {
-		// return hashTable;
-		// }
-		//
-		// ELFHashTable ht = null;
-		// for (int i = 1; i < getNumberOfSectionHeaders(); i++) {
-		// if ((ht = getSectionHeader(i).getHashTable()) != null) {
-		// hashTable = ht;
-		// return hashTable;
-		// }
-		// }
 		return null;
 	}
 
@@ -215,9 +164,16 @@ public class ElfFile {
 		return dynamicSymbolTableSection;
 	}
 
+	/** The {@link ElfSectionHeader#TYPE_DYNAMIC} with name ".dynamic". */
+	public ElfSectionHeader getDynamicLinkSection() throws IOException {
+		if (dynamicLinkSection != null) return dynamicLinkSection;
+		dynamicLinkSection = getSymbolTableSection(ElfSectionHeader.TYPE_DYNAMIC);
+		return dynamicLinkSection;
+	}
+
 	private ElfSectionHeader getSymbolTableSection(int type) throws ElfException, IOException {
 		ElfSectionHeader sh = null;
-		for (int i = 1; i < getNumberOfSectionHeaders(); i++) {
+		for (int i = 1; i < num_sh; i++) {
 			sh = getSectionHeader(i);
 			if (sh.type == type) {
 				dynamicSymbolTableSection = sh;
@@ -227,13 +183,9 @@ public class ElfFile {
 		return null;
 	}
 
-	/**
-	 * Returns the elf symbol with the specified name or null if one is not found.
-	 */
+	/** Returns the elf symbol with the specified name or null if one is not found. */
 	public ElfSymbol getELFSymbol(String symbolName) throws ElfException, IOException {
-		if (symbolName == null) {
-			return null;
-		}
+		if (symbolName == null) return null;
 
 		// Check dynamic symbol table for symbol name.
 		ElfSymbol symbol = null;
@@ -299,22 +251,10 @@ public class ElfFile {
 	}
 
 	public ElfProgramHeader getProgramHeader(int index) throws IOException {
-		return (ElfProgramHeader) programHeaders[index].getValue();
+		return programHeaders[index].getValue();
 	}
 
-	/**
-	 * Return the dynamic program header section segment data or null if the object file not participates in dynamic
-	 * linking.
-	 */
-//	public ElfDynamicSection getDynamicSection() throws IOException {
-//		for (int i = 0; i < num_ph; i++) {
-//			ElfProgramHeader p = getProgramHeader(i);
-//			if (p.type == ElfProgramHeader.TYPE_DYNAMIC) return new ElfDynamicSection(parser, p.offset);
-//		}
-//		return null;
-//	}
-
-	ElfFile(RandomAccessFile file) throws ElfException, IOException {
+	public ElfFile(RandomAccessFile file) throws ElfException, IOException {
 		byte[] ident = new byte[16];
 		int bytesRead = file.read(ident);
 		if (bytesRead != ident.length)
@@ -345,31 +285,37 @@ public class ElfFile {
 		num_ph = parser.readShort();
 		sh_entry_size = parser.readShort();
 		num_sh = parser.readShort();
+		if (num_sh == 0) {
+			throw new ElfException("e_shnum is SHN_UNDEF(0), which is not supported yet"
+					+ " (the actual number of section header table entries is contained in the sh_size field of the section header at index 0)");
+		}
 		sh_string_ndx = parser.readShort();
+		if (sh_string_ndx == /* SHN_XINDEX= */0xffff) {
+			throw new ElfException("e_shstrndx is SHN_XINDEX(0xffff), which is not supported yet"
+					+ " (the actual index of the section name string table section is contained in the sh_link field of the section header at index 0)");
 
-		// Set up the section headers
-		sectionHeaders = new MemoizedObject[num_sh];
+		}
+
+		sectionHeaders = MemoizedObject.uncheckedArray(num_sh);
 		for (int i = 0; i < num_sh; i++) {
 			final long sectionHeaderOffset = sh_offset + (i * sh_entry_size);
-			sectionHeaders[i] = new MemoizedObject() {
+			sectionHeaders[i] = new MemoizedObject<ElfSectionHeader>() {
 				@Override
-				public Object computeValue() throws ElfException, IOException {
+				public ElfSectionHeader computeValue() throws ElfException, IOException {
 					return new ElfSectionHeader(parser, sectionHeaderOffset);
 				}
 			};
 		}
 
-		// Set up the program headers.
-		programHeaders = new MemoizedObject[num_ph];
+		programHeaders = MemoizedObject.uncheckedArray(num_ph);
 		for (int i = 0; i < num_ph; i++) {
 			final long programHeaderOffset = ph_offset + (i * ph_entry_size);
-			programHeaders[i] = new MemoizedObject() {
+			programHeaders[i] = new MemoizedObject<ElfProgramHeader>() {
 				@Override
-				public Object computeValue() throws IOException {
+				public ElfProgramHeader computeValue() throws IOException {
 					return new ElfProgramHeader(parser, programHeaderOffset);
 				}
 			};
 		}
 	}
-
 }

@@ -3,8 +3,15 @@ package net.fornwall.jelf;
 import java.io.IOException;
 
 /**
- * http://www.sco.com/developers/gabi/latest/ch5.pheader.html#p_type
+ * Class corresponding to the Elf32_Phdr/Elf64_Phdr struct.
  * 
+ * An executable or shared object file's program header table is an array of structures, each describing a segment or
+ * other information the system needs to prepare the program for execution. An object file segment contains one or more
+ * sections. Program headers are meaningful only for executable and shared object files. A file specifies its own
+ * program header size with the ELF header's {@link ElfFile#ph_entry_size e_phentsize} and {@link ElfFile#num_ph
+ * e_phnum} members.
+ * 
+ * http://www.sco.com/developers/gabi/latest/ch5.pheader.html#p_type
  * http://stackoverflow.com/questions/22612735/how-can-i-find-the-dynamic-libraries-required-by-an-elf-binary-in-c
  */
 public class ElfProgramHeader {
@@ -32,21 +39,18 @@ public class ElfProgramHeader {
 	public static final int TYPE_LOPROC = 0x70000000;
 	public static final int TYPE_HIPROC = 0x7fffffff;
 
-	/** Defines the kind of segment this element describes. */
-	public final int type; // Elf32_Word or Elf64_Word - 4 bytes in both.
+	/** Elf{32,64}_Phdr#p_type. Kind of segment this element describes. */
+	public final int type; // Elf32_Word/Elf64_Word - 4 bytes in both.
+	/** Elf{32,64}_Phdr#p_offset. File offset at which the first byte of the segment resides. */
+	public final long offset; // Elf32_Off/Elf64_Off - 4 or 8 bytes.
+	/** Elf{32,64}_Phdr#p_vaddr. Virtual address at which the first byte of the segment resides in memory. */
+	public final long virtual_address; // Elf32_Addr/Elf64_Addr - 4 or 8 bytes.
+	/** Reserved for the physical address of the segment on systems where physical addressing is relevant. */
+	public final long physical_address; // Elf32_addr/Elf64_Addr - 4 or 8 bytes.
 
-	/** p_offset. Offset from the beginning of the file at which the first byte of the segment resides. */
-	public final long offset; // Elf32_Off
-	/** p_vaddr. This member gives the virtual address at which the first byte of the segment resides in memory. */
-	public final long virtual_address; // Elf32_Addr
-	/**
-	 * Reserved for the physical address of the segment on systems where physical addressing is relevant.
-	 */
-	public final long physical_address; // Elf32_addr
-
-	/** File image size of segment in bytes, may be 0. */
-	public final long file_size; // Elf32_Word
-	/** Memory image size of segment in bytes, may be 0. */
+	/** Elf{32,64}_Phdr#p_filesz. File image size of segment in bytes, may be 0. */
+	public final long file_size; // Elf32_Word/Elf64_Xword -
+	/** Elf{32,64}_Phdr#p_memsz. Memory image size of segment in bytes, may be 0. */
 	public final long mem_size; // Elf32_Word
 	/**
 	 * Flags relevant to this segment. Values for flags are defined in ELFSectionHeader.
@@ -54,11 +58,9 @@ public class ElfProgramHeader {
 	public final int flags; // Elf32_Word
 	public final long alignment; // Elf32_Word
 
-	private MemoizedObject[] symbols;
-
 	ElfProgramHeader(ElfParser parser, long offset) throws IOException {
 		parser.fsFile.seek(offset);
-		if (parser.elfFile.objectSize == 32) {
+		if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
 			// typedef struct {
 			// Elf32_Word p_type;
 			// Elf32_Off p_offset;
@@ -142,7 +144,7 @@ public class ElfProgramHeader {
 	@Override
 	public String toString() {
 		String typeString;
-		switch ((int) type) {
+		switch (type) {
 		case TYPE_NULL:
 			typeString = "PT_NULL";
 			break;
@@ -169,7 +171,15 @@ public class ElfProgramHeader {
 			break;
 		}
 
-		return "ElfProgramHeader[type=" + typeString + "]";
+		String pFlagsString = "";
+		if ((flags & /* PF_R= */4) != 0) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "read";
+		if ((flags & /* PF_W= */2) != 0) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "write";
+		if ((flags & /* PF_X= */1) != 0) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "execute";
+
+		if (pFlagsString.isEmpty()) pFlagsString = "0x" + Long.toHexString(flags);
+
+		return "ElfProgramHeader[p_type=" + typeString + ", p_filesz=" + file_size + ", p_memsz=" + mem_size + ", p_flags=" + pFlagsString + ", p_align="
+				+ alignment + ", range=[0x" + Long.toHexString(virtual_address) + "-0x" + Long.toHexString(virtual_address + mem_size) + "]]";
 	}
 
 }

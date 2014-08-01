@@ -93,4 +93,22 @@ class ElfParser {
 		return val;
 	}
 
+	/**
+	 * Find the file offset from a virtual address by looking up the {@link ElfProgramHeader} segment containing the
+	 * address and computing the resulting file offset.
+	 */
+	long virtualMemoryAddrToFileOffset(long address) throws IOException {
+		for (int i = 0; i < elfFile.num_ph; i++) {
+			ElfProgramHeader ph = elfFile.getProgramHeader(i);
+			if (address >= ph.virtual_address && address < (ph.virtual_address + ph.mem_size)) {
+				long relativeOffset = address - ph.virtual_address;
+				if (relativeOffset >= ph.file_size)
+					throw new ElfException("Can not convert virtual memory address " + Long.toHexString(address) + " to file offset -" + " found segment " + ph
+							+ " but address maps to memory outside file range");
+				return ph.offset + relativeOffset;
+			}
+		}
+		throw new ElfException("Cannot find segment for address " + Long.toHexString(address));
+	}
+
 }

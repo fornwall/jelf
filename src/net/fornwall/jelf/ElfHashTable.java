@@ -46,7 +46,7 @@ public class ElfHashTable {
 	 * ELFSection.getELFSymbol(String) to retrieve symbols by name. NOTE: since
 	 * this method is currently broken it will always return null.
 	 */
-	public ElfSymbol getSymbol(String symbolName) {
+	//public ElfSymbol getSymbol(String symbolName) {
 		// if (symbolName == null) {
 		// return null;
 		// }
@@ -75,7 +75,7 @@ public class ElfHashTable {
 		// index = chains[index];
 		// }
 		// return symbol;
-		return null;
-	}
+	// return null;
+	// }
 
 }

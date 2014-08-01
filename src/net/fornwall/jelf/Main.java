@@ -17,9 +17,8 @@ public class Main {
 		System.out.println("ELF object size: " + ((elfFile.objectSize == 0) ? "Invalid Object Size" : (elfFile.objectSize == 1) ? "32-bit" : "64-bit"));
 		System.out.println("ELF data encoding: " + ((elfFile.encoding == 0) ? "Invalid Data Encoding" : (elfFile.encoding == 1) ? "LSB" : "MSB"));
 
-		int h = elfFile.getNumberOfSectionHeaders();
-		System.out.println("--> Start: reading " + h + " section headers.");
-		for (int i = 0; i < elfFile.getNumberOfSectionHeaders(); i++) {
+		System.out.println("--> Start: reading " + elfFile.num_sh + " section headers.");
+		for (int i = 0; i < elfFile.num_sh; i++) {
 			ElfSectionHeader sh = elfFile.getSectionHeader(i);
 			int numSymbols = sh.getNumberOfSymbols();
 			System.out.println("----> Start: Section (" + i + "): " + sh + ", numSymbols=" + numSymbols);
@@ -31,7 +30,7 @@ public class Main {
 			;
 			if (sh.type == ElfSectionHeader.TYPE_STRTBL) {
 				System.out.println("------> Start: reading string table.");
-				//ElfStringTable st = sh.getStringTable();
+				// ElfStringTable st = sh.getStringTable();
 				System.out.println("<------ End: reading string table.");
 			} else if (sh.type == ElfSectionHeader.TYPE_HASH) {
 				System.out.println("------> Start: reading hash table.");
@@ -40,14 +39,13 @@ public class Main {
 			}
 			System.out.println("<---- End: Section (" + i + ")");
 		}
-		System.out.println("<-- End: reading " + h + " section headers.");
+		System.out.println("<-- End: reading " + elfFile.num_sh + " section headers.");
 
-		h = elfFile.num_ph;
-		System.out.println("--> Start: reading " + h + " program headers.");
+		System.out.println("--> Start: reading " + elfFile.num_ph + " program headers.");
 		for (int i = 0; i < elfFile.num_ph; i++) {
 			System.out.println("   " + elfFile.getProgramHeader(i));
 		}
-		System.out.println("<-- End: reading " + h + " program headers.");
+		System.out.println("<-- End: reading " + elfFile.num_ph + " program headers.");
 
 	}
 }

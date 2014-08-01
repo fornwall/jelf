@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,6 +49,21 @@ public class BasicTest {
 		Assert.assertEquals(25, file.num_sh);
 		Assert.assertEquals(15856, file.sh_offset);
 		assertSectionNames(file, null, ".interp", ".dynsym", ".dynstr", ".hash", ".rel.dyn", ".rel.plt", ".plt", ".text");
+
+		ElfSectionHeader dynamic = file.getDynamicLinkSection();
+		Assert.assertNotNull(dynamic);
+		// typedef struct {
+		// Elf32_Sword d_tag;
+		// union {
+		// Elf32_Word d_val;
+		// Elf32_Addr d_ptr;
+		// } d_un;
+		// } Elf32_Dyn;
+		Assert.assertEquals(8, dynamic.entry_size);
+		Assert.assertEquals(248, dynamic.size);
+
+		ElfDynamicStructure ds = dynamic.getDynamicSection();
+		Assert.assertEquals(Arrays.asList("libncursesw.so.6", "libc.so", "libdl.so"), ds.getNeededLibraries());
 	}
 
 	@Test
@@ -73,6 +89,11 @@ public class BasicTest {
 		Assert.assertEquals(27, file.num_sh);
 		Assert.assertEquals(119544, file.sh_offset);
 		assertSectionNames(file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash", ".dynsym");
+
+		ElfSectionHeader dynamic = file.getDynamicLinkSection();
+		Assert.assertNotNull(dynamic);
+		ElfDynamicStructure ds = dynamic.getDynamicSection();
+		Assert.assertEquals(Arrays.asList("libc.so.6"), ds.getNeededLibraries());
 	}
 
 }
