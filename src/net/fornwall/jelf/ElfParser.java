@@ -32,6 +32,10 @@ class ElfParser {
 		return fsFile.readByte();
 	}
 
+	short readUnsignedByte() throws IOException {
+		return (short) (fsFile.readByte() & 0x00FF);
+	}
+
 	short readShort() throws ElfException, IOException {
 		short val;
 		switch (elfFile.encoding) {

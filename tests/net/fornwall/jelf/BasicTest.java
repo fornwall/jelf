@@ -64,6 +64,8 @@ public class BasicTest {
 
 		ElfDynamicStructure ds = dynamic.getDynamicSection();
 		Assert.assertEquals(Arrays.asList("libncursesw.so.6", "libc.so", "libdl.so"), ds.getNeededLibraries());
+
+		Assert.assertEquals("/system/bin/linker", file.getInterpreter());
 	}
 
 	@Test
@@ -73,6 +75,7 @@ public class BasicTest {
 		Assert.assertEquals(ElfFile.DATA_LSB, file.encoding);
 		Assert.assertEquals(ElfFile.FT_DYN, file.file_type);
 		Assert.assertEquals(ElfFile.ARCH_ARM, file.arch);
+		Assert.assertEquals("/system/bin/linker", file.getInterpreter());
 	}
 
 	@Test
@@ -94,6 +97,8 @@ public class BasicTest {
 		Assert.assertNotNull(dynamic);
 		ElfDynamicStructure ds = dynamic.getDynamicSection();
 		Assert.assertEquals(Arrays.asList("libc.so.6"), ds.getNeededLibraries());
+
+		Assert.assertEquals("/lib64/ld-linux-x86-64.so.2", file.getInterpreter());
 	}
 
 }

@@ -25,41 +25,58 @@ import java.io.IOException;
  */
 public class ElfSectionHeader {
 
-	/** Section is inactive. */
-	public static final int TYPE_NULL = 0;
-	/** Section holds information defined by the program. */
-	public static final int TYPE_PROGBITS = 1;
 	/**
-	 * SHT_SYMTAB. Section holds symbol table information for link editing. It may also be used to store symbols for
-	 * dynamic linking. Only 1 per ELF file.
+	 * Marks the section header as inactive; it does not have an associated section. Other members of the section header
+	 * have undefined values.
 	 */
-	public static final int TYPE_SYMTBL = 2;
+	public static final int SHT_NULL = 0;
+	/** Section holds information defined by the program. */
+	public static final int SHT_PROGBITS = 1;
+	/**
+	 * Section holds symbol table information for link editing. It may also be used to store symbols for dynamic
+	 * linking. Only one per ELF file. The symtab contains everything, but it is non-allocable, can be stripped, and has
+	 * no runtime cost.
+	 */
+	public static final int SHT_SYMTAB = 2;
 	/** Section holds string table information. */
-	public static final int TYPE_STRTBL = 3;
+	public static final int SHT_STRTAB = 3;
 	/** Section holds relocation entries with explicit addends. */
-	public static final int TYPE_RELO_EXPLICIT = 4;
+	public static final int SHT_RELA = 4;
 	/** Section holds symbol hash table. */
-	public static final int TYPE_HASH = 5;
-	/** SHT_DYNAMIC. Section holds information for dynamic linking. */
-	public static final int TYPE_DYNAMIC = 6;
+	public static final int SHT_HASH = 5;
+	/**
+	 * Section holds information for dynamic linking. Only one per ELF file. The dynsym is allocable, and contains the
+	 * symbols needed to support runtime operation.
+	 */
+	public static final int SHT_DYNAMIC = 6;
 	/** Section holds information that marks the file. */
-	public static final int TYPE_NOTE = 7;
+	public static final int SHT_NOTE = 7;
 	/** Section occupies no space but resembles TYPE_PROGBITS. */
-	public static final int TYPE_NOBITS = 8;
+	public static final int SHT_NOBITS = 8;
 	/** Section holds relocation entries without explicit addends. */
-	public static final int TYPE_RELO = 9;
+	public static final int SHT_REL = 9;
 	/** Section is reserved but has unspecified semantics. */
-	public static final int TYPE_SHLIB = 10;
-	/** Section holds a minimum set of dynamic linking symbols. */
-	public static final int TYPE_DYNSYM = 11;
-	/** Lower bound section type that contains processor specific semantics. */
-	public static final int TYPE_LOPROC = 0x70000000;
-	/** Upper bound section type that contains processor specific semantics. */
-	public static final int TYPE_HIPROC = 0x7fffffff;
+	public static final int SHT_SHLIB = 10;
+	/** Section holds a minimum set of dynamic linking symbols. Only one per ELF file. */
+	public static final int SHT_DYNSYM = 11;
+	public static final int SHT_INIT_ARRAY = 14;
+	public static final int SHT_FINI_ARRAY = 15;
+	public static final int SHT_PREINIT_ARRAY = 16;
+	public static final int SHT_GROUP = 17;
+	public static final int SHT_SYMTAB_SHNDX = 18;
+
+	/** Lower bound of the range of indexes reserved for operating system-specific semantics. */
+	public static final int SHT_LOOS = 0x60000000;
+	/** Upper bound of the range of indexes reserved for operating system-specific semantics. */
+	public static final int SHT_HIOS = 0x6fffffff;
+	/** Lower bound of the range of indexes reserved for processor-specific semantics. */
+	public static final int SHT_LOPROC = 0x70000000;
+	/** Upper bound of the range of indexes reserved for processor-specific semantics. */
+	public static final int SHT_HIPROC = 0x7fffffff;
 	/** Lower bound of the range of indexes reserved for application programs. */
-	public static final int TYPE_LOUSER = 0x80000000;
+	public static final int SHT_LOUSER = 0x80000000;
 	/** Upper bound of the range of indexes reserved for application programs. */
-	public static final int TYPE_HIUSER = 0xffffffff;
+	public static final int SHT_HIUSER = 0xffffffff;
 
 	/** Flag informing that this section contains data that should be writable during process execution. */
 	public static final int FLAG_WRITE = 0x1;
@@ -80,7 +97,7 @@ public class ElfSectionHeader {
 	/** Section content and semantics. */
 	public final int type; // Elf32_Word or Elf64_Word - 4 bytes in both.
 	/** Flags. */
-	public final long flags; // Elf32_Word
+	public final long flags; // Elf32_Word or Elf64_Xword.
 	/**
 	 * sh_addr. If the section will be in the memory image of a process this will be the address at which the first byte
 	 * of section will be loaded. Otherwise, this value is 0.
@@ -102,7 +119,7 @@ public class ElfSectionHeader {
 	private MemoizedObject<ElfSymbol>[] symbols;
 	private MemoizedObject<ElfStringTable> stringTable;
 	private MemoizedObject<ElfHashTable> hashTable;
-	/** For the {@link #TYPE_DYNAMIC} ".dynamic" structure. */
+	/** For the {@link #SHT_DYNAMIC} ".dynamic" structure. */
 	private MemoizedObject<ElfDynamicStructure> dynamicStructure;
 
 	private final ElfFile elfHeader;
@@ -124,13 +141,12 @@ public class ElfSectionHeader {
 		entry_size = parser.readIntOrLong();
 
 		switch (type) {
-		case ElfSectionHeader.TYPE_NULL:
+		case ElfSectionHeader.SHT_NULL:
 			break;
-		case ElfSectionHeader.TYPE_PROGBITS:
+		case ElfSectionHeader.SHT_PROGBITS:
 			break;
-		case ElfSectionHeader.TYPE_SYMTBL:
-		case ElfSectionHeader.TYPE_DYNSYM:
-			// Setup the symbol table.
+		case ElfSectionHeader.SHT_SYMTAB:
+		case ElfSectionHeader.SHT_DYNSYM:
 			int num_entries = (int) (size / entry_size);
 			symbols = MemoizedObject.uncheckedArray(num_entries);
 			for (int i = 0; i < num_entries; i++) {
@@ -143,7 +159,7 @@ public class ElfSectionHeader {
 				};
 			}
 			break;
-		case ElfSectionHeader.TYPE_STRTBL:
+		case ElfSectionHeader.SHT_STRTAB:
 			stringTable = new MemoizedObject<ElfStringTable>() {
 				@Override
 				public ElfStringTable computeValue() throws IOException {
@@ -151,9 +167,9 @@ public class ElfSectionHeader {
 				}
 			};
 			break;
-		case ElfSectionHeader.TYPE_RELO_EXPLICIT:
+		case ElfSectionHeader.SHT_RELA:
 			break;
-		case ElfSectionHeader.TYPE_HASH:
+		case ElfSectionHeader.SHT_HASH:
 			hashTable = new MemoizedObject<ElfHashTable>() {
 				@Override
 				public ElfHashTable computeValue() throws IOException {
@@ -161,7 +177,7 @@ public class ElfSectionHeader {
 				}
 			};
 			break;
-		case ElfSectionHeader.TYPE_DYNAMIC:
+		case ElfSectionHeader.SHT_DYNAMIC:
 			dynamicStructure = new MemoizedObject<ElfDynamicStructure>() {
 				@Override
 				protected ElfDynamicStructure computeValue() throws ElfException, IOException {
@@ -169,13 +185,13 @@ public class ElfSectionHeader {
 				}
 			};
 			break;
-		case ElfSectionHeader.TYPE_NOTE:
+		case ElfSectionHeader.SHT_NOTE:
 			break;
-		case ElfSectionHeader.TYPE_NOBITS:
+		case ElfSectionHeader.SHT_NOBITS:
 			break;
-		case ElfSectionHeader.TYPE_RELO:
+		case ElfSectionHeader.SHT_REL:
 			break;
-		case ElfSectionHeader.TYPE_SHLIB:
+		case ElfSectionHeader.SHT_SHLIB:
 			break;
 		default:
 			break;

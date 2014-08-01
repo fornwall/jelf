@@ -17,27 +17,37 @@ import java.io.IOException;
 public class ElfProgramHeader {
 
 	/** PT_NULL. Type defining that the array element is unused. Other member values are undefined. */
-	public static final int TYPE_NULL = 0;
+	public static final int PT_NULL = 0;
 	/** PT_LOAD. Type defining that the array element specifies a loadable segment. */
-	public static final int TYPE_LOAD = 1;
+	public static final int PT_LOAD = 1;
 	/** PT_DYNAMIC. The array element specifies dynamic linking information. */
-	public static final int TYPE_DYNAMIC = 2;
+	public static final int PT_DYNAMIC = 2;
 	/**
 	 * PT_INTERP. The array element specifies the location and size of a null-terminated path name to invoke as an
-	 * interpreter.
+	 * interpreter. Meaningful only for executable files (though it may occur for shared objects); it may not occur more
+	 * than once in a file. If it is present, it must precede any loadable segment entry.
 	 */
-	public static final int TYPE_INTERP = 3;
-	/** PT_NOTE. The array element specifies the location and size of auxiliary information. */
-	public static final int TYPE_NOTE = 4;
-	/** PT_SHLIB. This segment type is reserved but has unspecified semantics. */
-	public static final int TYPE_SHLIB = 5;
+	public static final int PT_INTERP = 3;
+	/** The array element specifies the location and size of auxiliary information. */
+	public static final int PT_NOTE = 4;
+	/** This segment type is reserved but has unspecified semantics. */
+	public static final int PT_SHLIB = 5;
 	/**
-	 * PT_PHDR. The array element, if present, specifies the location and size of the program header table itself, both
-	 * in the file and in the memory image of the program. This segment type may not occur more than once in a file.
+	 * The array element, if present, specifies the location and size of the program header table itself, both in the
+	 * file and in the memory image of the program. This segment type may not occur more than once in a file.
 	 */
-	public static final int TYPE_PHDR = 6;
-	public static final int TYPE_LOPROC = 0x70000000;
-	public static final int TYPE_HIPROC = 0x7fffffff;
+	public static final int PT_PHDR = 6;
+	/** The array element specifies the Thread-Local Storage template. */
+	public static final int PT_TLS = 7;
+
+	/** Lower bound of the range reserved for operating system-specific semantics. */
+	public static final int PT_LOOS = 0x60000000;
+	/** Upper bound of the range reserved for operating system-specific semantics. */
+	public static final int PT_HIOS = 0x6fffffff;
+	/** Lower bound of the range reserved for processor-specific semantics. */
+	public static final int PT_LOPROC = 0x70000000;
+	/** Upper bound of the range reserved for processor-specific semantics. */
+	public static final int PT_HIPROC = 0x7fffffff;
 
 	/** Elf{32,64}_Phdr#p_type. Kind of segment this element describes. */
 	public final int type; // Elf32_Word/Elf64_Word - 4 bytes in both.
@@ -57,6 +67,8 @@ public class ElfProgramHeader {
 	 */
 	public final int flags; // Elf32_Word
 	public final long alignment; // Elf32_Word
+
+	private MemoizedObject<String> ptInterpreter;
 
 	ElfProgramHeader(ElfParser parser, long offset) throws IOException {
 		parser.fsFile.seek(offset);
@@ -99,8 +111,22 @@ public class ElfProgramHeader {
 			mem_size = parser.readLong();
 			alignment = parser.readLong();
 		}
-		//
-		// switch (type) {
+
+		switch (type) {
+		case PT_INTERP:
+			ptInterpreter = new MemoizedObject<String>() {
+				@Override
+				protected String computeValue() throws ElfException, IOException {
+					parser.fsFile.seek(ElfProgramHeader.this.offset);
+					StringBuilder buffer = new StringBuilder();
+					byte b;
+					while ((b = parser.readByte()) != 0) {
+						buffer.append((char) b);
+					}
+					return buffer.toString();
+				}
+			};
+			break;
 		// case ELFSectionHeader.TYPE_NULL:
 		// break;
 		// case ELFSectionHeader.TYPE_PROGBITS:
@@ -137,7 +163,7 @@ public class ElfProgramHeader {
 		// default:
 		// break;
 		// }
-		// }
+		}
 		//
 	}
 
@@ -145,25 +171,25 @@ public class ElfProgramHeader {
 	public String toString() {
 		String typeString;
 		switch (type) {
-		case TYPE_NULL:
+		case PT_NULL:
 			typeString = "PT_NULL";
 			break;
-		case TYPE_LOAD:
+		case PT_LOAD:
 			typeString = "PT_LOAD";
 			break;
-		case TYPE_DYNAMIC:
+		case PT_DYNAMIC:
 			typeString = "PT_DYNAMIC";
 			break;
-		case TYPE_INTERP:
+		case PT_INTERP:
 			typeString = "PT_INTERP";
 			break;
-		case TYPE_NOTE:
+		case PT_NOTE:
 			typeString = "PT_NOTE";
 			break;
-		case TYPE_SHLIB:
+		case PT_SHLIB:
 			typeString = "PT_SHLIB";
 			break;
-		case TYPE_PHDR:
+		case PT_PHDR:
 			typeString = "PT_PHDR";
 			break;
 		default:
@@ -180,6 +206,11 @@ public class ElfProgramHeader {
 
 		return "ElfProgramHeader[p_type=" + typeString + ", p_filesz=" + file_size + ", p_memsz=" + mem_size + ", p_flags=" + pFlagsString + ", p_align="
 				+ alignment + ", range=[0x" + Long.toHexString(virtual_address) + "-0x" + Long.toHexString(virtual_address + mem_size) + "]]";
+	}
+
+	/** Only for {@link #PT_INTERP} headers. */
+	public String getIntepreter() throws IOException {
+		return (ptInterpreter == null) ? null : ptInterpreter.getValue();
 	}
 
 }

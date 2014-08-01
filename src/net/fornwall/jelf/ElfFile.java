@@ -149,25 +149,24 @@ public class ElfFile {
 		return null;
 	}
 
-	/**
-	 * Returns the symbol table associated with this ELF file, or null if one does not exist.
-	 */
+	/** The {@link ElfSectionHeader#SHT_SYMTAB} section (of which there may be only one), if any. */
 	public ElfSectionHeader getSymbolTableSection() throws ElfException, IOException {
 		if (symbolTableSection != null) return symbolTableSection;
-		symbolTableSection = getSymbolTableSection(ElfSectionHeader.TYPE_SYMTBL);
+		symbolTableSection = getSymbolTableSection(ElfSectionHeader.SHT_SYMTAB);
 		return symbolTableSection;
 	}
 
+	/** The {@link ElfSectionHeader#SHT_DYNSYM} section (of which there may be only one), if any. */
 	public ElfSectionHeader getDynamicSymbolTableSection() throws ElfException, IOException {
 		if (dynamicSymbolTableSection != null) return dynamicSymbolTableSection;
-		dynamicSymbolTableSection = getSymbolTableSection(ElfSectionHeader.TYPE_DYNSYM);
+		dynamicSymbolTableSection = getSymbolTableSection(ElfSectionHeader.SHT_DYNSYM);
 		return dynamicSymbolTableSection;
 	}
 
-	/** The {@link ElfSectionHeader#TYPE_DYNAMIC} with name ".dynamic". */
+	/** The {@link ElfSectionHeader#SHT_DYNAMIC} section (of which there may be only one). Named ".dynamic". */
 	public ElfSectionHeader getDynamicLinkSection() throws IOException {
 		if (dynamicLinkSection != null) return dynamicLinkSection;
-		dynamicLinkSection = getSymbolTableSection(ElfSectionHeader.TYPE_DYNAMIC);
+		dynamicLinkSection = getSymbolTableSection(ElfSectionHeader.SHT_DYNAMIC);
 		return dynamicLinkSection;
 	}
 
@@ -318,4 +317,14 @@ public class ElfFile {
 			};
 		}
 	}
+
+	/** The interpreter specified by the {@link ElfProgramHeader#PT_INTERP} program header, if any. */
+	public String getInterpreter() throws IOException {
+		for (int i = 0; i < programHeaders.length; i++) {
+			ElfProgramHeader ph = programHeaders[i].getValue();
+			if (ph.type == ElfProgramHeader.PT_INTERP) return ph.getIntepreter();
+		}
+		return null;
+	}
+
 }

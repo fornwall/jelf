@@ -28,11 +28,11 @@ public class Main {
 				System.out.println("   " + sym);
 			}
 			;
-			if (sh.type == ElfSectionHeader.TYPE_STRTBL) {
+			if (sh.type == ElfSectionHeader.SHT_STRTAB) {
 				System.out.println("------> Start: reading string table.");
 				// ElfStringTable st = sh.getStringTable();
 				System.out.println("<------ End: reading string table.");
-			} else if (sh.type == ElfSectionHeader.TYPE_HASH) {
+			} else if (sh.type == ElfSectionHeader.SHT_HASH) {
 				System.out.println("------> Start: reading hash table.");
 				sh.getHashTable();
 				System.out.println("<------ End: reading hash table.");
@@ -43,7 +43,11 @@ public class Main {
 
 		System.out.println("--> Start: reading " + elfFile.num_ph + " program headers.");
 		for (int i = 0; i < elfFile.num_ph; i++) {
-			System.out.println("   " + elfFile.getProgramHeader(i));
+			ElfProgramHeader ph = elfFile.getProgramHeader(i);
+			System.out.println("   " + ph);
+			if (ph.type == ElfProgramHeader.PT_INTERP) {
+				System.out.println("   INTERPRETER: " + ph.getIntepreter());
+			}
 		}
 		System.out.println("<-- End: reading " + elfFile.num_ph + " program headers.");
 
