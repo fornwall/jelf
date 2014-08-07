@@ -1,9 +1,11 @@
 package net.fornwall.jelf;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <pre>
@@ -253,6 +255,31 @@ public class ElfFile {
 
 	public ElfProgramHeader getProgramHeader(int index) throws IOException {
 		return programHeaders[index].getValue();
+	}
+
+	public static ElfFile fromStream(InputStream in) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		int totalRead = 0;
+		byte[] buffer = new byte[8096];
+		boolean firstRead = true;
+		while (true) {
+			int readNow = in.read(buffer, totalRead, buffer.length - totalRead);
+			if (readNow == -1) {
+				return fromBytes(baos.toByteArray());
+			} else {
+				if (firstRead) {
+					// Abort early.
+					if (readNow < 4) {
+						throw new ElfException("Bad first read");
+					} else {
+						if (!(0x7f == buffer[0] && 'E' == buffer[1] && 'L' == buffer[2] && 'F' == buffer[3]))
+							throw new ElfException("Bad magic number for file");
+					}
+					firstRead = false;
+				}
+				baos.write(buffer, 0, readNow);
+			}
+		}
 	}
 
 	public static ElfFile fromFile(File file) throws ElfException, IOException {
