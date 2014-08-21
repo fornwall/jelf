@@ -16,7 +16,7 @@ abstract class MemoizedObject<T> {
 	protected abstract T computeValue() throws ElfException, IOException;
 
 	/** Public accessor for the memoized value. */
-	public T getValue() throws ElfException, IOException {
+	public final T getValue() throws ElfException, IOException {
 		if (!computed) {
 			value = computeValue();
 			computed = true;
