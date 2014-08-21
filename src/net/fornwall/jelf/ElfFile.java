@@ -48,9 +48,9 @@ public class ElfFile {
 	public static final int ARCH_SPARC = 2;
 	/** Intel 386 architecture type. */
 	public static final int ARCH_i386 = 3;
-	/** Motorolla 68000 architecture type. */
+	/** Motorola 68000 architecture type. */
 	public static final int ARCH_68k = 4;
-	/** Motorolla 88000 architecture type. */
+	/** Motorola 88000 architecture type. */
 	public static final int ARCH_88k = 5;
 	/** Intel 860 architecture type. */
 	public static final int ARCH_i860 = 7;
