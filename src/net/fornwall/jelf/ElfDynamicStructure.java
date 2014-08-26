@@ -137,6 +137,6 @@ public class ElfDynamicStructure {
 
 	@Override
 	public String toString() {
-		return "ElfDynamicSection[]";
+		return "ElfDynamicStructure[]";
 	}
 }
