@@ -92,9 +92,7 @@ public class BasicTest {
 		Assert.assertEquals(119544, file.sh_offset);
 		assertSectionNames(file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash", ".dynsym");
 
-		ElfSectionHeader dynamic = file.getDynamicLinkSection();
-		Assert.assertNotNull(dynamic);
-		ElfDynamicStructure ds = dynamic.getDynamicSection();
+		ElfDynamicStructure ds = file.getDynamicLinkSection().getDynamicSection();
 		Assert.assertEquals(Arrays.asList("libc.so.6"), ds.getNeededLibraries());
 
 		Assert.assertEquals("/lib64/ld-linux-x86-64.so.2", file.getInterpreter());
