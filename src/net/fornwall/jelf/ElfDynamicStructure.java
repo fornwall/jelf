@@ -75,8 +75,19 @@ public class ElfDynamicStructure {
 	public static final int DT_STRTAB = 5;
 	public static final int DT_SYMTAB = 6;
 	public static final int DT_RELA = 7;
+	public static final int DT_RELASZ = 8;
+	public static final int DT_RELAENT = 9;
 	/** The size in bytes of the {@link #DT_STRTAB} string table. */
 	public static final int DT_STRSZ = 10;
+	public static final int DT_SYMENT = 11;
+	public static final int DT_INIT = 12;
+	public static final int DT_FINI = 13;
+	public static final int DT_SONAME = 14;
+	public static final int DT_RPATH = 15;
+	public static final int DT_RUNPATH = 29;
+
+	public static final int DT_VERNEEDED = 0x6ffffffe;
+	public static final int DT_VERNEEDNUM = 0x6fffffff;
 
 	/** For the {@link #DT_STRTAB}. Mandatory. */
 	public long dt_strtab_offset;
@@ -85,6 +96,42 @@ public class ElfDynamicStructure {
 
 	private MemoizedObject<ElfStringTable> dtStringTable;
 	private final int[] dtNeeded;
+	public final List<ElfDynamicSectionEntry> entries = new ArrayList<>();
+
+	public static class ElfDynamicSectionEntry {
+		public ElfDynamicSectionEntry(long d_tag, long d_val_or_ptr) {
+			this.d_tag = d_tag;
+			this.d_val_or_ptr = d_val_or_ptr;
+		}
+
+		public long d_tag;
+		public long d_val_or_ptr;
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + (int) (d_tag ^ (d_tag >>> 32));
+			result = prime * result + (int) (d_val_or_ptr ^ (d_val_or_ptr >>> 32));
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) return true;
+			if (obj == null) return false;
+			if (getClass() != obj.getClass()) return false;
+			ElfDynamicSectionEntry other = (ElfDynamicSectionEntry) obj;
+			if (d_tag != other.d_tag) return false;
+			if (d_val_or_ptr != other.d_val_or_ptr) return false;
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return "ElfDynamicSectionEntry[" + d_tag + ", " + d_val_or_ptr + "]";
+		}
+	}
 
 	public ElfDynamicStructure(ElfParser parser, long offset, int size) {
 		parser.seek(offset);
@@ -97,6 +144,7 @@ public class ElfDynamicStructure {
 		loop: for (int i = 0; i < numEntries; i++) {
 			long d_tag = parser.readIntOrLong();
 			long d_val_or_ptr = parser.readIntOrLong();
+			entries.add(new ElfDynamicSectionEntry(d_tag, d_val_or_ptr));
 			switch ((int) d_tag) {
 			case DT_NULL:
 				// A DT_NULL element ends the array (may be following DT_NULL values, but no need to look at them).

@@ -155,33 +155,24 @@ public class ElfFile {
 
 	/** The {@link ElfSectionHeader#SHT_SYMTAB} section (of which there may be only one), if any. */
 	public ElfSectionHeader getSymbolTableSection() throws ElfException, IOException {
-		if (symbolTableSection != null) return symbolTableSection;
-		symbolTableSection = getSymbolTableSection(ElfSectionHeader.SHT_SYMTAB);
-		return symbolTableSection;
+		return (symbolTableSection != null) ? symbolTableSection : (symbolTableSection = getSymbolTableSection(ElfSectionHeader.SHT_SYMTAB));
 	}
 
 	/** The {@link ElfSectionHeader#SHT_DYNSYM} section (of which there may be only one), if any. */
 	public ElfSectionHeader getDynamicSymbolTableSection() throws ElfException, IOException {
-		if (dynamicSymbolTableSection != null) return dynamicSymbolTableSection;
-		dynamicSymbolTableSection = getSymbolTableSection(ElfSectionHeader.SHT_DYNSYM);
-		return dynamicSymbolTableSection;
+		return (dynamicSymbolTableSection != null) ? dynamicSymbolTableSection
+				: (dynamicSymbolTableSection = getSymbolTableSection(ElfSectionHeader.SHT_DYNSYM));
 	}
 
 	/** The {@link ElfSectionHeader#SHT_DYNAMIC} section (of which there may be only one). Named ".dynamic". */
 	public ElfSectionHeader getDynamicLinkSection() throws IOException {
-		if (dynamicLinkSection != null) return dynamicLinkSection;
-		dynamicLinkSection = getSymbolTableSection(ElfSectionHeader.SHT_DYNAMIC);
-		return dynamicLinkSection;
+		return (dynamicLinkSection != null) ? dynamicLinkSection : (dynamicLinkSection = getSymbolTableSection(ElfSectionHeader.SHT_DYNAMIC));
 	}
 
 	private ElfSectionHeader getSymbolTableSection(int type) throws ElfException, IOException {
-		ElfSectionHeader sh = null;
 		for (int i = 1; i < num_sh; i++) {
-			sh = getSectionHeader(i);
-			if (sh.type == type) {
-				dynamicSymbolTableSection = sh;
-				return sh;
-			}
+			ElfSectionHeader sh = getSectionHeader(i);
+			if (sh.type == type) return sh;
 		}
 		return null;
 	}

@@ -65,6 +65,42 @@ public class BasicTest {
 		Assert.assertEquals(Arrays.asList("libncursesw.so.6", "libc.so", "libdl.so"), ds.getNeededLibraries());
 
 		Assert.assertEquals("/system/bin/linker", file.getInterpreter());
+
+		// Dynamic section at offset 0x2e14 contains 26 entries:
+		// Tag Type Name/Value
+		// 0x00000003 (PLTGOT) 0xbf44
+		// 0x00000002 (PLTRELSZ) 352 (bytes)
+		// 0x00000017 (JMPREL) 0x8868
+		// 0x00000014 (PLTREL) REL
+		// 0x00000011 (REL) 0x8828
+		// 0x00000012 (RELSZ) 64 (bytes)
+		// 0x00000013 (RELENT) 8 (bytes)
+		// 0x00000015 (DEBUG) 0x0
+		// 0x00000006 (SYMTAB) 0x8128
+		// 0x0000000b (SYMENT) 16 (bytes)
+		// 0x00000005 (STRTAB) 0x84a8
+		// 0x0000000a (STRSZ) 513 (bytes)
+		// 0x00000004 (HASH) 0x86ac
+		// 0x00000001 (NEEDED) Shared library: [libncursesw.so.6]
+		// 0x00000001 (NEEDED) Shared library: [libc.so]
+		// 0x00000001 (NEEDED) Shared library: [libdl.so]
+		// 0x0000001a (FINI_ARRAY) 0xbdf4
+		// 0x0000001c (FINI_ARRAYSZ) 8 (bytes)
+		// 0x00000019 (INIT_ARRAY) 0xbdfc
+		// 0x0000001b (INIT_ARRAYSZ) 16 (bytes)
+		// 0x00000020 (PREINIT_ARRAY) 0xbe0c
+		// 0x00000021 (PREINIT_ARRAYSZ) 0x8
+		// 0x0000001d (RUNPATH) Library runpath: [/data/data/com.termux/files/usr/lib]
+		// 0x0000001e (FLAGS) BIND_NOW
+		// 0x6ffffffb (FLAGS_1) Flags: NOW
+		// 0x00000000 (NULL) 0x0
+		ElfDynamicStructure dynamicStructure = file.getDynamicLinkSection().getDynamicSection();
+		Assert.assertEquals(26, dynamicStructure.entries.size());
+		Assert.assertEquals(new ElfDynamicStructure.ElfDynamicSectionEntry(3, 0xbf44), dynamicStructure.entries.get(0));
+		Assert.assertEquals(new ElfDynamicStructure.ElfDynamicSectionEntry(2, 352), dynamicStructure.entries.get(1));
+		Assert.assertEquals(new ElfDynamicStructure.ElfDynamicSectionEntry(0x17, 0x8868), dynamicStructure.entries.get(2));
+		Assert.assertEquals(new ElfDynamicStructure.ElfDynamicSectionEntry(0x6ffffffb, 1), dynamicStructure.entries.get(24));
+		Assert.assertEquals(new ElfDynamicStructure.ElfDynamicSectionEntry(0, 0), dynamicStructure.entries.get(25));
 	}
 
 	@Test
