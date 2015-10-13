@@ -7,9 +7,8 @@ import java.util.List;
 /**
  * http://www.sco.com/developers/gabi/latest/ch5.dynamic.html#dynamic_section
  * 
- * "If an object file participates in dynamic linking, its program header table will have an element of type PT_DYNAMIC.
- * This ``segment'' contains the .dynamic section. A special symbol, _DYNAMIC, labels the section, which contains an
- * array of the following structures."
+ * "If an object file participates in dynamic linking, its program header table will have an element of type PT_DYNAMIC. This ``segment'' contains the .dynamic
+ * section. A special symbol, _DYNAMIC, labels the section, which contains an array of the following structures."
  * 
  * <pre>
  * typedef struct { Elf32_Sword d_tag; union { Elf32_Word d_val; Elf32_Addr d_ptr; } d_un; } Elf32_Dyn;
@@ -85,6 +84,9 @@ public class ElfDynamicStructure {
 	public static final int DT_SONAME = 14;
 	public static final int DT_RPATH = 15;
 	public static final int DT_RUNPATH = 29;
+
+	public static final int DT_VERDEF = 0x6ffffffc; /* Address of version definition */
+	public static final int DT_VERDEFNUM = 0x6ffffffd; /* Number of version definitions */
 
 	public static final int DT_VERNEEDED = 0x6ffffffe;
 	public static final int DT_VERNEEDNUM = 0x6fffffff;
