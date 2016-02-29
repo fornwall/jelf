@@ -84,12 +84,17 @@ public class ElfDynamicStructure {
 	public static final int DT_SONAME = 14;
 	public static final int DT_RPATH = 15;
 	public static final int DT_RUNPATH = 29;
-
+	public static final int DT_FLAGS_1 = 0x6ffffffb;
 	public static final int DT_VERDEF = 0x6ffffffc; /* Address of version definition */
 	public static final int DT_VERDEFNUM = 0x6ffffffd; /* Number of version definitions */
-
 	public static final int DT_VERNEEDED = 0x6ffffffe;
 	public static final int DT_VERNEEDNUM = 0x6fffffff;
+
+	/** Some values of {@link #DT_FLAGS_1}. */
+	public static final int DF_1_NOW = 0x00000001; /* Set RTLD_NOW for this object. */
+	public static final int DF_1_GLOBAL = 0x00000002; /* Set RTLD_GLOBAL for this object. */
+	public static final int DF_1_GROUP = 0x00000004; /* Set RTLD_GROUP for this object. */
+	public static final int DF_1_NODELETE = 0x00000008; /* Set RTLD_NODELETE for this object. */
 
 	/** For the {@link #DT_STRTAB}. Mandatory. */
 	public long dt_strtab_offset;

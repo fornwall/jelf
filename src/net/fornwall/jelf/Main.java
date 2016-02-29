@@ -27,7 +27,7 @@ public class Main {
 				ElfSymbol sym = sh.getELFSymbol(j);
 				System.out.println("   " + sym);
 			}
-			;
+
 			if (sh.type == ElfSectionHeader.SHT_STRTAB) {
 				System.out.println("------> Start: reading string table.");
 				// ElfStringTable st = sh.getStringTable();
