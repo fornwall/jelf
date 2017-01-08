@@ -19,7 +19,7 @@ public class Main {
 
 		System.out.println("--> Start: reading " + elfFile.num_sh + " section headers.");
 		for (int i = 0; i < elfFile.num_sh; i++) {
-			ElfSectionHeader sh = elfFile.getSectionHeader(i);
+			ElfSection sh = elfFile.getSection(i);
 			int numSymbols = sh.getNumberOfSymbols();
 			System.out.println("----> Start: Section (" + i + "): " + sh + ", numSymbols=" + numSymbols);
 
@@ -28,11 +28,11 @@ public class Main {
 				System.out.println("   " + sym);
 			}
 
-			if (sh.type == ElfSectionHeader.SHT_STRTAB) {
+			if (sh.type == ElfSection.SHT_STRTAB) {
 				System.out.println("------> Start: reading string table.");
 				// ElfStringTable st = sh.getStringTable();
 				System.out.println("<------ End: reading string table.");
-			} else if (sh.type == ElfSectionHeader.SHT_HASH) {
+			} else if (sh.type == ElfSection.SHT_HASH) {
 				System.out.println("------> Start: reading hash table.");
 				sh.getHashTable();
 				System.out.println("<------ End: reading hash table.");
@@ -43,9 +43,9 @@ public class Main {
 
 		System.out.println("--> Start: reading " + elfFile.num_ph + " program headers.");
 		for (int i = 0; i < elfFile.num_ph; i++) {
-			ElfProgramHeader ph = elfFile.getProgramHeader(i);
+			ElfSegment ph = elfFile.getProgramHeader(i);
 			System.out.println("   " + ph);
-			if (ph.type == ElfProgramHeader.PT_INTERP) {
+			if (ph.type == ElfSegment.PT_INTERP) {
 				System.out.println("   INTERPRETER: " + ph.getIntepreter());
 			}
 		}

@@ -23,7 +23,7 @@ import java.io.IOException;
  * reserved values do not represent actual sections in the object file. Also in such contexts, an escape value indicates
  * that the actual section index is to be found elsewhere, in a larger field.
  */
-public class ElfSectionHeader {
+public final class ElfSection {
 
 	/**
 	 * Marks the section header as inactive; it does not have an associated section. Other members of the section header
@@ -64,6 +64,10 @@ public class ElfSectionHeader {
 	public static final int SHT_PREINIT_ARRAY = 16;
 	public static final int SHT_GROUP = 17;
 	public static final int SHT_SYMTAB_SHNDX = 18;
+
+	public static final int SHT_GNU_verdef = 0x6ffffffd;
+	public static final int SHT_GNU_verneed = 0x6ffffffe;
+	public static final int SHT_GNU_versym = 0x6fffffff;
 
 	/** Lower bound of the range of indexes reserved for operating system-specific semantics. */
 	public static final int SHT_LOOS = 0x60000000;
@@ -125,7 +129,7 @@ public class ElfSectionHeader {
 	private final ElfFile elfHeader;
 
 	/** Reads the section header information located at offset. */
-	ElfSectionHeader(ElfParser parser, long offset) {
+	ElfSection(ElfParser parser, long offset) {
 		this.elfHeader = parser.elfFile;
 		parser.seek(offset);
 
@@ -141,12 +145,12 @@ public class ElfSectionHeader {
 		entry_size = parser.readIntOrLong();
 
 		switch (type) {
-		case ElfSectionHeader.SHT_NULL:
+		case ElfSection.SHT_NULL:
 			break;
-		case ElfSectionHeader.SHT_PROGBITS:
+		case ElfSection.SHT_PROGBITS:
 			break;
-		case ElfSectionHeader.SHT_SYMTAB:
-		case ElfSectionHeader.SHT_DYNSYM:
+		case ElfSection.SHT_SYMTAB:
+		case ElfSection.SHT_DYNSYM:
 			int num_entries = (int) (size / entry_size);
 			symbols = MemoizedObject.uncheckedArray(num_entries);
 			for (int i = 0; i < num_entries; i++) {
@@ -159,7 +163,7 @@ public class ElfSectionHeader {
 				};
 			}
 			break;
-		case ElfSectionHeader.SHT_STRTAB:
+		case ElfSection.SHT_STRTAB:
 			stringTable = new MemoizedObject<ElfStringTable>() {
 				@Override
 				public ElfStringTable computeValue() throws IOException {
@@ -167,9 +171,9 @@ public class ElfSectionHeader {
 				}
 			};
 			break;
-		case ElfSectionHeader.SHT_RELA:
+		case ElfSection.SHT_RELA:
 			break;
-		case ElfSectionHeader.SHT_HASH:
+		case ElfSection.SHT_HASH:
 			hashTable = new MemoizedObject<ElfHashTable>() {
 				@Override
 				public ElfHashTable computeValue() throws IOException {
@@ -177,7 +181,7 @@ public class ElfSectionHeader {
 				}
 			};
 			break;
-		case ElfSectionHeader.SHT_DYNAMIC:
+		case ElfSection.SHT_DYNAMIC:
 			dynamicStructure = new MemoizedObject<ElfDynamicStructure>() {
 				@Override
 				protected ElfDynamicStructure computeValue() throws ElfException, IOException {
@@ -185,13 +189,13 @@ public class ElfSectionHeader {
 				}
 			};
 			break;
-		case ElfSectionHeader.SHT_NOTE:
+		case ElfSection.SHT_NOTE:
 			break;
-		case ElfSectionHeader.SHT_NOBITS:
+		case ElfSection.SHT_NOBITS:
 			break;
-		case ElfSectionHeader.SHT_REL:
+		case ElfSection.SHT_REL:
 			break;
-		case ElfSectionHeader.SHT_SHLIB:
+		case ElfSection.SHT_SHLIB:
 			break;
 		default:
 			break;
@@ -228,7 +232,7 @@ public class ElfSectionHeader {
 	/** Returns the name of the section or null if the section has no name. */
 	public String getName() throws IOException {
 		if (name_ndx == 0) return null;
-		ElfStringTable tbl = elfHeader.getSectionHeaderStringTable();
+		ElfStringTable tbl = elfHeader.getSectionNameStringTable();
 		return tbl.get(name_ndx);
 	}
 

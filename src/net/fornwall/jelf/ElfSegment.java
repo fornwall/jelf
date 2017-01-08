@@ -14,7 +14,7 @@ import java.io.IOException;
  * http://www.sco.com/developers/gabi/latest/ch5.pheader.html#p_type
  * http://stackoverflow.com/questions/22612735/how-can-i-find-the-dynamic-libraries-required-by-an-elf-binary-in-c
  */
-public class ElfProgramHeader {
+public class ElfSegment {
 
 	/** Type defining that the array element is unused. Other member values are undefined. */
 	public static final int PT_NULL = 0;
@@ -70,7 +70,7 @@ public class ElfProgramHeader {
 
 	private MemoizedObject<String> ptInterpreter;
 
-	ElfProgramHeader(ElfParser parser, long offset) {
+	ElfSegment(ElfParser parser, long offset) {
 		parser.seek(offset);
 		if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
 			// typedef struct {
@@ -117,7 +117,7 @@ public class ElfProgramHeader {
 			ptInterpreter = new MemoizedObject<String>() {
 				@Override
 				protected String computeValue() throws ElfException, IOException {
-					parser.seek(ElfProgramHeader.this.offset);
+					parser.seek(ElfSegment.this.offset);
 					StringBuilder buffer = new StringBuilder();
 					int b;
 					while ((b = parser.readUnsignedByte()) != 0)

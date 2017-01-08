@@ -5,7 +5,7 @@ import java.io.IOException;
 /**
  * Class corresponding to the Elf32_Sym/Elf64_Sym struct.
  */
-public class ElfSymbol {
+public final class ElfSymbol {
 
 	/** Binding specifying that local symbols are not visible outside the object file that contains its definition. */
 	public static final int BINDING_LOCAL = 0;
@@ -130,9 +130,9 @@ public class ElfSymbol {
 
 		// Retrieve the name of the symbol from the correct string table.
 		String symbol_name = null;
-		if (section_type == ElfSectionHeader.SHT_SYMTAB) {
+		if (section_type == ElfSection.SHT_SYMTAB) {
 			symbol_name = elfHeader.getStringTable().get(name_ndx);
-		} else if (section_type == ElfSectionHeader.SHT_DYNSYM) {
+		} else if (section_type == ElfSection.SHT_DYNSYM) {
 			symbol_name = elfHeader.getDynamicStringTable().get(name_ndx);
 		}
 		return symbol_name;

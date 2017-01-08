@@ -25,7 +25,7 @@ public class BasicTest {
 	private static void assertSectionNames(ElfFile file, String... expectedSectionNames) throws IOException {
 		for (int i = 0; i < expectedSectionNames.length; i++) {
 			String expected = expectedSectionNames[i];
-			String actual = file.getSectionHeader(i).getName();
+			String actual = file.getSection(i).getName();
 			if (expected == null) {
 				Assert.assertNull(actual);
 			} else {
@@ -49,7 +49,7 @@ public class BasicTest {
 		Assert.assertEquals(15856, file.sh_offset);
 		assertSectionNames(file, null, ".interp", ".dynsym", ".dynstr", ".hash", ".rel.dyn", ".rel.plt", ".plt", ".text");
 
-		ElfSectionHeader dynamic = file.getDynamicLinkSection();
+		ElfSection dynamic = file.getDynamicLinkSection();
 		Assert.assertNotNull(dynamic);
 		// typedef struct {
 		// Elf32_Sword d_tag;

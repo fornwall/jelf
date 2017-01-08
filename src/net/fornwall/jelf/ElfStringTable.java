@@ -2,7 +2,7 @@ package net.fornwall.jelf;
 
 import java.io.IOException;
 
-public class ElfStringTable {
+public final class ElfStringTable {
 
 	/** The string table data. */
 	private final byte data[];
