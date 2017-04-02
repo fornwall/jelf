@@ -1,6 +1,8 @@
 jelf
 ====
-ELF parsing in java.
+ELF parsing library in java.
+
+[![Build Status](https://travis-ci.org/fornwall/jelf.svg?branch=master)](https://travis-ci.org/fornwall/jelf)
 
 ELF Resources
 =============
