@@ -23,13 +23,13 @@ import java.io.InputStream;
  */
 public final class ElfFile {
 
-	/** Relocatable file type. */
+	/** Relocatable file type. A possible value of {@link #file_type}. */
 	public static final int FT_REL = 1;
-	/** Executable file type. */
+	/** Executable file type. A possible value of {@link #file_type}. */
 	public static final int FT_EXEC = 2;
-	/** Shared object file type. */
+	/** Shared object file type. A possible value of {@link #file_type}. */
 	public static final int FT_DYN = 3;
-	/** Core file file type. */
+	/** Core file file type. A possible value of {@link #file_type}. */
 	public static final int FT_CORE = 4;
 
 	/** 32-bit objects. */

@@ -11,15 +11,8 @@ import org.junit.Test;
 
 public class BasicTest {
 
-	private File testDir;
-
-	@Before
-	public void setUp() throws Exception {
-		testDir = new File(BasicTest.class.getResource(".").getFile());
-	}
-
 	private ElfFile parseFile(String name) throws ElfException, FileNotFoundException, IOException {
-		return ElfFile.fromFile(new File(testDir, name));
+		return ElfFile.fromStream(BasicTest.class.getResourceAsStream("/" + name));
 	}
 
 	private static void assertSectionNames(ElfFile file, String... expectedSectionNames) throws IOException {
