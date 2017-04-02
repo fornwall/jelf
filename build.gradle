@@ -1,11 +1,9 @@
-buildscript {
-	repositories {
-	    jcenter()
-	}
-}
-
 plugins {
 	id "com.jfrog.bintray" version "1.7"
+}
+
+repositories {
+	jcenter()
 }
 
 apply plugin: 'java'
