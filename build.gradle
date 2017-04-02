@@ -1,47 +1,83 @@
+buildscript {
+	repositories {
+	    jcenter()
+	}
+}
+
 plugins {
-    id "com.jfrog.bintray" version "1.7"
-    id "com.github.dcendents.android-maven" version "1.5"
+	id "com.jfrog.bintray" version "1.7"
 }
 
 apply plugin: 'java'
-
-ext {
-    bintrayRepo = 'maven'
-    bintrayName = 'jelf'
-    bintrayUserOrg = 'fornwall'
-
-    publishedGroupId = 'net.fornwall.jelf'
-    libraryName = 'JElf'
-    artifact = 'jelf'
-
-    libraryDescription = 'ELF parsing library in java'
-
-    siteUrl = 'https://github.com/fornwall/jelf'
-    gitUrl = 'https://github.com/fornwall/jelf.git'
-
-    libraryVersion = '0.1'
-
-    developerId = 'fornwall'
-    developerName = 'Fredrik Fornwall'
-    developerEmail = 'fredrik@fornwall.net'
-
-    licenseName = 'MIT License'
-    licenseUrl = 'https://opensource.org/licenses/MIT'
-    allLicenses = ['MIT']
-}
-
-repositories {
-    jcenter()
-}
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+	testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 test {
-    afterTest { desc, result ->
-        println "Test ${desc.name} [${desc.className}] result: ${result.resultType}"
-    }
+	afterTest { desc, result ->
+		println "Test ${desc.name} [${desc.className}] result: ${result.resultType}"
+	}
 }
 
-apply from: 'bintray-upload.gradle'
+def pomConfig = {
+	licenses {
+		license {
+			name 'The MIT License'
+			url 'https://opensource.org/licenses/MIT'
+			distribution 'repo'
+		}
+	}
+	developers {
+		developer {
+			id 'fornwall'
+			name 'Fredrik Fornwall'
+			email 'fredrik@fornwall.net'
+		}
+	}
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+// See https://github.com/bintray/gradle-bintray-plugin
+publishing {
+	publications {
+		MyPublication(MavenPublication) {
+			from components.java
+			artifact sourcesJar
+			artifact javadocJar
+			groupId 'net.fornwall.jelf'
+			artifactId 'jelf'
+			version '0.2'
+			pom.withXml {
+				def root = asNode()
+				root.appendNode('description', 'ELF parsing library in java')
+				root.appendNode('name', 'JElf')
+				root.appendNode('url', 'https://github.com/fornwall/jelf')
+				root.children().last() + pomConfig
+			}
+		}
+	}
+}
+
+bintray {
+	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+	publications = ['MyPublication']
+	pkg {
+		repo = 'maven'
+		userOrg = user
+		name = 'jelf'
+		labels = ['java', 'elf']
+	}
+}
