@@ -44,7 +44,7 @@ public final class ElfFile {
 
 	/** No architecture type. */
 	public static final int ARCH_NONE = 0;
-	/** AT&T architecture type. */
+	/** AT&amp;T architecture type. */
 	public static final int ARCH_ATT = 1;
 	/** SPARC architecture type. */
 	public static final int ARCH_SPARC = 2;

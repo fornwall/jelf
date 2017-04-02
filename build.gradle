@@ -1,4 +1,34 @@
+plugins {
+    id "com.jfrog.bintray" version "1.7"
+    id "com.github.dcendents.android-maven" version "1.5"
+}
+
 apply plugin: 'java'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'jelf'
+    bintrayUserOrg = 'fornwall'
+
+    publishedGroupId = 'net.fornwall.jelf'
+    libraryName = 'JElf'
+    artifact = 'jelf'
+
+    libraryDescription = 'ELF parsing library in java'
+
+    siteUrl = 'https://github.com/fornwall/jelf'
+    gitUrl = 'https://github.com/fornwall/jelf.git'
+
+    libraryVersion = '0.1'
+
+    developerId = 'fornwall'
+    developerName = 'Fredrik Fornwall'
+    developerEmail = 'fredrik@fornwall.net'
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ['MIT']
+}
 
 repositories {
     jcenter()
@@ -13,3 +43,5 @@ test {
         println "Test ${desc.name} [${desc.className}] result: ${result.resultType}"
     }
 }
+
+apply from: 'bintray-upload.gradle'
