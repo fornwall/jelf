@@ -70,7 +70,7 @@ public class ElfSegment {
 
 	private MemoizedObject<String> ptInterpreter;
 
-	ElfSegment(ElfParser parser, long offset) {
+	ElfSegment(final ElfParser parser, long offset) {
 		parser.seek(offset);
 		if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
 			// typedef struct {

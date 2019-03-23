@@ -2,6 +2,7 @@ package net.fornwall.jelf;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.MappedByteBuffer;
 
 /** Package internal class used for parsing ELF files. */
 class ElfParser {
@@ -9,14 +10,33 @@ class ElfParser {
 	final ElfFile elfFile;
 	private final ByteArrayInputStream fsFile;
 
+    private final MappedByteBuffer mappedByteBuffer;
+    private final long mbbStartPosition;
+
+
 	ElfParser(ElfFile elfFile, ByteArrayInputStream fsFile) {
 		this.elfFile = elfFile;
 		this.fsFile = fsFile;
+        mappedByteBuffer = null;
+        mbbStartPosition = -1;
+    }
+
+    ElfParser(ElfFile elfFile, MappedByteBuffer byteBuffer, long mbbStartPos) {
+        this.elfFile = elfFile;
+        mappedByteBuffer = byteBuffer;
+        mbbStartPosition = mbbStartPos;
+        mappedByteBuffer.position((int)mbbStartPosition);
+        fsFile = null;
 	}
 
 	public void seek(long offset) {
-		fsFile.reset();
-		if (fsFile.skip(offset) != offset) throw new ElfException("seeking outside file");
+        if (fsFile != null) {
+    		fsFile.reset();
+	    	if (fsFile.skip(offset) != offset) throw new ElfException("seeking outside file");
+        }
+        else if (mappedByteBuffer != null) {
+            mappedByteBuffer.position((int)(mbbStartPosition + offset)); // we may be limited to sub-4GB mapped filess
+        }
 	}
 
 	/**
@@ -35,7 +55,14 @@ class ElfParser {
 	}
 
 	short readUnsignedByte() {
-		int val = fsFile.read();
+        int val = -1;
+        if (fsFile != null) {
+            val = fsFile.read();
+        } else if (mappedByteBuffer != null) {
+            byte temp = mappedByteBuffer.get();
+            val = temp & 0xFF; // bytes are signed in Java =_= so assigning them to a longer type risks sign extension.
+        }
+
 		if (val < 0) throw new ElfException("Trying to read outside file");
 		return (short) val;
 	}
@@ -111,7 +138,13 @@ class ElfParser {
 	}
 
 	public int read(byte[] data) throws IOException {
-		return fsFile.read(data);
+        if (fsFile != null) {
+            return fsFile.read(data);
+        } else if (mappedByteBuffer != null) {
+            mappedByteBuffer.get(data);
+            return data.length;
+        }
+        throw new IOException("No way to read from file or buffer");
 	}
 
 }
