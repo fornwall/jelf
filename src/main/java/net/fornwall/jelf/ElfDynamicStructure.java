@@ -140,7 +140,7 @@ public class ElfDynamicStructure {
 		}
 	}
 
-	public ElfDynamicStructure(ElfParser parser, long offset, int size) {
+	public ElfDynamicStructure(final ElfParser parser, long offset, int size) {
 		parser.seek(offset);
 		int numEntries = size / 8;
 
@@ -150,7 +150,7 @@ public class ElfDynamicStructure {
 		// necessary DT_STRSZ is read.
 		loop: for (int i = 0; i < numEntries; i++) {
 			long d_tag = parser.readIntOrLong();
-			long d_val_or_ptr = parser.readIntOrLong();
+			final long d_val_or_ptr = parser.readIntOrLong();
 			entries.add(new ElfDynamicSectionEntry(d_tag, d_val_or_ptr));
 			switch ((int) d_tag) {
 			case DT_NULL:

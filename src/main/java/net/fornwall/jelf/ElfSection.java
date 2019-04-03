@@ -125,11 +125,12 @@ public final class ElfSection {
 	private MemoizedObject<ElfHashTable> hashTable;
 	/** For the {@link #SHT_DYNAMIC} ".dynamic" structure. */
 	private MemoizedObject<ElfDynamicStructure> dynamicStructure;
+	private MemoizedObject<ElfNote> note;
 
 	private final ElfFile elfHeader;
 
 	/** Reads the section header information located at offset. */
-	ElfSection(ElfParser parser, long offset) {
+	ElfSection(final ElfParser parser, long offset) {
 		this.elfHeader = parser.elfFile;
 		parser.seek(offset);
 
@@ -190,6 +191,12 @@ public final class ElfSection {
 			};
 			break;
 		case ElfSection.SHT_NOTE:
+		    note = new MemoizedObject<ElfNote>() {
+                @Override
+                protected ElfNote computeValue() throws ElfException, IOException {
+                    return new ElfNote(parser, section_offset, (int)size);
+                }
+            };
 			break;
 		case ElfSection.SHT_NOBITS:
 			break;
@@ -220,6 +227,9 @@ public final class ElfSection {
 	public ElfDynamicStructure getDynamicSection() throws IOException {
 		return (dynamicStructure != null) ? dynamicStructure.getValue() : null;
 	}
+	public ElfNote getNote() throws IOException {
+	    return (note != null) ? note.getValue() : null;
+    }
 
 	/**
 	 * Returns the hash table for this section or null if one does not exist. NOTE: currently the ELFHashTable does not

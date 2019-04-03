@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.MappedByteBuffer;
 
 /**
  * An ELF (Executable and Linkable Format) file can be a relocatable, executable, shared or core file.
@@ -290,11 +291,78 @@ public final class ElfFile {
 	public static ElfFile fromBytes(byte[] buffer) throws ElfException, IOException {
 		return new ElfFile(new ByteArrayInputStream(buffer));
 	}
+    public ElfFile(MappedByteBuffer buffer, long startPosition) throws ElfException, IOException {
+        final ElfParser parser = new ElfParser(this, buffer, startPosition);
+
+        //Parsing is a shitty thing to do in constructors.
+        byte[] ident = new byte[16];
+        int bytesRead = parser.read(ident);
+        if (bytesRead != ident.length)
+            throw new ElfException("Error reading elf header (read " + bytesRead + "bytes - expected to read " + ident.length + "bytes)");
+
+        if (!(0x7f == ident[0] && 'E' == ident[1] && 'L' == ident[2] && 'F' == ident[3])) throw new ElfException("Bad magic number for file");
+
+        objectSize = ident[4];
+        if (!(objectSize == CLASS_32 || objectSize == CLASS_64)) throw new ElfException("Invalid object size class: " + objectSize);
+        encoding = ident[5];
+        if (!(encoding == DATA_LSB || encoding == DATA_MSB)) throw new ElfException("Invalid encoding: " + encoding);
+        int elfVersion = ident[6];
+        if (elfVersion != 1) throw new ElfException("Invalid elf version: " + elfVersion);
+        // ident[7]; // EI_OSABI, target operating system ABI
+        // ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
+        // ident[9-15] // EI_PAD, currently unused.
+
+        file_type = parser.readShort();
+        arch = parser.readShort();
+        version = parser.readInt();
+        entry_point = parser.readIntOrLong();
+        ph_offset = parser.readIntOrLong();
+        sh_offset = parser.readIntOrLong();
+        flags = parser.readInt();
+        eh_size = parser.readShort();
+        ph_entry_size = parser.readShort();
+        num_ph = parser.readShort();
+        sh_entry_size = parser.readShort();
+        num_sh = parser.readShort();
+        if (num_sh == 0) {
+            throw new ElfException("e_shnum is SHN_UNDEF(0), which is not supported yet"
+                    + " (the actual number of section header table entries is contained in the sh_size field of the section header at index 0)");
+        }
+        sh_string_ndx = parser.readShort();
+        if (sh_string_ndx == /* SHN_XINDEX= */0xffff) {
+            throw new ElfException("e_shstrndx is SHN_XINDEX(0xffff), which is not supported yet"
+                    + " (the actual index of the section name string table section is contained in the sh_link field of the section header at index 0)");
+        }
+
+        sectionHeaders = MemoizedObject.uncheckedArray(num_sh);
+        for (int i = 0; i < num_sh; i++) {
+            final long sectionHeaderOffset = sh_offset + (i * sh_entry_size);
+            sectionHeaders[i] = new MemoizedObject<ElfSection>() {
+                @Override
+                public ElfSection computeValue() throws ElfException, IOException {
+                    return new ElfSection(parser, sectionHeaderOffset);
+                }
+            };
+        }
+
+        programHeaders = MemoizedObject.uncheckedArray(num_ph);
+        for (int i = 0; i < num_ph; i++) {
+            final long programHeaderOffset = ph_offset + (i * ph_entry_size);
+            programHeaders[i] = new MemoizedObject<ElfSegment>() {
+                @Override
+                public ElfSegment computeValue() throws IOException {
+                    return new ElfSegment(parser, programHeaderOffset);
+                }
+            };
+        }
+
+    }
+    
 
 	public ElfFile(ByteArrayInputStream baos) throws ElfException, IOException {
-		byte[] ident = new byte[16];
 		final ElfParser parser = new ElfParser(this, baos);
 
+		byte[] ident = new byte[16];        
 		int bytesRead = parser.read(ident);
 		if (bytesRead != ident.length)
 			throw new ElfException("Error reading elf header (read " + bytesRead + "bytes - expected to read " + ident.length + "bytes)");
