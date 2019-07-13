@@ -72,6 +72,7 @@ public final class ElfFile {
 	 */
 	public final byte encoding;
 
+    public final byte elfVersion;
 	/** Identifies the object file type. One of the FT_* constants in the class. */
 	public final short file_type; // Elf32_Half
 	/** The required architecture. One of the ARCH_* constants in the class. */
@@ -306,7 +307,7 @@ public final class ElfFile {
         if (!(objectSize == CLASS_32 || objectSize == CLASS_64)) throw new ElfException("Invalid object size class: " + objectSize);
         encoding = ident[5];
         if (!(encoding == DATA_LSB || encoding == DATA_MSB)) throw new ElfException("Invalid encoding: " + encoding);
-        int elfVersion = ident[6];
+        elfVersion = ident[6];
         if (elfVersion != 1) throw new ElfException("Invalid elf version: " + elfVersion);
         // ident[7]; // EI_OSABI, target operating system ABI
         // ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
@@ -373,7 +374,7 @@ public final class ElfFile {
 		if (!(objectSize == CLASS_32 || objectSize == CLASS_64)) throw new ElfException("Invalid object size class: " + objectSize);
 		encoding = ident[5];
 		if (!(encoding == DATA_LSB || encoding == DATA_MSB)) throw new ElfException("Invalid encoding: " + encoding);
-		int elfVersion = ident[6];
+		elfVersion = ident[6];
 		if (elfVersion != 1) throw new ElfException("Invalid elf version: " + elfVersion);
 		// ident[7]; // EI_OSABI, target operating system ABI
 		// ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
