@@ -2,24 +2,16 @@ package net.fornwall.jelf;
 
 
 public class ElfHashTable {
-	/**
-	 * Returns the ELFSymbol that has the specified name or null if no symbol with that name exists. NOTE: Currently
-	 * this method does not work and will always return null.
-	 */
-	private int num_buckets;
-	private int num_chains;
-
-	// These could probably be memoized.
-	private int buckets[];
-	private int chains[];
 
 	ElfHashTable(ElfParser parser, long offset, int length) {
 		parser.seek(offset);
-		num_buckets = parser.readInt();
-		num_chains = parser.readInt();
 
-		buckets = new int[num_buckets];
-		chains = new int[num_chains];
+		int num_buckets = parser.readInt();
+		int num_chains = parser.readInt();
+
+		// These could probably be memoized.
+		int[] buckets = new int[num_buckets];
+		int[] chains = new int[num_chains];
 		// Read the bucket data.
 		for (int i = 0; i < num_buckets; i++) {
 			buckets[i] = parser.readInt();

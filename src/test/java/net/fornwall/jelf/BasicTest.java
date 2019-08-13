@@ -1,13 +1,12 @@
 package net.fornwall.jelf;
 
-import java.io.File;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Collections;
 
 public class BasicTest {
 
@@ -122,7 +121,7 @@ public class BasicTest {
 		assertSectionNames(file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash", ".dynsym");
 
 		ElfDynamicStructure ds = file.getDynamicLinkSection().getDynamicSection();
-		Assert.assertEquals(Arrays.asList("libc.so.6"), ds.getNeededLibraries());
+		Assert.assertEquals(Collections.singletonList("libc.so.6"), ds.getNeededLibraries());
 
 		Assert.assertEquals("/lib64/ld-linux-x86-64.so.2", file.getInterpreter());
 	}

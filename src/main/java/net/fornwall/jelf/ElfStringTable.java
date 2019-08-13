@@ -17,8 +17,7 @@ public final class ElfStringTable {
 			throw new ElfException("Error reading string table (read " + bytesRead + "bytes - expected to " + "read " + data.length + "bytes)");
 
 		int stringsCount = 0;
-		for (int ptr = 0; ptr < data.length; ptr++)
-			if (data[ptr] == '\0') stringsCount++;
+		for (byte datum : data) if (datum == '\0') stringsCount++;
 		numStrings = stringsCount;
 	}
 

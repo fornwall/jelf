@@ -430,8 +430,8 @@ public final class ElfFile {
 
 	/** The interpreter specified by the {@link ElfSegment#PT_INTERP} program header, if any. */
 	public String getInterpreter() throws IOException {
-		for (int i = 0; i < programHeaders.length; i++) {
-			ElfSegment ph = programHeaders[i].getValue();
+		for (MemoizedObject<ElfSegment> programHeader : programHeaders) {
+			ElfSegment ph = programHeader.getValue();
 			if (ph.type == ElfSegment.PT_INTERP) return ph.getIntepreter();
 		}
 		return null;

@@ -185,8 +185,7 @@ public class ElfDynamicStructure {
 	public List<String> getNeededLibraries() throws ElfException, IOException {
 		List<String> result = new ArrayList<>();
 		ElfStringTable stringTable = dtStringTable.getValue();
-		for (int i = 0; i < dtNeeded.length; i++)
-			result.add(stringTable.get(dtNeeded[i]));
+		for (int value : dtNeeded) result.add(stringTable.get(value));
 		return result;
 	}
 
