@@ -1,5 +1,5 @@
 plugins {
-	id "com.jfrog.bintray" version "1.7"
+	id "com.jfrog.bintray" version "1.8.4"
 }
 
 repositories {
@@ -11,6 +11,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
+version = "0.3"
 
 dependencies {
 	testCompile group: 'junit', name: 'junit', version: '4.12'
@@ -58,7 +59,7 @@ publishing {
 			artifact javadocJar
 			groupId 'net.fornwall.jelf'
 			artifactId 'jelf'
-			version '0.3'
+			version this.version
 			pom.withXml {
 				def root = asNode()
 				root.appendNode('description', 'ELF parsing library in java')
