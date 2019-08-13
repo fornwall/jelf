@@ -10,6 +10,8 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
+sourceCompatibility = 1.8
+
 dependencies {
 	testCompile group: 'junit', name: 'junit', version: '4.12'
 }
@@ -56,7 +58,7 @@ publishing {
 			artifact javadocJar
 			groupId 'net.fornwall.jelf'
 			artifactId 'jelf'
-			version '0.2'
+			version '0.3'
 			pom.withXml {
 				def root = asNode()
 				root.appendNode('description', 'ELF parsing library in java')
