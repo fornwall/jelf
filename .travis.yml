@@ -1,4 +1,3 @@
-sudo: false
 language: java
 dist: xenial
 jdk:
