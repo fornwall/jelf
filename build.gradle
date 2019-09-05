@@ -86,7 +86,7 @@ bintray {
 		version {
 			gpg {
 				sign = true
-				passphrase = property('gpg.passphrase')
+				passphrase = project.hasProperty('gpg.passphrase') ? project.property('gpg.passphrase') : null
 			}
 		}
 	}
