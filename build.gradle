@@ -11,7 +11,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
-version = "0.3"
+version = "0.4.1"
 
 dependencies {
 	testCompile group: 'junit', name: 'junit', version: '4.12'
@@ -37,6 +37,9 @@ def pomConfig = {
 			name 'Fredrik Fornwall'
 			email 'fredrik@fornwall.net'
 		}
+	}
+	scm {
+		url "https://github.com/fornwall/jelf"
 	}
 }
 
@@ -80,5 +83,11 @@ bintray {
 		userOrg = user
 		name = 'jelf'
 		labels = ['java', 'elf']
+		version {
+			gpg {
+				sign = true
+				passphrase = property('gpg.passphrase')
+			}
+		}
 	}
 }

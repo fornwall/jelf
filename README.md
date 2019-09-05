@@ -4,6 +4,28 @@ ELF parsing library in java.
 
 [![Build Status](https://travis-ci.org/fornwall/jelf.svg?branch=master)](https://travis-ci.org/fornwall/jelf)
 
+## Adding JElf to your build
+
+JElf's Maven group ID is `net.fornwall.jelf` and its artifact ID is `jelf`.
+
+To add a dependency on JElf using Maven, use the following:
+
+```xml
+<dependency>
+  <groupId>net.fornwall.jelf</groupId>
+  <artifactId>jelf</artifactId>
+  <version>0.4.1</version>
+</dependency>
+```
+
+To add a dependency using Gradle:
+
+```gradle
+dependencies {
+  implementation 'net.fornwall.jelf:jelf:0.4.1'
+}
+```
+
 ELF Resources
 =============
 - [Wikipedia entry on the ELF format](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
