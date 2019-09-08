@@ -1,5 +1,5 @@
 # JElf
-JElf is an ELF parsing library in java.
+Java library for parsing [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) files.
 
 [![Build Status](https://img.shields.io/travis/fornwall/jelf)](https://travis-ci.org/fornwall/jelf)
 [![MIT licensed](http://img.shields.io/:license-MIT-blue.svg)](LICENSE.txt)
@@ -14,9 +14,9 @@ To add a dependency on JElf using Maven, use the following:
 
 ```xml
 <dependency>
-  <groupId>net.fornwall</groupId>
-  <artifactId>jelf</artifactId>
-  <version>0.4.2</version>
+    <groupId>net.fornwall</groupId>
+    <artifactId>jelf</artifactId>
+    <version>0.4.2</version>
 </dependency>
 ```
 
@@ -24,7 +24,7 @@ To add a dependency using Gradle:
 
 ```gradle
 dependencies {
-  implementation 'net.fornwall:jelf:0.4.2'
+    implementation 'net.fornwall:jelf:0.4.2'
 }
 ```
 
