@@ -13,7 +13,7 @@ To add a dependency on JElf using Maven, use the following:
 <dependency>
   <groupId>net.fornwall</groupId>
   <artifactId>jelf</artifactId>
-  <version>0.4.1</version>
+  <version>0.4.2</version>
 </dependency>
 ```
 
@@ -21,7 +21,7 @@ To add a dependency using Gradle:
 
 ```gradle
 dependencies {
-  implementation 'net.fornwall:jelf:0.4.1'
+  implementation 'net.fornwall:jelf:0.4.2'
 }
 ```
 
