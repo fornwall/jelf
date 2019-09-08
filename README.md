@@ -5,13 +5,13 @@ JElf is an ELF parsing library in java.
 
 ## Adding JElf to your build
 
-JElf's Maven group ID is `net.fornwall.jelf` and its artifact ID is `jelf`.
+JElf's Maven group ID is `net.fornwall` and its artifact ID is `jelf`.
 
 To add a dependency on JElf using Maven, use the following:
 
 ```xml
 <dependency>
-  <groupId>net.fornwall.jelf</groupId>
+  <groupId>net.fornwall</groupId>
   <artifactId>jelf</artifactId>
   <version>0.4.1</version>
 </dependency>
@@ -21,7 +21,7 @@ To add a dependency using Gradle:
 
 ```gradle
 dependencies {
-  implementation 'net.fornwall.jelf:jelf:0.4.1'
+  implementation 'net.fornwall:jelf:0.4.1'
 }
 ```
 
