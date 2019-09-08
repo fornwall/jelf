@@ -1,7 +1,9 @@
 # JElf
 JElf is an ELF parsing library in java.
 
-[![Build Status](https://travis-ci.org/fornwall/jelf.svg?branch=master)](https://travis-ci.org/fornwall/jelf)
+[![Build Status](https://img.shields.io/travis/fornwall/jelf)](https://travis-ci.org/fornwall/jelf)
+[![MIT licensed](http://img.shields.io/:license-MIT-blue.svg)](LICENSE.txt)
+[![Package on Maven Central](https://img.shields.io/maven-central/v/net.fornwall/jelf)](https://mvnrepository.com/artifact/net.fornwall/jelf)
 
 ## Adding JElf to your build
 
