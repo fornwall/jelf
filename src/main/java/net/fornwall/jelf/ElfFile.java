@@ -92,9 +92,9 @@ public final class ElfFile {
 	/** Section header table offset in bytes. If there is no section header table the value is 0. */
 	public final long sh_offset; // Elf32_Off
 	/** Processor specific flags. */
-	public int flags; // Elf32_Word
+	public final int flags; // Elf32_Word
 	/** ELF header size in bytes. */
-	public short eh_size; // Elf32_Half
+	public final short eh_size; // Elf32_Half
 	/** e_phentsize. Size of one entry in the file's program header table in bytes. All entries are the same size. */
 	public final short ph_entry_size; // Elf32_Half
 	/** e_phnum. Number of {@link ElfSegment} entries in the program header table, 0 if no entries. */
