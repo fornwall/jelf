@@ -3,7 +3,29 @@ package net.fornwall.jelf;
 import java.io.IOException;
 
 /**
- * Class corresponding to the Elf32_Sym/Elf64_Sym struct.
+ * An entry in the symbol table, which holds information needed to locate and relocate a program's symbolic definitions and references.
+ * <p>
+ * In the elf.h header file the struct definitions are:
+ *
+ * <pre>
+ * typedef struct {
+ *     uint32_t      st_name;
+ *     Elf32_Addr    st_value;
+ *     uint32_t      st_size;
+ *     unsigned char st_info;
+ *     unsigned char st_other;
+ *     uint16_t      st_shndx;
+ * } Elf32_Sym;
+ *
+ * typedef struct {
+ *     uint32_t      st_name;
+ *     unsigned char st_info;
+ *     unsigned char st_other;
+ *     uint16_t      st_shndx;
+ *     Elf64_Addr    st_value;
+ *     uint64_t      st_size;
+ * } Elf64_Sym;
+ * </pre>
  */
 public final class ElfSymbol {
 
@@ -49,22 +71,22 @@ public final class ElfSymbol {
 	 * Index into the symbol string table that holds the character representation of the symbols. 0 means the symbol has
 	 * no character name.
 	 */
-	private final int name_ndx; // Elf32_Word
-	/** Value of the associated symbol. This may be a relativa address for .so or absolute address for other ELFs. */
-	public final long value; // Elf32_Addr
+	public final int st_name; // Elf32_Word
+	/** Value of the associated symbol. This may be a relative address for .so or absolute address for other ELFs. */
+	public final long st_value; // Elf32_Addr
 	/** Size of the symbol. 0 if the symbol has no size or the size is unknown. */
-	public final long size; // Elf32_Word
+	public final long st_size; // Elf32_Word
 	/** Specifies the symbol type and binding attributes. */
-	private final short info; // unsigned char
+	public final short st_info; // unsigned char
 	/** Currently holds the value of 0 and has no meaning. */
-	public final short other; // unsigned char
+	public final short st_other; // unsigned char
 	/**
 	 * Index to the associated section header. This value will need to be read as an unsigned short if we compare it to
 	 * ELFSectionHeader.NDX_LORESERVE and ELFSectionHeader.NDX_HIRESERVE.
 	 */
-	public final short section_header_ndx; // Elf32_Half
+	public final short st_shndx; // Elf32_Half
 
-	private final int section_type;
+	public final int section_type;
 
 	/** Offset from the beginning of the file to this symbol. */
 	public final long offset;
@@ -76,19 +98,19 @@ public final class ElfSymbol {
 		parser.seek(offset);
 		this.offset = offset;
 		if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
-			name_ndx = parser.readInt();
-			value = parser.readInt();
-			size = parser.readInt();
-			info = parser.readUnsignedByte();
-			other = parser.readUnsignedByte();
-			section_header_ndx = parser.readShort();
+			st_name = parser.readInt();
+			st_value = parser.readInt();
+			st_size = parser.readInt();
+			st_info = parser.readUnsignedByte();
+			st_other = parser.readUnsignedByte();
+			st_shndx = parser.readShort();
 		} else {
-			name_ndx = parser.readInt();
-			info = parser.readUnsignedByte();
-			other = parser.readUnsignedByte();
-			section_header_ndx = parser.readShort();
-			value = parser.readLong();
-			size = parser.readLong();
+			st_name = parser.readInt();
+			st_info = parser.readUnsignedByte();
+			st_other = parser.readUnsignedByte();
+			st_shndx = parser.readShort();
+			st_value = parser.readLong();
+			st_size = parser.readLong();
 		}
 
 		this.section_type = section_type;
@@ -115,25 +137,25 @@ public final class ElfSymbol {
 
 	/** Returns the binding for this symbol. */
 	public int getBinding() {
-		return info >> 4;
+		return st_info >> 4;
 	}
 
 	/** Returns the symbol type. */
 	public int getType() {
-		return info & 0x0F;
+		return st_info & 0x0F;
 	}
 
 	/** Returns the name of the symbol or null if the symbol has no name. */
 	public String getName() throws ElfException, IOException {
 		// Check to make sure this symbol has a name.
-		if (name_ndx == 0) return null;
+		if (st_name == 0) return null;
 
 		// Retrieve the name of the symbol from the correct string table.
 		String symbol_name = null;
 		if (section_type == ElfSection.SHT_SYMTAB) {
-			symbol_name = elfHeader.getStringTable().get(name_ndx);
+			symbol_name = elfHeader.getStringTable().get(st_name);
 		} else if (section_type == ElfSection.SHT_DYNSYM) {
-			symbol_name = elfHeader.getDynamicStringTable().get(name_ndx);
+			symbol_name = elfHeader.getDynamicStringTable().get(st_name);
 		}
 		return symbol_name;
 	}
@@ -169,7 +191,7 @@ public final class ElfSymbol {
 		}
 
 		try {
-			return "ElfSymbol[name=" + getName() + ", type=" + typeString + ", size=" + size + "]";
+			return "ElfSymbol[name=" + getName() + ", type=" + typeString + ", size=" + st_size + "]";
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

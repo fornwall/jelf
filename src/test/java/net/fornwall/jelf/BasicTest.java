@@ -124,6 +124,10 @@ public class BasicTest {
 		Assert.assertEquals(Collections.singletonList("libc.so.6"), ds.getNeededLibraries());
 
 		Assert.assertEquals("/lib64/ld-linux-x86-64.so.2", file.getInterpreter());
+
+		ElfSection rodata = file.firstSectionByName(ElfSection.NAME_RODATA);
+		Assert.assertNotNull(rodata);
+		Assert.assertEquals(ElfSection.SHT_PROGBITS, rodata.type);
 	}
 
 }

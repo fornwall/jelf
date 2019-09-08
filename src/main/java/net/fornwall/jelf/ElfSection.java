@@ -4,19 +4,19 @@ import java.io.IOException;
 
 /**
  * Class corresponding to the Elf32_Shdr/Elf64_Shdr struct.
- * 
+ *
  * <p>
  * An object file's section header table lets one locate all the file's sections. The section header table is an array
  * of Elf32_Shdr or Elf64_Shdr structures. A section header table index is a subscript into this array. The ELF header's
  * {@link ElfFile#sh_offset e_shoff member} gives the byte offset from the beginning of the file to the section header
  * table with each section header entry being {@link ElfFile#sh_entry_size e_shentsize} bytes big.
- * 
+ *
  * <p>
  * {@link ElfFile#num_sh e_shnum} normally tells how many entries the section header table contains, but if the number
  * of sections is greater than or equal to SHN_LORESERVE (0xff00), e_shnum has the value SHN_UNDEF (0) and the actual
  * number of section header table entries is contained in the sh_size field of the section header at index 0 (otherwise,
  * the sh_size member of the initial entry contains 0).
- * 
+ *
  * <p>
  * Some section header table indexes are reserved in contexts where index size is restricted, for example, the st_shndx
  * member of a symbol table entry and the e_shnum and e_shstrndx members of the ELF header. In such contexts, the
@@ -91,10 +91,21 @@ public final class ElfSection {
 	/** Flag informing that all the bits in the mask are reserved for processor specific semantics. */
 	public static final int FLAG_MASK = 0xf0000000;
 
-	/** Section header name identifying the section as a string table. */
-	public static final String STRING_TABLE_NAME = ".strtab";
-	/** Section header name identifying the section as a dynamic string table. */
-	public static final String DYNAMIC_STRING_TABLE_NAME = ".dynstr";
+	/**
+	 * Name for the section containing the string table.
+	 * <p>
+	 * This section contains a string table which contains names for symbol structures
+	 * by being indexed by the {@link ElfSymbol#st_name} field.
+	 */
+	public static final String NAME_STRTAB = ".strtab";
+	/**
+	 * Name for the section containing the dynamic string table.
+	 */
+	public static final String NAME_DYNSTR = ".dynstr";
+	/**
+	 * Name for the section containing read-only initialized data.
+	 */
+	public static final String NAME_RODATA = ".rodata";
 
 	/** Index into the section header string table which gives the name of the section. */
 	public final int name_ndx; // Elf32_Word or Elf64_Word - 4 bytes in both.

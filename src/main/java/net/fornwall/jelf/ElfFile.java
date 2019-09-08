@@ -137,46 +137,51 @@ public final class ElfFile {
 
 	/** Returns the string table associated with this ELF file. */
 	public ElfStringTable getStringTable() throws ElfException, IOException {
-		return findStringTableWithName(ElfSection.STRING_TABLE_NAME);
+		return findStringTableWithName(ElfSection.NAME_STRTAB);
 	}
 
 	/**
 	 * Returns the dynamic symbol table associated with this ELF file, or null if one does not exist.
 	 */
 	public ElfStringTable getDynamicStringTable() throws ElfException, IOException {
-		return findStringTableWithName(ElfSection.DYNAMIC_STRING_TABLE_NAME);
+		return findStringTableWithName(ElfSection.NAME_DYNSTR);
 	}
 
 	private ElfStringTable findStringTableWithName(String tableName) throws ElfException, IOException {
 		// Loop through the section header and look for a section
 		// header with the name "tableName". We can ignore entry 0
 		// since it is defined as being undefined.
-		for (int i = 1; i < num_sh; i++) {
-			ElfSection sh = getSection(i);
-			if (tableName.equals(sh.getName())) return sh.getStringTable();
-		}
-		return null;
+		ElfSection section = firstSectionByName(tableName);
+		return section == null ? null : section.getStringTable();
 	}
 
 	/** The {@link ElfSection#SHT_SYMTAB} section (of which there may be only one), if any. */
-	public ElfSection getSymbolTableSection() throws ElfException, IOException {
-		return (symbolTableSection != null) ? symbolTableSection : (symbolTableSection = getSymbolTableSection(ElfSection.SHT_SYMTAB));
+	public ElfSection firstSectionByType() throws ElfException, IOException {
+		return (symbolTableSection != null) ? symbolTableSection : (symbolTableSection = firstSectionByType(ElfSection.SHT_SYMTAB));
 	}
 
 	/** The {@link ElfSection#SHT_DYNSYM} section (of which there may be only one), if any. */
 	public ElfSection getDynamicSymbolTableSection() throws ElfException, IOException {
-		return (dynamicSymbolTableSection != null) ? dynamicSymbolTableSection : (dynamicSymbolTableSection = getSymbolTableSection(ElfSection.SHT_DYNSYM));
+		return (dynamicSymbolTableSection != null) ? dynamicSymbolTableSection : (dynamicSymbolTableSection = firstSectionByType(ElfSection.SHT_DYNSYM));
 	}
 
 	/** The {@link ElfSection#SHT_DYNAMIC} section (of which there may be only one). Named ".dynamic". */
 	public ElfSection getDynamicLinkSection() throws IOException {
-		return (dynamicLinkSection != null) ? dynamicLinkSection : (dynamicLinkSection = getSymbolTableSection(ElfSection.SHT_DYNAMIC));
+		return (dynamicLinkSection != null) ? dynamicLinkSection : (dynamicLinkSection = firstSectionByType(ElfSection.SHT_DYNAMIC));
 	}
 
-	private ElfSection getSymbolTableSection(int type) throws ElfException, IOException {
+	public ElfSection firstSectionByType(int type) throws ElfException, IOException {
 		for (int i = 1; i < num_sh; i++) {
 			ElfSection sh = getSection(i);
 			if (sh.type == type) return sh;
+		}
+		return null;
+	}
+
+	public ElfSection firstSectionByName(String sectionName) throws ElfException, IOException {
+		for (int i = 1; i < num_sh; i++) {
+			ElfSection sh = getSection(i);
+			if (sectionName.equals(sh.getName())) return sh;
 		}
 		return null;
 	}
@@ -200,7 +205,7 @@ public final class ElfFile {
 		}
 
 		// Check symbol table for symbol name.
-		sh = getSymbolTableSection();
+		sh = firstSectionByType();
 		if (sh != null) {
 			int numSymbols = sh.getNumberOfSymbols();
 			for (int i = 0; i < Math.ceil(numSymbols / 2); i++) {
@@ -229,19 +234,19 @@ public final class ElfFile {
 			int numSymbols = sh.getNumberOfSymbols();
 			for (int i = 0; i < numSymbols; i++) {
 				symbol = sh.getELFSymbol(i);
-				value = symbol.value;
-				if (address >= value && address < value + symbol.size) return symbol;
+				value = symbol.st_value;
+				if (address >= value && address < value + symbol.st_size) return symbol;
 			}
 		}
 
 		// Check symbol table for symbol name.
-		sh = getSymbolTableSection();
+		sh = firstSectionByType();
 		if (sh != null) {
 			int numSymbols = sh.getNumberOfSymbols();
 			for (int i = 0; i < numSymbols; i++) {
 				symbol = sh.getELFSymbol(i);
-				value = symbol.value;
-				if (address >= value && address < value + symbol.size) return symbol;
+				value = symbol.st_value;
+				if (address >= value && address < value + symbol.st_size) return symbol;
 			}
 		}
 		return null;
