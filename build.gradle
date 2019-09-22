@@ -14,7 +14,7 @@ sourceCompatibility = 1.8
 version = "0.4.3"
 
 dependencies {
-	testCompile group: 'junit', name: 'junit', version: '4.12'
+	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
 }
 
 test {
