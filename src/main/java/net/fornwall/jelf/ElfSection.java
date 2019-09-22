@@ -22,6 +22,7 @@ import java.io.IOException;
  * member of a symbol table entry and the e_shnum and e_shstrndx members of the ELF header. In such contexts, the
  * reserved values do not represent actual sections in the object file. Also in such contexts, an escape value indicates
  * that the actual section index is to be found elsewhere, in a larger field.
+ *
  */
 public final class ElfSection {
 
@@ -121,18 +122,19 @@ public final class ElfSection {
 	/** Offset from beginning of file to first byte of the section. */
 	public final long section_offset; // Elf32_Off
 	/** Size in bytes of the section. TYPE_NOBITS is a special case. */
-	public final long size; // Elf32_Word
+	public final /* uint32_t */ long size;
 	/** Section header table index link. */
-	public final int link; // Elf32_Word or Elf64_Word - 4 bytes in both.
+	public final /* uint32_t */ int link;
 	/** Extra information determined by the section type. */
-	public final int info; // Elf32_Word or Elf64_Word - 4 bytes in both.
+	public final /* uint32_t */ int info;
 	/** Address alignment constraints for the section. */
-	public final long address_alignment; // Elf32_Word
+	public final /* uint32_t */ long address_alignment;
 	/** Size of a fixed-size entry, 0 if none. */
 	public final long entry_size; // Elf32_Word
 
 	private MemoizedObject<ElfSymbol>[] symbols;
 	private MemoizedObject<ElfStringTable> stringTable;
+	/** For the {@link #SHT_HASH} section .*/
 	private MemoizedObject<ElfHashTable> hashTable;
 	/** For the {@link #SHT_DYNAMIC} ".dynamic" structure. */
 	private MemoizedObject<ElfDynamicStructure> dynamicStructure;

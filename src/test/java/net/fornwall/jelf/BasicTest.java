@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public class BasicTest {
 
@@ -103,6 +104,13 @@ public class BasicTest {
 		Assert.assertEquals(ElfFile.FT_DYN, file.file_type);
 		Assert.assertEquals(ElfFile.ARCH_ARM, file.arch);
 		Assert.assertEquals("/system/bin/linker", file.getInterpreter());
+
+		List<ElfSection> noteSections = file.sectionsWithType(ElfSection.SHT_NOTE);
+		Assert.assertEquals(1, noteSections.size());
+		Assert.assertEquals(".note.gnu.gold-version", noteSections.get(0).getName());
+		Assert.assertEquals("GNU", noteSections.get(0).getNote().getName());
+		Assert.assertEquals(ElfNote.NT_GNU_GOLD_VERSION, noteSections.get(0).getNote().type);
+		Assert.assertEquals("gold 1.11", noteSections.get(0).getNote().descriptorAsBytes());
 	}
 
 	@Test
@@ -128,6 +136,23 @@ public class BasicTest {
 		ElfSection rodata = file.firstSectionByName(ElfSection.NAME_RODATA);
 		Assert.assertNotNull(rodata);
 		Assert.assertEquals(ElfSection.SHT_PROGBITS, rodata.type);
+
+		List<ElfSection> noteSections = file.sectionsWithType(ElfSection.SHT_NOTE);
+		Assert.assertEquals(2, noteSections.size());
+		Assert.assertEquals(".note.ABI-tag", noteSections.get(0).getName());
+		Assert.assertEquals("GNU", noteSections.get(0).getNote().getName());
+		Assert.assertEquals(ElfNote.NT_GNU_ABI_TAG, noteSections.get(0).getNote().type);
+		Assert.assertEquals(ElfNote.GnuAbiDescriptor.ELF_NOTE_OS_LINUX, noteSections.get(0).getNote().descriptorAsGnuAbi().operatingSystem);
+		Assert.assertEquals(2, noteSections.get(0).getNote().descriptorAsGnuAbi().majorVersion);
+		Assert.assertEquals(6, noteSections.get(0).getNote().descriptorAsGnuAbi().minorVersion);
+		Assert.assertEquals(24, noteSections.get(0).getNote().descriptorAsGnuAbi().subminorVersion);
+		Assert.assertEquals(".note.gnu.build-id", noteSections.get(1).getName());
+		Assert.assertEquals("GNU", noteSections.get(1).getNote().getName());
+		Assert.assertEquals(ElfNote.NT_GNU_BUILD_ID, noteSections.get(1).getNote().type);
+		Assert.assertEquals(0x14, noteSections.get(1).getNote().descriptorBytes().length);
+		Assert.assertEquals(0x0f, noteSections.get(1).getNote().descriptorBytes()[0]);
+		Assert.assertArrayEquals(new byte[]{0x0f, 0x7f, (byte) 0xf2, (byte) 0x87, (byte) 0xcf, 0x26, (byte) 0xeb, (byte) 0xa9, (byte) 0xa6, 0x64, 0x3b, 0x12, 0x26, 0x08, (byte) 0x9e, (byte) 0xea, 0x57, (byte) 0xcb, 0x7e, 0x44},
+				noteSections.get(1).getNote().descriptorBytes());
 	}
 
 }

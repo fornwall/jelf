@@ -7,6 +7,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.MappedByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * An ELF (Executable and Linkable Format) file can be a relocatable, executable, shared or core file.
@@ -130,6 +133,19 @@ public final class ElfFile {
 		return sectionHeaders[index].getValue();
 	}
 
+	public List<ElfSection> sectionsWithType(int sectionType) throws ElfException, IOException {
+		if (num_sh < 2) return Collections.emptyList();
+		List<ElfSection> result = new ArrayList<>();
+	    for (int i = 1; i < num_sh; i++) {
+	    	ElfSection section = getSection(i);
+	    	if (section.type == sectionType) {
+	    		result.add(section);
+			}
+		}
+	    return result;
+	}
+
+
 	/** Returns the section header string table associated with this ELF file. */
 	public ElfStringTable getSectionNameStringTable() throws ElfException, IOException {
 		return getSection(sh_string_ndx).getStringTable();
@@ -156,21 +172,21 @@ public final class ElfFile {
 	}
 
 	/** The {@link ElfSection#SHT_SYMTAB} section (of which there may be only one), if any. */
-	public ElfSection firstSectionByType() throws ElfException, IOException {
-		return (symbolTableSection != null) ? symbolTableSection : (symbolTableSection = firstSectionByType(ElfSection.SHT_SYMTAB));
+	public ElfSection getSymbolTableSection() throws ElfException, IOException {
+		return (symbolTableSection != null) ? symbolTableSection : (symbolTableSection = getSymbolTableSection(ElfSection.SHT_SYMTAB));
 	}
 
 	/** The {@link ElfSection#SHT_DYNSYM} section (of which there may be only one), if any. */
 	public ElfSection getDynamicSymbolTableSection() throws ElfException, IOException {
-		return (dynamicSymbolTableSection != null) ? dynamicSymbolTableSection : (dynamicSymbolTableSection = firstSectionByType(ElfSection.SHT_DYNSYM));
+		return (dynamicSymbolTableSection != null) ? dynamicSymbolTableSection : (dynamicSymbolTableSection = getSymbolTableSection(ElfSection.SHT_DYNSYM));
 	}
 
 	/** The {@link ElfSection#SHT_DYNAMIC} section (of which there may be only one). Named ".dynamic". */
 	public ElfSection getDynamicLinkSection() throws IOException {
-		return (dynamicLinkSection != null) ? dynamicLinkSection : (dynamicLinkSection = firstSectionByType(ElfSection.SHT_DYNAMIC));
+		return (dynamicLinkSection != null) ? dynamicLinkSection : (dynamicLinkSection = getSymbolTableSection(ElfSection.SHT_DYNAMIC));
 	}
 
-	public ElfSection firstSectionByType(int type) throws ElfException, IOException {
+	public ElfSection getSymbolTableSection(int type) throws ElfException, IOException {
 		for (int i = 1; i < num_sh; i++) {
 			ElfSection sh = getSection(i);
 			if (sh.type == type) return sh;
@@ -205,7 +221,7 @@ public final class ElfFile {
 		}
 
 		// Check symbol table for symbol name.
-		sh = firstSectionByType();
+		sh = getSymbolTableSection();
 		if (sh != null) {
 			int numSymbols = sh.getNumberOfSymbols();
 			for (int i = 0; i < Math.ceil(numSymbols / 2); i++) {
@@ -240,7 +256,7 @@ public final class ElfFile {
 		}
 
 		// Check symbol table for symbol name.
-		sh = firstSectionByType();
+		sh = getSymbolTableSection();
 		if (sh != null) {
 			int numSymbols = sh.getNumberOfSymbols();
 			for (int i = 0; i < numSymbols; i++) {
