@@ -130,8 +130,7 @@ public class ElfDynamicStructure {
 			if (getClass() != obj.getClass()) return false;
 			ElfDynamicSectionEntry other = (ElfDynamicSectionEntry) obj;
 			if (d_tag != other.d_tag) return false;
-			if (d_val_or_ptr != other.d_val_or_ptr) return false;
-			return true;
+			return d_val_or_ptr == other.d_val_or_ptr;
 		}
 
 		@Override
@@ -187,6 +186,16 @@ public class ElfDynamicStructure {
 		ElfStringTable stringTable = dtStringTable.getValue();
 		for (int value : dtNeeded) result.add(stringTable.get(value));
 		return result;
+	}
+
+	public String getRunPath() throws IOException {
+		for (ElfDynamicSectionEntry entry : entries) {
+			if (entry.d_tag == DT_RUNPATH) {
+				ElfStringTable stringTable = dtStringTable.getValue();
+				return stringTable.get((int) entry.d_val_or_ptr);
+			}
+		}
+		return null;
 	}
 
 	@Override

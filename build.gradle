@@ -18,6 +18,7 @@ dependencies {
 }
 
 test {
+	useJUnitPlatform()
 	afterTest { desc, result ->
 		println "Test ${desc.name} [${desc.className}] result: ${result.resultType}"
 	}

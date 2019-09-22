@@ -8,42 +8,19 @@ import java.nio.MappedByteBuffer;
 class ElfParser {
 
 	final ElfFile elfFile;
-	private final ByteArrayInputStream fsFile;
+	private final BackingFile backingFile;
 
-    private final MappedByteBuffer mappedByteBuffer;
-    private final long mbbStartPosition;
-
-
-	ElfParser(ElfFile elfFile, ByteArrayInputStream fsFile) {
-		this.elfFile = elfFile;
-		this.fsFile = fsFile;
-        mappedByteBuffer = null;
-        mbbStartPosition = -1;
-    }
-
-    ElfParser(ElfFile elfFile, MappedByteBuffer byteBuffer, long mbbStartPos) {
+    ElfParser(ElfFile elfFile, BackingFile backingFile) {
         this.elfFile = elfFile;
-        mappedByteBuffer = byteBuffer;
-        mbbStartPosition = mbbStartPos;
-        mappedByteBuffer.position((int)mbbStartPosition);
-        fsFile = null;
+		this.backingFile = backingFile;
 	}
 
 	public void seek(long offset) {
-        if (fsFile != null) {
-    		fsFile.reset();
-	    	if (fsFile.skip(offset) != offset) throw new ElfException("seeking outside file");
-        } else if (mappedByteBuffer != null) {
-            mappedByteBuffer.position((int)(mbbStartPosition + offset)); // we may be limited to sub-4GB mapped filess
-        }
+	    backingFile.seek(offset);
 	}
 
 	public void skip(int bytesToSkip) {
-		if (fsFile != null) {
-			fsFile.skip(bytesToSkip);
-		} else {
-			mappedByteBuffer.position(mappedByteBuffer.position() + bytesToSkip);
-		}
+		backingFile.skip(bytesToSkip);
 	}
 
 	/**
@@ -62,16 +39,7 @@ class ElfParser {
 	}
 
 	short readUnsignedByte() {
-        int val = -1;
-        if (fsFile != null) {
-            val = fsFile.read();
-        } else if (mappedByteBuffer != null) {
-            byte temp = mappedByteBuffer.get();
-            val = temp & 0xFF; // bytes are signed in Java =_= so assigning them to a longer type risks sign extension.
-        }
-
-		if (val < 0) throw new ElfException("Trying to read outside file");
-		return (short) val;
+	    return backingFile.readUnsignedByte();
 	}
 
 	short readShort() throws ElfException {
@@ -145,13 +113,7 @@ class ElfParser {
 	}
 
 	public int read(byte[] data) throws IOException {
-        if (fsFile != null) {
-            return fsFile.read(data);
-        } else if (mappedByteBuffer != null) {
-            mappedByteBuffer.get(data);
-            return data.length;
-        }
-        throw new IOException("No way to read from file or buffer");
+	    return backingFile.read(data);
 	}
 
 }

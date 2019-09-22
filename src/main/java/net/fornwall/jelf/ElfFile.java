@@ -12,18 +12,23 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * An ELF (Executable and Linkable Format) file can be a relocatable, executable, shared or core file.
+ * An ELF (Executable and Linkable Format) file that can be a relocatable, executable, shared or core file.
+ *
+ * Use one of the following methods to parse input to get an instance of this class:
+ * <ul>
+ *     <li>{@link #from(File)}</li>
+ *     <li>{@link #from(byte[])}</li>
+ *     <li>{@link #from(InputStream)}</li>
+ *     <li>{@link #from(MappedByteBuffer)}</li>
+ * </ul>
  * 
- * <pre>
- * http://man7.org/linux/man-pages/man5/elf.5.html
- * http://en.wikipedia.org/wiki/Executable_and_Linkable_Format
- * http://www.ibm.com/developerworks/library/l-dynamic-libraries/
- * http://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf
- * 
- * Elf64_Addr, Elf64_Off, Elf64_Xword, Elf64_Sxword: 8 bytes
- * Elf64_Word, Elf64_Sword: 4 bytes
- * Elf64_Half: 2 bytes
- * </pre>
+ * Resources about ELF files:
+ * <ul>
+ *  <li>http://man7.org/linux/man-pages/man5/elf.5.html</li>
+ *  <li>http://en.wikipedia.org/wiki/Executable_and_Linkable_Format</li>
+ *  <li>http://www.ibm.com/developerworks/library/l-dynamic-libraries/</li>
+ *  <li>http://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf</li>
+ * </ul>
  */
 public final class ElfFile {
 
@@ -272,7 +277,7 @@ public final class ElfFile {
 		return programHeaders[index].getValue();
 	}
 
-	public static ElfFile fromStream(InputStream in) throws IOException {
+	public static ElfFile from(InputStream in) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		int totalRead = 0;
 		byte[] buffer = new byte[8096];
@@ -280,7 +285,7 @@ public final class ElfFile {
 		while (true) {
 			int readNow = in.read(buffer, totalRead, buffer.length - totalRead);
 			if (readNow == -1) {
-				return fromBytes(baos.toByteArray());
+				return from(baos.toByteArray());
 			} else {
 				if (firstRead) {
 					// Abort early.
@@ -297,7 +302,7 @@ public final class ElfFile {
 		}
 	}
 
-	public static ElfFile fromFile(File file) throws ElfException, IOException {
+	public static ElfFile from(File file) throws ElfException, IOException {
 		byte[] buffer = new byte[(int) file.length()];
 		try (FileInputStream in = new FileInputStream(file)) {
 			int totalRead = 0;
@@ -310,82 +315,19 @@ public final class ElfFile {
 				}
 			}
 		}
-		return new ElfFile(new ByteArrayInputStream(buffer));
+		return from(buffer);
 	}
 
-	public static ElfFile fromBytes(byte[] buffer) throws ElfException, IOException {
-		return new ElfFile(new ByteArrayInputStream(buffer));
+	public static ElfFile from(byte[] buffer) throws ElfException, IOException {
+		return new ElfFile(new BackingFile(new ByteArrayInputStream(buffer)));
 	}
-    public ElfFile(MappedByteBuffer buffer, long startPosition) throws ElfException, IOException {
-        final ElfParser parser = new ElfParser(this, buffer, startPosition);
 
-        //Parsing is a shitty thing to do in constructors.
-        byte[] ident = new byte[16];
-        int bytesRead = parser.read(ident);
-        if (bytesRead != ident.length)
-            throw new ElfException("Error reading elf header (read " + bytesRead + "bytes - expected to read " + ident.length + "bytes)");
+	public static ElfFile from(MappedByteBuffer mappedByteBuffer) throws ElfException, IOException {
+		return new ElfFile(new BackingFile(mappedByteBuffer));
+	}
 
-        if (!(0x7f == ident[0] && 'E' == ident[1] && 'L' == ident[2] && 'F' == ident[3])) throw new ElfException("Bad magic number for file");
-
-        objectSize = ident[4];
-        if (!(objectSize == CLASS_32 || objectSize == CLASS_64)) throw new ElfException("Invalid object size class: " + objectSize);
-        encoding = ident[5];
-        if (!(encoding == DATA_LSB || encoding == DATA_MSB)) throw new ElfException("Invalid encoding: " + encoding);
-        elfVersion = ident[6];
-        if (elfVersion != 1) throw new ElfException("Invalid elf version: " + elfVersion);
-        abi = ident[7]; // EI_OSABI, target operating system ABI
-        abiVersion = ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
-        // ident[9-15] // EI_PAD, currently unused.
-
-        file_type = parser.readShort();
-        arch = parser.readShort();
-        version = parser.readInt();
-        entry_point = parser.readIntOrLong();
-        ph_offset = parser.readIntOrLong();
-        sh_offset = parser.readIntOrLong();
-        flags = parser.readInt();
-        eh_size = parser.readShort();
-        ph_entry_size = parser.readShort();
-        num_ph = parser.readShort();
-        sh_entry_size = parser.readShort();
-        num_sh = parser.readShort();
-        if (num_sh == 0) {
-            throw new ElfException("e_shnum is SHN_UNDEF(0), which is not supported yet"
-                    + " (the actual number of section header table entries is contained in the sh_size field of the section header at index 0)");
-        }
-        sh_string_ndx = parser.readShort();
-        if (sh_string_ndx == /* SHN_XINDEX= */0xffff) {
-            throw new ElfException("e_shstrndx is SHN_XINDEX(0xffff), which is not supported yet"
-                    + " (the actual index of the section name string table section is contained in the sh_link field of the section header at index 0)");
-        }
-
-        sectionHeaders = MemoizedObject.uncheckedArray(num_sh);
-        for (int i = 0; i < num_sh; i++) {
-            final long sectionHeaderOffset = sh_offset + (i * sh_entry_size);
-            sectionHeaders[i] = new MemoizedObject<ElfSection>() {
-                @Override
-                public ElfSection computeValue() throws ElfException, IOException {
-                    return new ElfSection(parser, sectionHeaderOffset);
-                }
-            };
-        }
-
-        programHeaders = MemoizedObject.uncheckedArray(num_ph);
-        for (int i = 0; i < num_ph; i++) {
-            final long programHeaderOffset = ph_offset + (i * ph_entry_size);
-            programHeaders[i] = new MemoizedObject<ElfSegment>() {
-                @Override
-                public ElfSegment computeValue() throws IOException {
-                    return new ElfSegment(parser, programHeaderOffset);
-                }
-            };
-        }
-
-    }
-    
-
-	public ElfFile(ByteArrayInputStream baos) throws ElfException, IOException {
-		final ElfParser parser = new ElfParser(this, baos);
+	private ElfFile(BackingFile backingFile) throws ElfException, IOException {
+		final ElfParser parser = new ElfParser(this, backingFile);
 
 		byte[] ident = new byte[16];        
 		int bytesRead = parser.read(ident);

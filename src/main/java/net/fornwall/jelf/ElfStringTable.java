@@ -2,10 +2,17 @@ package net.fornwall.jelf;
 
 import java.io.IOException;
 
-public final class ElfStringTable {
+/**
+ * String table sections hold null-terminated character sequences, commonly called strings.
+ *
+ * The object file uses these strings to represent symbol and section names.
+ *
+ * You reference a string as an index into the string table section.
+ */
+final class ElfStringTable {
 
 	/** The string table data. */
-	private final byte data[];
+	private final byte[] data;
 	public final int numStrings;
 
 	/** Reads all the strings from [offset, length]. */
@@ -21,11 +28,10 @@ public final class ElfStringTable {
 		numStrings = stringsCount;
 	}
 
-	public String get(int index) {
-		int startPtr = index;
+	String get(int index) {
 		int endPtr = index;
 		while (data[endPtr] != '\0')
 			endPtr++;
-		return new String(data, startPtr, endPtr - startPtr);
+		return new String(data, index, endPtr - index);
 	}
 }

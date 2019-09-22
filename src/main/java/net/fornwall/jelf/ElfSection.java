@@ -240,6 +240,7 @@ public final class ElfSection {
 	public ElfDynamicStructure getDynamicSection() throws IOException {
 		return (dynamicStructure != null) ? dynamicStructure.getValue() : null;
 	}
+
 	public ElfNote getNote() throws IOException {
 	    return (note != null) ? note.getValue() : null;
     }
