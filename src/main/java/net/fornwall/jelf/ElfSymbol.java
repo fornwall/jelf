@@ -163,7 +163,8 @@ public final class ElfSymbol {
 	@Override
 	public String toString() {
 		String typeString;
-		switch (getType()) {
+		int typeInt = getType();
+		switch (typeInt) {
 		case STT_NOTYPE:
 			typeString = "object";
 			break;
@@ -186,7 +187,7 @@ public final class ElfSymbol {
 			typeString = "hiproc";
 			break;
 		default:
-			typeString = "???";
+			typeString = Integer.toString(typeInt);
 			break;
 		}
 
