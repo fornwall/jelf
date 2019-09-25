@@ -9,14 +9,16 @@ import java.io.IOException;
  *
  * You reference a string as an index into the string table section.
  */
-final class ElfStringTable {
+final class ElfStringTable extends ElfSection {
 
 	/** The string table data. */
 	private final byte[] data;
 	public final int numStrings;
 
 	/** Reads all the strings from [offset, length]. */
-	ElfStringTable(ElfParser parser, long offset, int length) throws ElfException, IOException {
+	ElfStringTable(ElfParser parser, long offset, int length, ElfSectionHeader header) throws ElfException, IOException {
+		super(header);
+
 		parser.seek(offset);
 		data = new byte[length];
 		int bytesRead = parser.read(data);

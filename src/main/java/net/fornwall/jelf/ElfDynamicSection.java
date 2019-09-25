@@ -63,7 +63,7 @@ import java.util.List;
  * DT_HIPROC			0x7fffffff	unspecified	unspecified	unspecified
  * </pre>
  */
-public class ElfDynamicStructure {
+public class ElfDynamicSection extends ElfSection {
 
 	public static final int DT_NULL = 0;
 	public static final int DT_NEEDED = 1;
@@ -103,10 +103,10 @@ public class ElfDynamicStructure {
 
 	private MemoizedObject<ElfStringTable> dtStringTable;
 	private final int[] dtNeeded;
-	public final List<ElfDynamicSectionEntry> entries = new ArrayList<>();
+	public final List<ElfDynamicStructure> entries = new ArrayList<>();
 
-	public static class ElfDynamicSectionEntry {
-		public ElfDynamicSectionEntry(long d_tag, long d_val_or_ptr) {
+	public static class ElfDynamicStructure {
+		public ElfDynamicStructure(long d_tag, long d_val_or_ptr) {
 			this.d_tag = d_tag;
 			this.d_val_or_ptr = d_val_or_ptr;
 		}
@@ -128,7 +128,7 @@ public class ElfDynamicStructure {
 			if (this == obj) return true;
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
-			ElfDynamicSectionEntry other = (ElfDynamicSectionEntry) obj;
+			ElfDynamicStructure other = (ElfDynamicStructure) obj;
 			if (d_tag != other.d_tag) return false;
 			return d_val_or_ptr == other.d_val_or_ptr;
 		}
@@ -139,9 +139,11 @@ public class ElfDynamicStructure {
 		}
 	}
 
-	public ElfDynamicStructure(final ElfParser parser, long offset, int size) {
-		parser.seek(offset);
-		int numEntries = size / 8;
+	public ElfDynamicSection(final ElfParser parser, ElfSectionHeader header) {
+		super(header);
+
+		parser.seek(header.section_offset);
+		int numEntries = (int) (header.size / 8);
 
 		List<Integer> dtNeededList = new ArrayList<>();
 		// Except for the DT_NULL element at the end of the array, and the relative order of DT_NEEDED elements, entries
@@ -150,7 +152,7 @@ public class ElfDynamicStructure {
 		loop: for (int i = 0; i < numEntries; i++) {
 			long d_tag = parser.readIntOrLong();
 			final long d_val_or_ptr = parser.readIntOrLong();
-			entries.add(new ElfDynamicSectionEntry(d_tag, d_val_or_ptr));
+			entries.add(new ElfDynamicStructure(d_tag, d_val_or_ptr));
 			switch ((int) d_tag) {
 			case DT_NULL:
 				// A DT_NULL element ends the array (may be following DT_NULL values, but no need to look at them).
@@ -163,7 +165,7 @@ public class ElfDynamicStructure {
 					@Override
 					protected ElfStringTable computeValue() throws ElfException, IOException {
 						long fileOffsetForStringTable = parser.virtualMemoryAddrToFileOffset(d_val_or_ptr);
-						return new ElfStringTable(parser, fileOffsetForStringTable, dt_strtab_size);
+						return new ElfStringTable(parser, fileOffsetForStringTable, dt_strtab_size, null); // FIXME: null header
 					}
 				};
 				dt_strtab_offset = d_val_or_ptr;
@@ -189,7 +191,7 @@ public class ElfDynamicStructure {
 	}
 
 	public String getRunPath() throws IOException {
-		for (ElfDynamicSectionEntry entry : entries) {
+		for (ElfDynamicStructure entry : entries) {
 			if (entry.d_tag == DT_RUNPATH) {
 				ElfStringTable stringTable = dtStringTable.getValue();
 				return stringTable.get((int) entry.d_val_or_ptr);

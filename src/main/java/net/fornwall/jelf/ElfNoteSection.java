@@ -2,7 +2,7 @@ package net.fornwall.jelf;
 
 import java.io.IOException;
 
-class ElfNote {
+class ElfNoteSection extends ElfSection {
 
     /**
      * A possible value of the {@link #type} where the description should contain {@link GnuAbiDescriptor}.
@@ -70,8 +70,10 @@ class ElfNote {
     private byte[] descriptorBytes;
     private final GnuAbiDescriptor gnuAbiDescriptor;
 
-    ElfNote(ElfParser parser, long offset, int size) throws ElfException, IOException {
-        parser.seek(offset);
+    ElfNoteSection(ElfParser parser, ElfSectionHeader header) throws ElfException, IOException {
+        super(header);
+
+        parser.seek(header.section_offset);
         nameSize = parser.readInt();
         descriptorSize = parser.readInt();
         type = parser.readInt();
@@ -107,7 +109,7 @@ class ElfNote {
         return descriptorBytes;
     }
 
-    public String descriptorAsBytes() {
+    public String descriptorAsString() {
         return new String(descriptorBytes);
     }
 

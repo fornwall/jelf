@@ -152,9 +152,9 @@ public final class ElfSymbol {
 
 		// Retrieve the name of the symbol from the correct string table.
 		String symbol_name = null;
-		if (section_type == ElfSection.SHT_SYMTAB) {
+		if (section_type == ElfSectionHeader.SHT_SYMTAB) {
 			symbol_name = elfHeader.getStringTable().get(st_name);
-		} else if (section_type == ElfSection.SHT_DYNSYM) {
+		} else if (section_type == ElfSectionHeader.SHT_DYNSYM) {
 			symbol_name = elfHeader.getDynamicStringTable().get(st_name);
 		}
 		return symbol_name;
