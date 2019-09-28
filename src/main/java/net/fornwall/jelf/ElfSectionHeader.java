@@ -34,9 +34,9 @@ public class ElfSectionHeader {
 	/** Section holds information defined by the program. */
 	public static final int SHT_PROGBITS = 1;
 	/**
-	 * Section holds symbol table information for link editing. It may also be used to store symbols for dynamic
-	 * linking. Only one per ELF file. The symtab contains everything, but it is non-allocable, can be stripped, and has
-	 * no runtime cost.
+	 * The {@link #type} value for a section containing complete symbol table information necessary for link editing.
+	 *
+	 * See {@link ElfSymbolTableSection}, which is the class representing sections of this type, for more information.
 	 */
 	public static final int SHT_SYMTAB = 2;
 	/** Section holds string table information. */
@@ -58,7 +58,11 @@ public class ElfSectionHeader {
 	public static final int SHT_REL = 9;
 	/** Section is reserved but has unspecified semantics. */
 	public static final int SHT_SHLIB = 10;
-	/** Section holds a minimum set of dynamic linking symbols. Only one per ELF file. */
+	/**
+	 * The {@link #type} value for a section containing a minimal set of symbols needed for dynamic linking at runtime.
+	 *
+	 * See {@link ElfSymbolTableSection}, which is the class representing sections of this type, for more information.
+	 */
 	public static final int SHT_DYNSYM = 11;
 	public static final int SHT_INIT_ARRAY = 14;
 	public static final int SHT_FINI_ARRAY = 15;
@@ -152,7 +156,7 @@ public class ElfSectionHeader {
 	}
 
 	/** Returns the name of the section or null if the section has no name. */
-	public String getName() throws IOException {
+	public String getName() {
 		if (name_ndx == 0) return null;
 		ElfStringTable tbl = elfHeader.getSectionNameStringTable();
 		return tbl.get(name_ndx);
@@ -160,11 +164,7 @@ public class ElfSectionHeader {
 
 	@Override
 	public String toString() {
-		try {
-			return "ElfSectionHeader[name=" + getName() + ", type=0x" + Long.toHexString(type) + "]";
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		return "ElfSectionHeader[name=" + getName() + ", type=0x" + Long.toHexString(type) + "]";
 	}
 
 }

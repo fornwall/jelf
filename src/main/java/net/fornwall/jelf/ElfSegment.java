@@ -116,7 +116,7 @@ public class ElfSegment {
 		case PT_INTERP:
 			ptInterpreter = new MemoizedObject<String>() {
 				@Override
-				protected String computeValue() throws ElfException, IOException {
+				protected String computeValue() throws ElfException {
 					parser.seek(ElfSegment.this.offset);
 					StringBuilder buffer = new StringBuilder();
 					int b;

@@ -95,21 +95,21 @@ public final class ElfFile {
 	 * 0.
 	 */
 	public final long entry_point; // Elf32_Addr
-	/** Program header table offset in bytes. If there is no program header table the value is 0. */
+	/** e_phoff. Program header table offset in bytes. If there is no program header table the value is 0. */
 	public final long ph_offset; // Elf32_Off
-	/** Section header table offset in bytes. If there is no section header table the value is 0. */
+	/** e_shoff. Section header table offset in bytes. If there is no section header table the value is 0. */
 	public final long sh_offset; // Elf32_Off
-	/** Processor specific flags. */
+	/** e_flags. Processor specific flags. */
 	public final int flags; // Elf32_Word
-	/** ELF header size in bytes. */
+	/** e_ehsize. ELF header size in bytes. */
 	public final short eh_size; // Elf32_Half
 	/** e_phentsize. Size of one entry in the file's program header table in bytes. All entries are the same size. */
 	public final short ph_entry_size; // Elf32_Half
 	/** e_phnum. Number of {@link ElfSegment} entries in the program header table, 0 if no entries. */
 	public final short num_ph; // Elf32_Half
-	/** Section header entry size in bytes. */
+	/** e_shentsize. Section header entry size in bytes - all entries are the same size. */
 	public final short sh_entry_size; // Elf32_Half
-	/** Number of entries in the section header table, 0 if no entries. */
+	/** e_shnum. Number of entries in the section header table, 0 if no entries. */
 	public final short num_sh; // Elf32_Half
 
 	/**
@@ -134,11 +134,11 @@ public final class ElfFile {
 	 * Returns the section header at the specified index. The section header at index 0 is defined as being a undefined
 	 * section.
 	 */
-	public ElfSection getSection(int index) throws ElfException, IOException {
+	public ElfSection getSection(int index) throws ElfException {
 		return sections[index].getValue();
 	}
 
-	public List<ElfSection> sectionsOfType(int sectionType) throws ElfException, IOException {
+	public List<ElfSection> sectionsOfType(int sectionType) throws ElfException {
 		if (num_sh < 2) return Collections.emptyList();
 		List<ElfSection> result = new ArrayList<>();
 	    for (int i = 1; i < num_sh; i++) {
@@ -152,23 +152,23 @@ public final class ElfFile {
 
 
 	/** Returns the section header string table associated with this ELF file. */
-	public ElfStringTable getSectionNameStringTable() throws ElfException, IOException {
+	public ElfStringTable getSectionNameStringTable() throws ElfException {
 		return (ElfStringTable) getSection(sh_string_ndx);
 	}
 
 	/** Returns the string table associated with this ELF file. */
-	public ElfStringTable getStringTable() throws ElfException, IOException {
+	public ElfStringTable getStringTable() throws ElfException {
 		return findStringTableWithName(ElfSectionHeader.NAME_STRTAB);
 	}
 
 	/**
 	 * Returns the dynamic symbol table associated with this ELF file, or null if one does not exist.
 	 */
-	public ElfStringTable getDynamicStringTable() throws ElfException, IOException {
+	public ElfStringTable getDynamicStringTable() throws ElfException {
 		return findStringTableWithName(ElfSectionHeader.NAME_DYNSTR);
 	}
 
-	private ElfStringTable findStringTableWithName(String tableName) throws ElfException, IOException {
+	private ElfStringTable findStringTableWithName(String tableName) throws ElfException {
 		// Loop through the section header and look for a section
 		// header with the name "tableName". We can ignore entry 0
 		// since it is defined as being undefined.
@@ -206,7 +206,7 @@ public final class ElfFile {
 		return null;
 	}
 
-	public ElfSection firstSectionByName(String sectionName) throws ElfException, IOException {
+	public ElfSection firstSectionByName(String sectionName) throws ElfException {
 		for (int i = 1; i < num_sh; i++) {
 			ElfSection sh = getSection(i);
 			if (sectionName.equals(sh.header.getName())) return sh;
@@ -280,7 +280,7 @@ public final class ElfFile {
 		return null;
 	}
 
-	public ElfSegment getProgramHeader(int index) throws IOException {
+	public ElfSegment getProgramHeader(int index) {
 		return programHeaders[index].getValue();
 	}
 
@@ -380,7 +380,7 @@ public final class ElfFile {
 			final long sectionHeaderOffset = sh_offset + (i * sh_entry_size);
 			sections[i] = new MemoizedObject<ElfSection>() {
 				@Override
-				public ElfSection computeValue() throws ElfException, IOException {
+				public ElfSection computeValue() throws ElfException {
 					ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, sectionHeaderOffset);
 					switch (elfSectionHeader.type) {
 						case ElfSectionHeader.SHT_DYNAMIC:
@@ -394,6 +394,8 @@ public final class ElfFile {
                             return new ElfHashTable(parser, elfSectionHeader);
 						case ElfSectionHeader.SHT_NOTE:
 							return new ElfNoteSection(parser, elfSectionHeader);
+						case ElfSectionHeader.SHT_RELA:
+							return new ElfRelocationSection(parser, elfSectionHeader);
 						default:
 							return new ElfSection(elfSectionHeader);
 					}
@@ -406,7 +408,7 @@ public final class ElfFile {
 			final long programHeaderOffset = ph_offset + (i * ph_entry_size);
 			programHeaders[i] = new MemoizedObject<ElfSegment>() {
 				@Override
-				public ElfSegment computeValue() throws IOException {
+				public ElfSegment computeValue() {
 					return new ElfSegment(parser, programHeaderOffset);
 				}
 			};

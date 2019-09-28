@@ -1,8 +1,17 @@
 package net.fornwall.jelf;
 
+/**
+ * An ELF section with symbol information.
+ *
+ * This class represents either of two section types:
+ * <ul>
+ *     <li>{@link ElfSectionHeader#SHT_DYNSYM}: For a minimal set of symbols adequate for dynamic linking. Can be stripped and has no runtime cost (is non-allocable). Normally named ".dynsym".</li>
+ *     <li>{@link ElfSectionHeader#SHT_SYMTAB}: A complete symbol table typically used for link editing. Can not be stripped (is allocable). Normally named ".symtab".</li>
+ * </ul>
+ */
 public class ElfSymbolTableSection extends ElfSection {
 
-    public ElfSymbol[] symbols;
+    public final ElfSymbol[] symbols;
 
     public ElfSymbolTableSection(ElfParser parser, ElfSectionHeader header) {
         super(header);

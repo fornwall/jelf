@@ -55,14 +55,18 @@ class BackingFile {
         return (short) val;
     }
 
-    public int read(byte[] data) throws IOException {
+    public int read(byte[] data) {
         if (byteArray != null) {
-            return byteArray.read(data);
+            try {
+                return byteArray.read(data);
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading " + data.length + " bytes", e);
+            }
         } else if (mappedByteBuffer != null) {
             mappedByteBuffer.get(data);
             return data.length;
         }
-        throw new IOException("No way to read from file or buffer");
+        throw new RuntimeException("No way to read from file or buffer");
     }
 
 }

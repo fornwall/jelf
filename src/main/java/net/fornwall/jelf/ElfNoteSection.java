@@ -70,14 +70,14 @@ class ElfNoteSection extends ElfSection {
     private byte[] descriptorBytes;
     private final GnuAbiDescriptor gnuAbiDescriptor;
 
-    ElfNoteSection(ElfParser parser, ElfSectionHeader header) throws ElfException, IOException {
+    ElfNoteSection(ElfParser parser, ElfSectionHeader header) throws ElfException {
         super(header);
 
         parser.seek(header.section_offset);
         nameSize = parser.readInt();
         descriptorSize = parser.readInt();
         type = parser.readInt();
-        byte nameBytes[] = new byte[nameSize];
+        byte[] nameBytes = new byte[nameSize];
         descriptorBytes = new byte[descriptorSize];
         int bytesRead = parser.read(nameBytes);
         if (bytesRead != nameSize) {

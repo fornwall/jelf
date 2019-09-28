@@ -96,6 +96,56 @@ class BasicTest {
 
 			ElfNoteSection noteSection = file.firstSectionByType(ElfNoteSection.class);
 			Assertions.assertSame(noteSection, noteSections.get(0));
+
+			ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
+			Assertions.assertEquals(".dynsym", dynsym.header.getName());
+			Assertions.assertEquals(768, dynsym.symbols.length);
+
+			ElfSymbol symbol = dynsym.symbols[0];
+			Assertions.assertNull(symbol.getName());
+			Assertions.assertEquals(ElfSymbol.STT_NOTYPE, symbol.getType());
+			Assertions.assertEquals(0, symbol.st_size);
+			Assertions.assertEquals(ElfSymbol.BINDING_LOCAL, symbol.getBinding());
+			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
+			symbol = dynsym.symbols[1];
+			Assertions.assertEquals("__cxa_finalize", symbol.getName());
+			Assertions.assertEquals(ElfSymbol.STT_FUNC, symbol.getType());
+			Assertions.assertEquals(0, symbol.st_size);
+			Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
+			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
+			symbol = dynsym.symbols[767];
+			Assertions.assertEquals("_Unwind_GetTextRelBase", symbol.getName());
+			Assertions.assertEquals(ElfSymbol.STT_FUNC, symbol.getType());
+			Assertions.assertEquals(8, symbol.st_size);
+			Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
+			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
+
+			ElfSymbolTableSection symtab = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_SYMTAB);
+			Assertions.assertEquals(".symtab", symtab.header.getName());
+			Assertions.assertEquals(2149, symtab.symbols.length);
+			symbol = symtab.symbols[0];
+			Assertions.assertNull(symbol.getName());
+			Assertions.assertEquals(ElfSymbol.STT_NOTYPE, symbol.getType());
+			Assertions.assertEquals(ElfSymbol.BINDING_LOCAL, symbol.getBinding());
+			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
+			symbol = symtab.symbols[1];
+			Assertions.assertEquals("crtbegin_so.c", symbol.getName());
+			Assertions.assertEquals(ElfSymbol.STT_FILE, symbol.getType());
+			Assertions.assertEquals(ElfSymbol.BINDING_LOCAL, symbol.getBinding());
+			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
+			symbol = symtab.symbols[2148];
+			Assertions.assertEquals("_Unwind_GetTextRelBase", symbol.getName());
+			Assertions.assertEquals(ElfSymbol.STT_FUNC, symbol.getType());
+			Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
+			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
+
+			ElfHashTable hashTable = file.firstSectionByType(ElfHashTable.class);
+			for (ElfSymbol s : dynsym.symbols) {
+			    if (s.getName() != null) {
+					Assertions.assertSame(s, hashTable.lookupSymbol(s.getName(), dynsym));
+				}
+			}
+			Assertions.assertNull(hashTable.lookupSymbol("non_existing", dynsym));
 		});
 	}
 

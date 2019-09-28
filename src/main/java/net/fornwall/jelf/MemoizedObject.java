@@ -13,10 +13,10 @@ abstract class MemoizedObject<T> {
 	 * Should compute the value of this memoized object. This will only be called once, upon the first call to
 	 * {@link #getValue}.
 	 */
-	protected abstract T computeValue() throws ElfException, IOException;
+	protected abstract T computeValue() throws ElfException;
 
 	/** Public accessor for the memoized value. */
-	public final T getValue() throws ElfException, IOException {
+	public final T getValue() throws ElfException {
 		if (!computed) {
 			value = computeValue();
 			computed = true;

@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * http://www.sco.com/developers/gabi/latest/ch5.dynamic.html#dynamic_section
- * 
- * "If an object file participates in dynamic linking, its program header table will have an element of type PT_DYNAMIC. This ``segment'' contains the .dynamic
- * section. A special symbol, _DYNAMIC, labels the section, which contains an array of the following structures."
- * 
+ * An {@link ElfSection} with information necessary for dynamic linking.
+ *
+ * This section contains a list of {@link ElfDynamicStructure}
+ *
  * <pre>
  * typedef struct { Elf32_Sword d_tag; union { Elf32_Word d_val; Elf32_Addr d_ptr; } d_un; } Elf32_Dyn;
  * extern Elf32_Dyn _DYNAMIC[];
@@ -105,20 +104,52 @@ public class ElfDynamicSection extends ElfSection {
 	private final int[] dtNeeded;
 	public final List<ElfDynamicStructure> entries = new ArrayList<>();
 
+	/**
+	 * An entry in the {@link #entries} of a {@link ElfDynamicSection}.
+	 *
+	 * In the elf.h header file this represents either of the following structures:
+	 *
+	 * <pre>
+	 * typedef struct {
+	 *     Elf32_Sword d_tag;
+	 *     union {
+	 *         Elf32_Word      d_val;
+	 *         Elf32_Addr      d_ptr;
+	 *         Elf32_Off       d_off;
+	 *     } d_un;
+	 * } Elf32_Dyn;
+	 *
+	 * typedef struct {
+	 *     Elf64_Xword d_tag;
+	 *     union {
+	 *         Elf64_Xword d_val;
+	 *         Elf64_Addr d_ptr;
+	 *     } d_un;
+	 * } Elf64_Dyn;
+	 * </pre>
+	 */
 	public static class ElfDynamicStructure {
 		public ElfDynamicStructure(long d_tag, long d_val_or_ptr) {
-			this.d_tag = d_tag;
+			this.tag = d_tag;
 			this.d_val_or_ptr = d_val_or_ptr;
 		}
 
-		public long d_tag;
-		public long d_val_or_ptr;
+		/**
+         * A tag value whose value defines how to interpret {@link #d_val_or_ptr}.
+		 *
+		 * One of the DT_* constants in {@link ElfDynamicSection}.
+		 */
+		public final long tag;
+		/**
+		 * A field whose value is to be interpreted as specified by the {@link #tag}.
+		 */
+		public final long d_val_or_ptr;
 
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + (int) (d_tag ^ (d_tag >>> 32));
+			result = prime * result + (int) (tag ^ (tag >>> 32));
 			result = prime * result + (int) (d_val_or_ptr ^ (d_val_or_ptr >>> 32));
 			return result;
 		}
@@ -129,13 +160,13 @@ public class ElfDynamicSection extends ElfSection {
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
 			ElfDynamicStructure other = (ElfDynamicStructure) obj;
-			if (d_tag != other.d_tag) return false;
+			if (tag != other.tag) return false;
 			return d_val_or_ptr == other.d_val_or_ptr;
 		}
 
 		@Override
 		public String toString() {
-			return "ElfDynamicSectionEntry[" + d_tag + ", " + d_val_or_ptr + "]";
+			return "ElfDynamicSectionEntry[" + tag + ", " + d_val_or_ptr + "]";
 		}
 	}
 
@@ -163,7 +194,7 @@ public class ElfDynamicSection extends ElfSection {
 			case DT_STRTAB: {
 				dtStringTable = new MemoizedObject<ElfStringTable>() {
 					@Override
-					protected ElfStringTable computeValue() throws ElfException, IOException {
+					protected ElfStringTable computeValue() throws ElfException {
 						long fileOffsetForStringTable = parser.virtualMemoryAddrToFileOffset(d_val_or_ptr);
 						return new ElfStringTable(parser, fileOffsetForStringTable, dt_strtab_size, null); // FIXME: null header
 					}
@@ -192,7 +223,7 @@ public class ElfDynamicSection extends ElfSection {
 
 	public String getRunPath() throws IOException {
 		for (ElfDynamicStructure entry : entries) {
-			if (entry.d_tag == DT_RUNPATH) {
+			if (entry.tag == DT_RUNPATH) {
 				ElfStringTable stringTable = dtStringTable.getValue();
 				return stringTable.get((int) entry.d_val_or_ptr);
 			}

@@ -16,7 +16,7 @@ final class ElfStringTable extends ElfSection {
 	public final int numStrings;
 
 	/** Reads all the strings from [offset, length]. */
-	ElfStringTable(ElfParser parser, long offset, int length, ElfSectionHeader header) throws ElfException, IOException {
+	ElfStringTable(ElfParser parser, long offset, int length, ElfSectionHeader header) throws ElfException {
 		super(header);
 
 		parser.seek(offset);

@@ -1,9 +1,5 @@
 package net.fornwall.jelf;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.MappedByteBuffer;
-
 /** Package internal class used for parsing ELF files. */
 class ElfParser {
 
@@ -98,7 +94,7 @@ class ElfParser {
 	 * Find the file offset from a virtual address by looking up the {@link ElfSegment} segment containing the
 	 * address and computing the resulting file offset.
 	 */
-	long virtualMemoryAddrToFileOffset(long address) throws IOException {
+	long virtualMemoryAddrToFileOffset(long address) {
 		for (int i = 0; i < elfFile.num_ph; i++) {
 			ElfSegment ph = elfFile.getProgramHeader(i);
 			if (address >= ph.virtual_address && address < (ph.virtual_address + ph.mem_size)) {
@@ -112,7 +108,7 @@ class ElfParser {
 		throw new ElfException("Cannot find segment for address " + Long.toHexString(address));
 	}
 
-	public int read(byte[] data) throws IOException {
+	public int read(byte[] data) {
 	    return backingFile.read(data);
 	}
 
