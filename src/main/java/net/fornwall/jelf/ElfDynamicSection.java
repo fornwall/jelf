@@ -83,6 +83,7 @@ public class ElfDynamicSection extends ElfSection {
 	public static final int DT_SONAME = 14;
 	public static final int DT_RPATH = 15;
 	public static final int DT_RUNPATH = 29;
+	public static final int DT_GNU_HASH = 0x6ffffef5;
 	public static final int DT_FLAGS_1 = 0x6ffffffb;
 	public static final int DT_VERDEF = 0x6ffffffc; /* Address of version definition */
 	public static final int DT_VERDEFNUM = 0x6ffffffd; /* Number of version definitions */

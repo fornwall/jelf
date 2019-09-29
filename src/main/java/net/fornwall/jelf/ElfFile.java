@@ -176,21 +176,21 @@ public final class ElfFile {
 	}
 
 	/** The {@link ElfSectionHeader#SHT_SYMTAB} section (of which there may be only one), if any. */
-	public ElfSymbolTableSection getSymbolTableSection() throws ElfException, IOException {
+	public ElfSymbolTableSection getSymbolTableSection() throws ElfException {
 		return (symbolTableSection != null) ? symbolTableSection : (symbolTableSection = (ElfSymbolTableSection) firstSectionByType(ElfSectionHeader.SHT_SYMTAB));
 	}
 
 	/** The {@link ElfSectionHeader#SHT_DYNSYM} section (of which there may be only one), if any. */
-	public ElfSymbolTableSection getDynamicSymbolTableSection() throws ElfException, IOException {
+	public ElfSymbolTableSection getDynamicSymbolTableSection() throws ElfException {
 		return (dynamicSymbolTableSection != null) ? dynamicSymbolTableSection : (dynamicSymbolTableSection = (ElfSymbolTableSection) firstSectionByType(ElfSectionHeader.SHT_DYNSYM));
 	}
 
 	/** The {@link ElfSectionHeader#SHT_DYNAMIC} section (of which there may be only one). Named ".dynamic". */
-	public ElfDynamicSection getDynamicSection() throws IOException {
+	public ElfDynamicSection getDynamicSection() {
 		return (dynamicSection != null) ? dynamicSection : (dynamicSection = (ElfDynamicSection) firstSectionByType(ElfSectionHeader.SHT_DYNAMIC));
 	}
 
-	public ElfSection firstSectionByType(int type) throws ElfException, IOException {
+	public ElfSection firstSectionByType(int type) throws ElfException {
 		for (int i = 1; i < num_sh; i++) {
 			ElfSection sh = getSection(i);
 			if (sh.header.type == type) return sh;
@@ -198,7 +198,7 @@ public final class ElfFile {
 		return null;
 	}
 
-	public <T extends ElfSection> T firstSectionByType(Class<T> type) throws ElfException, IOException {
+	public <T extends ElfSection> T firstSectionByType(Class<T> type) throws ElfException {
 		for (int i = 1; i < num_sh; i++) {
 			ElfSection sh = getSection(i);
 			if (type.isInstance(sh)) return (T) sh;
@@ -396,6 +396,8 @@ public final class ElfFile {
 							return new ElfNoteSection(parser, elfSectionHeader);
 						case ElfSectionHeader.SHT_RELA:
 							return new ElfRelocationSection(parser, elfSectionHeader);
+						case ElfSectionHeader.SHT_GNU_HASH:
+							return new ElfGnuHashTable(parser, elfSectionHeader);
 						default:
 							return new ElfSection(elfSectionHeader);
 					}

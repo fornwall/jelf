@@ -1,5 +1,12 @@
 package net.fornwall.jelf;
 
+/**
+ * An ELF section containing a hash table for lookup of dynamic symbols.
+ *
+ * Note that this has been replaced with {@link ElfGnuHashTable} on modern Linux systems.
+ *
+ * See https://flapenguin.me/2017/04/24/elf-lookup-dt-hash/
+ */
 public class ElfHashTable extends ElfSection {
 
     private final int[] buckets;

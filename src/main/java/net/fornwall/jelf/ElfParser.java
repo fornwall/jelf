@@ -51,7 +51,7 @@ class ElfParser {
 		int ch2 = readUnsignedByte();
 		int ch3 = readUnsignedByte();
 		int ch4 = readUnsignedByte();
-		int val = ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+		int val = ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4));
 
 		if (elfFile.encoding == ElfFile.DATA_LSB) val = byteSwap(val);
 		return val;

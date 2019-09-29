@@ -70,6 +70,12 @@ public class ElfSectionHeader {
 	public static final int SHT_GROUP = 17;
 	public static final int SHT_SYMTAB_SHNDX = 18;
 
+	/**
+	 * A hash table for fast lookup of dynamic symbols.
+	 *
+	 * See {@link ElfGnuHashTable}.
+	 */
+	public static final int SHT_GNU_HASH = 0x6ffffff6;
 	public static final int SHT_GNU_verdef = 0x6ffffffd;
 	public static final int SHT_GNU_verneed = 0x6ffffffe;
 	public static final int SHT_GNU_versym = 0x6fffffff;

@@ -45,6 +45,31 @@ class BasicTest {
 		}
 	}
 
+	private void validateHashTable(ElfFile file) throws IOException {
+		ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
+
+		ElfHashTable hashTable = file.firstSectionByType(ElfHashTable.class);
+		if (hashTable != null) {
+			for (ElfSymbol s : dynsym.symbols) {
+				if (s.getName() != null) {
+					Assertions.assertSame(s, hashTable.lookupSymbol(s.getName(), dynsym));
+				}
+			}
+			Assertions.assertNull(hashTable.lookupSymbol("non_existing", dynsym));
+		}
+
+		ElfGnuHashTable gnuHashTable = file.firstSectionByType(ElfGnuHashTable.class);
+		if (gnuHashTable != null) {
+		    int i = 0;
+			for (ElfSymbol s : dynsym.symbols) {
+				if (i++ < gnuHashTable.symbolOffset) continue;
+				Assertions.assertSame(s, gnuHashTable.lookupSymbol(s.getName(), dynsym));
+			}
+			Assertions.assertNull(gnuHashTable.lookupSymbol("non_existing", dynsym));
+		}
+
+	}
+
 	@Test
 	void testAndroidArmBinTset() throws Exception {
 		parseFile("android_arm_tset", file -> {
@@ -75,6 +100,8 @@ class BasicTest {
 			Assertions.assertEquals(new ElfDynamicSection.ElfDynamicStructure(0x17, 0x8868), dynamic.entries.get(2));
 			Assertions.assertEquals(new ElfDynamicSection.ElfDynamicStructure(0x6ffffffb, 1), dynamic.entries.get(24));
 			Assertions.assertEquals(new ElfDynamicSection.ElfDynamicStructure(0, 0), dynamic.entries.get(25));
+
+			validateHashTable(file);
 		});
 	}
 
@@ -139,13 +166,7 @@ class BasicTest {
 			Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
 			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
 
-			ElfHashTable hashTable = file.firstSectionByType(ElfHashTable.class);
-			for (ElfSymbol s : dynsym.symbols) {
-			    if (s.getName() != null) {
-					Assertions.assertSame(s, hashTable.lookupSymbol(s.getName(), dynsym));
-				}
-			}
-			Assertions.assertNull(hashTable.lookupSymbol("non_existing", dynsym));
+			validateHashTable(file);
 		});
 	}
 
@@ -191,6 +212,8 @@ class BasicTest {
 			Assertions.assertEquals(0x0f, note2.descriptorBytes()[0]);
 			Assertions.assertArrayEquals(new byte[]{0x0f, 0x7f, (byte) 0xf2, (byte) 0x87, (byte) 0xcf, 0x26, (byte) 0xeb, (byte) 0xa9, (byte) 0xa6, 0x64, 0x3b, 0x12, 0x26, 0x08, (byte) 0x9e, (byte) 0xea, 0x57, (byte) 0xcb, 0x7e, 0x44},
 					note2.descriptorBytes());
+
+			validateHashTable(file);
 		});
 	}
 
