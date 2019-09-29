@@ -167,6 +167,14 @@ class BasicTest {
 			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
 
 			validateHashTable(file);
+
+			Assertions.assertTrue(file.getProgramHeader(0).isReadable());
+			Assertions.assertFalse(file.getProgramHeader(0).isWriteable());
+			Assertions.assertFalse(file.getProgramHeader(0).isExecutable());
+
+			Assertions.assertTrue(file.getProgramHeader(2).isReadable());
+			Assertions.assertFalse(file.getProgramHeader(2).isWriteable());
+			Assertions.assertTrue(file.getProgramHeader(2).isExecutable());
 		});
 	}
 

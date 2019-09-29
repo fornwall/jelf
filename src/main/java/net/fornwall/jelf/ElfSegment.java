@@ -160,9 +160,9 @@ public class ElfSegment {
 		}
 
 		String pFlagsString = "";
-		if ((flags & /* PF_R= */4) != 0) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "read";
-		if ((flags & /* PF_W= */2) != 0) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "write";
-		if ((flags & /* PF_X= */1) != 0) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "execute";
+		if (isReadable()) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "read";
+		if (isWriteable()) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "write";
+		if (isExecutable()) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "execute";
 
 		if (pFlagsString.isEmpty()) pFlagsString = "0x" + Long.toHexString(flags);
 
@@ -175,4 +175,15 @@ public class ElfSegment {
 		return (ptInterpreter == null) ? null : ptInterpreter.getValue();
 	}
 
+	public boolean isReadable() {
+		return (flags & /* PF_R= */4) != 0;
+	}
+
+	public boolean isWriteable() {
+		return (flags & /* PF_W= */2) != 0;
+	}
+
+	public boolean isExecutable() {
+		return (flags & /* PF_X= */1) != 0;
+	}
 }
