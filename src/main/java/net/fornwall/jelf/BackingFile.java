@@ -2,6 +2,7 @@ package net.fornwall.jelf;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.MappedByteBuffer;
 
 class BackingFile {
@@ -19,7 +20,7 @@ class BackingFile {
         this.byteArray = null;
         this.mappedByteBuffer = mappedByteBuffer;
         this.mbbStartPosition = 0;
-        mappedByteBuffer.position((int) mbbStartPosition);
+        ((Buffer)mappedByteBuffer).position((int) mbbStartPosition);
     }
 
     public void seek(long offset) {
@@ -27,7 +28,7 @@ class BackingFile {
             byteArray.reset();
             if (byteArray.skip(offset) != offset) throw new ElfException("seeking outside file");
         } else if (mappedByteBuffer != null) {
-            mappedByteBuffer.position((int)(mbbStartPosition + offset)); // we may be limited to sub-4GB mapped filess
+            ((Buffer)mappedByteBuffer).position((int)(mbbStartPosition + offset)); // we may be limited to sub-4GB mapped filess
         }
     }
 
@@ -38,7 +39,7 @@ class BackingFile {
                 throw new IllegalArgumentException("Wanted to skip " + bytesToSkip + " bytes, but only able to skip " + skipped);
             }
         } else {
-            mappedByteBuffer.position(mappedByteBuffer.position() + bytesToSkip);
+            ((Buffer)mappedByteBuffer).position(mappedByteBuffer.position() + bytesToSkip);
         }
     }
 
