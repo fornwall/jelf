@@ -252,10 +252,10 @@ public final class ElfFile {
 	 * Returns the elf symbol with the specified address or null if one is not found. 'address' is relative to base of
 	 * shared object for .so's.
 	 */
-	public ElfSymbol getELFSymbol(long address) throws ElfException, IOException {
+	public ElfSymbol getELFSymbol(long address) throws ElfException {
 		// Check dynamic symbol table for address.
-		ElfSymbol symbol = null;
-		long value = 0L;
+		ElfSymbol symbol;
+		long value;
 
 		ElfSymbolTableSection sh = getDynamicSymbolTableSection();
 		if (sh != null) {
