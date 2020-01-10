@@ -88,8 +88,11 @@ class BasicTest {
 
 			ElfDynamicSection dynamic = file.getDynamicSection();
 			Assertions.assertNotNull(dynamic);
+			Assertions.assertEquals(".dynamic", dynamic.header.getName());
 			Assertions.assertEquals(8, dynamic.header.entry_size);
 			Assertions.assertEquals(248, dynamic.header.size);
+			Assertions.assertEquals(ElfDynamicSection.DF_BIND_NOW, dynamic.getFlags());
+			Assertions.assertEquals(ElfDynamicSection.DF_1_NOW, dynamic.getFlags1());
 
 			Assertions.assertEquals(Arrays.asList("libncursesw.so.6", "libc.so", "libdl.so"), dynamic.getNeededLibraries());
 			Assertions.assertEquals("/data/data/com.termux/files/usr/lib", dynamic.getRunPath());
@@ -122,6 +125,7 @@ class BasicTest {
 			Assertions.assertEquals("gold 1.11", ((ElfNoteSection) noteSections.get(0)).descriptorAsString());
 
 			ElfNoteSection noteSection = file.firstSectionByType(ElfNoteSection.class);
+			Assertions.assertEquals(".note.gnu.gold-version", noteSection.header.getName());
 			Assertions.assertSame(noteSection, noteSections.get(0));
 
 			ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
@@ -167,6 +171,10 @@ class BasicTest {
 			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
 
 			validateHashTable(file);
+
+			ElfDynamicSection dynamic = file.firstSectionByType(ElfDynamicSection.class);
+			Assertions.assertEquals(ElfDynamicSection.DF_SYMBOLIC | ElfDynamicSection.DF_BIND_NOW, dynamic.getFlags());
+			Assertions.assertEquals(ElfDynamicSection.DF_1_NOW, dynamic.getFlags1());
 
 			Assertions.assertTrue(file.getProgramHeader(0).isReadable());
 			Assertions.assertFalse(file.getProgramHeader(0).isWriteable());
