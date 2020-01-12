@@ -1,7 +1,7 @@
 package net.fornwall.jelf;
 
 /**
- * An entry in the symbol table, which holds information needed to locate and relocate a program's symbolic definitions and references.
+ * An entry in the {@link ElfSymbolTableSection}, which holds information needed to locate and relocate a program's symbolic definitions and references.
  * <p>
  * In the elf.h header file the struct definitions are:
  *

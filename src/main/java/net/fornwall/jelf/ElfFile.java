@@ -32,14 +32,14 @@ import java.util.List;
  */
 public final class ElfFile {
 
-	/** Relocatable file type. A possible value of {@link #file_type}. */
-	public static final int FT_REL = 1;
-	/** Executable file type. A possible value of {@link #file_type}. */
-	public static final int FT_EXEC = 2;
-	/** Shared object file type. A possible value of {@link #file_type}. */
-	public static final int FT_DYN = 3;
-	/** Core file file type. A possible value of {@link #file_type}. */
-	public static final int FT_CORE = 4;
+	/** Relocatable file type. A possible value of {@link #e_type}. */
+	public static final int ET_REL = 1;
+	/** Executable file type. A possible value of {@link #e_type}. */
+	public static final int ET_EXEC = 2;
+	/** Shared object file type. A possible value of {@link #e_type}. */
+	public static final int ET_DYN = 3;
+	/** Core file file type. A possible value of {@link #e_type}. */
+	public static final int ET_CORE = 4;
 
 	/** 32-bit objects. */
 	public static final byte CLASS_32 = 1;
@@ -71,6 +71,8 @@ public final class ElfFile {
 	public static final int ARCH_X86_64 = 0x3E;
 	public static final int ARCH_AARCH64 = 0xB7;
 
+	/** Identifies the object file type. One of the ET_* constants in the class. */
+	public final short e_type; // Elf32_Half
 	/** Byte identifying the size of objects, either {@link #CLASS_32} or {link {@value #CLASS_64} . */
 	public final byte objectSize;
 
@@ -84,8 +86,6 @@ public final class ElfFile {
     public final byte abi;
     public final byte abiVersion;
 
-	/** Identifies the object file type. One of the FT_* constants in the class. */
-	public final short file_type; // Elf32_Half
 	/** The required architecture. One of the ARCH_* constants in the class. */
 	public final short arch; // Elf32_Half
 	/** Version */
@@ -353,7 +353,7 @@ public final class ElfFile {
 		abiVersion = ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
 		// ident[9-15] // EI_PAD, currently unused.
 
-		file_type = parser.readShort();
+		e_type = parser.readShort();
 		arch = parser.readShort();
 		version = parser.readInt();
 		entry_point = parser.readIntOrLong();

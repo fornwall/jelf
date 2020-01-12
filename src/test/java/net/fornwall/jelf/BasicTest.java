@@ -3,7 +3,6 @@ package net.fornwall.jelf;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -33,7 +32,7 @@ class BasicTest {
 		}
 	}
 
-	private static void assertSectionNames(ElfFile file, String... expectedSectionNames) throws IOException {
+	private static void assertSectionNames(ElfFile file, String... expectedSectionNames) {
 		for (int i = 0; i < expectedSectionNames.length; i++) {
 			String expected = expectedSectionNames[i];
 			String actual = file.getSection(i).header.getName();
@@ -45,7 +44,7 @@ class BasicTest {
 		}
 	}
 
-	private void validateHashTable(ElfFile file) throws IOException {
+	private void validateHashTable(ElfFile file) {
 		ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
 
 		ElfHashTable hashTable = file.firstSectionByType(ElfHashTable.class);
@@ -75,7 +74,7 @@ class BasicTest {
 		parseFile("android_arm_tset", file -> {
 			Assertions.assertEquals(ElfFile.CLASS_32, file.objectSize);
 			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
-			Assertions.assertEquals(ElfFile.FT_EXEC, file.file_type);
+			Assertions.assertEquals(ElfFile.ET_EXEC, file.e_type);
 			Assertions.assertEquals(ElfFile.ARCH_ARM, file.arch);
 			Assertions.assertEquals(32, file.ph_entry_size);
 			Assertions.assertEquals(7, file.num_ph);
@@ -113,7 +112,7 @@ class BasicTest {
 		parseFile("android_arm_libncurses", file -> {
 			Assertions.assertEquals(ElfFile.CLASS_32, file.objectSize);
 			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
-			Assertions.assertEquals(ElfFile.FT_DYN, file.file_type);
+			Assertions.assertEquals(ElfFile.ET_DYN, file.e_type);
 			Assertions.assertEquals(ElfFile.ARCH_ARM, file.arch);
 			Assertions.assertEquals("/system/bin/linker", file.getInterpreter());
 
@@ -191,7 +190,7 @@ class BasicTest {
 		parseFile("linux_amd64_bindash", file -> {
 			Assertions.assertEquals(ElfFile.CLASS_64, file.objectSize);
 			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
-			Assertions.assertEquals(ElfFile.FT_DYN, file.file_type);
+			Assertions.assertEquals(ElfFile.ET_DYN, file.e_type);
 			Assertions.assertEquals(ElfFile.ARCH_X86_64, file.arch);
 			Assertions.assertEquals(56, file.ph_entry_size);
 			Assertions.assertEquals(9, file.num_ph);
