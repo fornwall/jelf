@@ -1,10 +1,10 @@
 # JElf
-Java library for parsing [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) files.
+Java library for parsing [Executable and Linkable Format (ELF)](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) files.
 
-[![Build Status](https://img.shields.io/travis/fornwall/jelf)](https://travis-ci.org/fornwall/jelf)
+[![Build Status](https://github.com/fornwall/jelf/workflows/Java%20CI/badge.svg)](https://github.com/fornwall/jelf/actions?query=workflow%3A%22Java+CI%22)
 [![MIT licensed](http://img.shields.io/:license-MIT-blue.svg)](LICENSE.txt)
-[![javadoc](https://www.javadoc.io/badge/net.fornwall/jelf.svg)](https://www.javadoc.io/doc/net.fornwall/jelf)
 [![Package on Maven Central](https://img.shields.io/maven-central/v/net.fornwall/jelf)](https://search.maven.org/artifact/net.fornwall/jelf/)
+[![javadoc](https://www.javadoc.io/badge/net.fornwall/jelf.svg)](https://www.javadoc.io/doc/net.fornwall/jelf)
 
 ## Adding JElf to your build
 
