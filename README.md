@@ -24,7 +24,7 @@ To add a dependency using Gradle:
 
 ```gradle
 dependencies {
-    implementation 'net.fornwall:jelf:0.4.3'
+    implementation 'net.fornwall:jelf:0.4.5'
 }
 ```
 
