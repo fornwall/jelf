@@ -16,7 +16,7 @@ To add a dependency on JElf using Maven, use the following:
 <dependency>
     <groupId>net.fornwall</groupId>
     <artifactId>jelf</artifactId>
-    <version>0.4.3</version>
+    <version>0.4.5</version>
 </dependency>
 ```
 
