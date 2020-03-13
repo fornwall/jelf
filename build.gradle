@@ -17,6 +17,7 @@ dependencies {
 }
 
 test {
+	systemProperty "jelf.version", project.version.toString()
 	useJUnitPlatform()
 	afterTest { desc, result ->
 		println "Test ${desc.name} [${desc.className}] result: ${result.resultType}"
