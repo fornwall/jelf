@@ -10,7 +10,7 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
-version = "0.4.4"
+version = "0.4.5"
 
 dependencies {
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
