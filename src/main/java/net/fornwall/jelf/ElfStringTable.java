@@ -9,7 +9,7 @@ import java.io.IOException;
  *
  * You reference a string as an index into the string table section.
  */
-final class ElfStringTable extends ElfSection {
+final public class ElfStringTable extends ElfSection {
 
 	/** The string table data. */
 	private final byte[] data;
@@ -30,7 +30,7 @@ final class ElfStringTable extends ElfSection {
 		numStrings = stringsCount;
 	}
 
-	String get(int index) {
+	public String get(int index) {
 		int endPtr = index;
 		while (data[endPtr] != '\0')
 			endPtr++;
