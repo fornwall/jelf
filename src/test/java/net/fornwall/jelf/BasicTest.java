@@ -232,4 +232,24 @@ class BasicTest {
 		});
 	}
 
+	@Test
+	public void testObjectFile() throws Exception {
+		parseFile("objectFile.o", file -> {
+			Assertions.assertEquals(ElfFile.CLASS_32, file.objectSize);
+			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
+			Assertions.assertEquals(ElfFile.ET_REL, file.e_type);
+			assertSectionNames(file, null, ".text", ".rel.text", ".data", ".bss",
+					".comment", ".ARM.attributes", ".symtab", ".strtab", ".shstrtab");
+
+			List<ElfSection> sections = file.sectionsOfType(ElfSectionHeader.SHT_REL);
+			Assertions.assertEquals(1, sections.size());
+			ElfRelocationSection relocations = (ElfRelocationSection) sections.get(0);
+			Assertions.assertEquals(1, relocations.relocations.length);
+
+			ElfRelocation rel = relocations.relocations[0];
+			Assertions.assertEquals(0x0000_0006, rel.r_offset);
+			Assertions.assertEquals(0x0000_080A, rel.r_info);
+		});
+	}
+
 }
