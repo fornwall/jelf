@@ -21,7 +21,7 @@ import java.util.List;
  *     <li>{@link #from(InputStream)}</li>
  *     <li>{@link #from(MappedByteBuffer)}</li>
  * </ul>
- * 
+ *
  * Resources about ELF files:
  * <ul>
  *  <li>http://man7.org/linux/man-pages/man5/elf.5.html</li>
@@ -336,7 +336,7 @@ public final class ElfFile {
 	private ElfFile(BackingFile backingFile) throws ElfException, IOException {
 		final ElfParser parser = new ElfParser(this, backingFile);
 
-		byte[] ident = new byte[16];        
+		byte[] ident = new byte[16];
 		int bytesRead = parser.read(ident);
 		if (bytesRead != ident.length)
 			throw new ElfException("Error reading elf header (read " + bytesRead + "bytes - expected to read " + ident.length + "bytes)");
@@ -395,6 +395,8 @@ public final class ElfFile {
 						case ElfSectionHeader.SHT_NOTE:
 							return new ElfNoteSection(parser, elfSectionHeader);
 						case ElfSectionHeader.SHT_RELA:
+							return new ElfRelocationAddendSection(parser, elfSectionHeader);
+						case ElfSectionHeader.SHT_REL:
 							return new ElfRelocationSection(parser, elfSectionHeader);
 						case ElfSectionHeader.SHT_GNU_HASH:
 							return new ElfGnuHashTable(parser, elfSectionHeader);
