@@ -10,3 +10,8 @@
 build/
 bin/
 gradle.properties
+
+# Eclipse
+.classpath
+.project
+.settings
