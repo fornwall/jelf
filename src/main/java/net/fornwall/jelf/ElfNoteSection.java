@@ -13,7 +13,7 @@ public class ElfNoteSection extends ElfSection {
      * word 0: number of entries
      * word 1: bitmask of enabled entries
      * Then follow variable-length entries, one byte followed by a '\0'-terminated hwcap name string.  The byte gives the bit
-     * number to test if enabled, <code>(1U << bit) & bitmask</code>.
+     * number to test if enabled, <code>(1U &lt;&lt; bit) &amp; bitmask</code>.
      */
     public static final int NT_GNU_HWCAP = 2;
     /**
