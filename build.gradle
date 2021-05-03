@@ -1,20 +1,25 @@
 plugins {
-	id "com.jfrog.bintray" version "1.8.4"
+	id 'signing'
+	id "maven-publish"
+	id "java-library"
 }
 
 repositories {
-	jcenter()
+	mavenCentral()
 }
 
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-
-sourceCompatibility = 1.8
+group = "net.fornwall"
 version = "0.5.0"
+sourceCompatibility = 1.8
 
 dependencies {
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
 	testRuntimeOnly "org.junit.platform:junit-platform-commons:1.7.0"
+}
+
+java {
+	withJavadocJar()
+	withSourcesJar()
 }
 
 test {
@@ -25,71 +30,73 @@ test {
 	}
 }
 
-def pomConfig = {
-	licenses {
-		license {
-			name 'The MIT License'
-			url 'https://opensource.org/licenses/MIT'
-			distribution 'repo'
-		}
-	}
-	developers {
-		developer {
-			id 'fornwall'
-			name 'Fredrik Fornwall'
-			email 'fredrik@fornwall.net'
-		}
-	}
-	scm {
-		url "https://github.com/fornwall/jelf"
-	}
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = 'sources'
-	from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-	classifier = 'javadoc'
-	from javadoc.destinationDir
-}
-
-// See https://github.com/bintray/gradle-bintray-plugin
+// See https://docs.gradle.org/current/userguide/publishing_maven.html
+// and https://github.com/igr/repo-url-parser/blob/master/build.gradle
+//
+// Setup signing credentials with as described in
+// https://docs.gradle.org/current/userguide/signing_plugin.html
+// with the following gradle properties:
+//    signing.keyId=XXX
+//    signing.password=YYY
+//    signing.secretKeyRingFile=ZZZ
+//
+// Then publish to local (~/.m2/) and remote with:
+//    ./gradlew publishToMavenLocal
+//    ./gradlew -PsonatypeUsername=XXX -PsonatypePassword=YYY publishMavenJavaPublicationToMavenRepository
+//
+// Finally sign in to https://oss.sonatype.org/ to Close and Release as described at
+// https://central.sonatype.org/publish/release/
+ext.admin = hasProperty('sonatypeUsername')
 publishing {
 	publications {
-		MyPublication(MavenPublication) {
+		mavenJava(MavenPublication) {
+			artifactId = 'jelf'
 			from components.java
-			artifact sourcesJar
-			artifact javadocJar
-			groupId 'net.fornwall'
-			artifactId 'jelf'
-			version this.version
-			pom.withXml {
-				def root = asNode()
-				root.appendNode('description', 'ELF parsing library in java')
-				root.appendNode('name', 'JElf')
-				root.appendNode('url', 'https://github.com/fornwall/jelf')
-				root.children().last() + pomConfig
+			pom {
+				name = 'JElf'
+				description = 'ELF parsing library in java'
+				url = 'https://github.com/fornwall/jelf'
+				licenses {
+					license {
+						name = 'The MIT License'
+						url = 'https://opensource.org/licenses/MIT'
+					}
+				}
+				developers {
+					developer {
+						id = 'fornwall'
+						name = 'Fredrik Fornwall'
+						email = 'fredrik@fornwall.net'
+					}
+				}
+				scm {
+					connection = 'scm:git:git://github.com/fornwall/jelf.git'
+					developerConnection = 'scm:git:ssh://git@github.com/fornwall/jelf.git'
+					url = 'http://github.com/fornwall/jelf/'
+				}
+			}
+		}
+	}
+	repositories {
+		maven {
+			url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+			if (admin) {
+				credentials {
+					username = project.property('sonatypeUsername')
+					password = project.property('sonatypePassword')
+				}
 			}
 		}
 	}
 }
 
-bintray {
-	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-	publications = ['MyPublication']
-	pkg {
-		repo = 'maven'
-		userOrg = user
-		name = 'jelf'
-		labels = ['java', 'elf']
-		version {
-			gpg {
-				sign = true
-				passphrase = project.hasProperty('gpg.passphrase') ? project.property('gpg.passphrase') : null
-			}
-		}
+signing {
+	sign publishing.publications.mavenJava
+}
+
+javadoc {
+	if (JavaVersion.current().isJava9Compatible()) {
+		options.addBooleanOption('html5', true)
 	}
 }
+
