@@ -290,7 +290,7 @@ public final class ElfFile {
     public <T extends ElfSection> T firstSectionByType(Class<T> type) throws ElfException {
         for (int i = 1; i < num_sh; i++) {
             ElfSection sh = getSection(i);
-            if (type.isInstance(sh)) return (T) sh;
+            if (type.isInstance(sh)) return type.cast(sh);
         }
         return null;
     }
