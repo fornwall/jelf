@@ -50,7 +50,7 @@ public final class ElfSymbol {
         STV_HIDDEN,
         /**
          * A symbol defined in the current component is protected if it is visible in other components but cannot be preempted.
-         *
+         * <p>
          * Any reference to such a symbol from within the defining component must be resolved to the definition in that component, even if there is a definition in another component that would interpose by the default rules. A symbol with STB_LOCAL binding will not have STV_PROTECTED visibility.
          */
         STV_PROTECTED
@@ -203,14 +203,18 @@ public final class ElfSymbol {
     }
 
     /**
-     * Returns the binding for this symbol.
+     * Returns the binding for this symbol, extracted from the {@link #st_info} field.
+     *
+     * @return the binding for this symbol
      */
     public int getBinding() {
         return st_info >> 4;
     }
 
     /**
-     * Returns the symbol type.
+     * Returns the symbol type, extracted from the {@link #st_info} field.
+     *
+     * @return the type of this symbol
      */
     public int getType() {
         return st_info & 0x0F;
@@ -218,6 +222,8 @@ public final class ElfSymbol {
 
     /**
      * Returns the name of the symbol or null if the symbol has no name.
+     *
+     * @return the name of this symbol, if any
      */
     public String getName() throws ElfException {
         // Check to make sure this symbol has a name.

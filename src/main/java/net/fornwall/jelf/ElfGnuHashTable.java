@@ -14,10 +14,10 @@ public class ElfGnuHashTable extends ElfSection {
     private final ElfParser parser;
     private final int ELFCLASS_BITS;
     // The number of .dynsym symbols skipped.
-    int symbolOffset;
-    int bloomShift;
-    long[] bloomFilter;
-    int[] buckets;
+    final int symbolOffset;
+    final int bloomShift;
+    final long[] bloomFilter;
+    final int[] buckets;
     int[] chain;
 
     ElfGnuHashTable(ElfParser parser, ElfSectionHeader header) {

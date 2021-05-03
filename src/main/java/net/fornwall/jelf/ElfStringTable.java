@@ -1,7 +1,5 @@
 package net.fornwall.jelf;
 
-import java.io.IOException;
-
 /**
  * String table sections hold null-terminated character sequences, commonly called strings.
  *

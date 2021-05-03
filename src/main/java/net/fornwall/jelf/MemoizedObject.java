@@ -1,7 +1,5 @@
 package net.fornwall.jelf;
 
-import java.io.IOException;
-
 /**
  * A memoized object. Override {@link #computeValue} in subclasses; call {@link #getValue} in using code.
  */
