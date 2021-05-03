@@ -118,7 +118,7 @@ class BasicTest {
 
 			List<ElfSection> noteSections = file.sectionsOfType(ElfSectionHeader.SHT_NOTE);
 			Assertions.assertEquals(1, noteSections.size());
-			Assertions.assertEquals(".note.gnu.gold-version", ((ElfNoteSection) noteSections.get(0)).header.getName());
+			Assertions.assertEquals(".note.gnu.gold-version", noteSections.get(0).header.getName());
 			Assertions.assertEquals("GNU", ((ElfNoteSection) noteSections.get(0)).getName());
 			Assertions.assertEquals(ElfNoteSection.NT_GNU_GOLD_VERSION, ((ElfNoteSection) noteSections.get(0)).type);
 			Assertions.assertEquals("gold 1.11", ((ElfNoteSection) noteSections.get(0)).descriptorAsString());
