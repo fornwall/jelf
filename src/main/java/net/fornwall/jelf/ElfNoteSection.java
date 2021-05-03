@@ -1,8 +1,6 @@
 package net.fornwall.jelf;
 
-import java.io.IOException;
-
-class ElfNoteSection extends ElfSection {
+public class ElfNoteSection extends ElfSection {
 
     /**
      * A possible value of the {@link #type} where the description should contain {@link GnuAbiDescriptor}.
@@ -66,8 +64,8 @@ class ElfNoteSection extends ElfSection {
     public final /* uint32_t */ int nameSize;
     public final /* uint32_t */ int descriptorSize;
     public final /* uint32_t */ int type;
-    private String name;
-    private byte[] descriptorBytes;
+    private final String name;
+    private final byte[] descriptorBytes;
     private final GnuAbiDescriptor gnuAbiDescriptor;
 
     ElfNoteSection(ElfParser parser, ElfSectionHeader header) throws ElfException {
@@ -101,11 +99,11 @@ class ElfNoteSection extends ElfSection {
         name = new String(nameBytes, 0, nameSize-1); // unnecessary trailing 0
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 
-    byte[] descriptorBytes() {
+    public byte[] descriptorBytes() {
         return descriptorBytes;
     }
 
