@@ -6,7 +6,7 @@ package net.fornwall.jelf;
  * An executable or shared object file's program header table is an array of structures, each describing a segment or
  * other information the system needs to prepare the program for execution. An object file segment contains one or more
  * sections. Program headers are meaningful only for executable and shared object files. A file specifies its own
- * program header size with the ELF header's {@link ElfFile#ph_entry_size e_phentsize} and {@link ElfFile#num_ph
+ * program header size with the ELF header's {@link ElfFile#e_phentsize e_phentsize} and {@link ElfFile#e_phnum
  * e_phnum} members.
  * <p>
  * http://www.sco.com/developers/gabi/latest/ch5.pheader.html#p_type
@@ -70,39 +70,41 @@ public class ElfSegment {
     /**
      * Elf{32,64}_Phdr#p_type. Kind of segment this element describes.
      */
-    public final int type; // Elf32_Word/Elf64_Word - 4 bytes in both.
-    /**
-     * Elf{32,64}_Phdr#p_offset. File offset at which the first byte of the segment resides.
-     */
-    public final long offset; // Elf32_Off/Elf64_Off - 4 or 8 bytes.
-    /**
-     * Elf{32,64}_Phdr#p_vaddr. Virtual address at which the first byte of the segment resides in memory.
-     */
-    public final long virtual_address; // Elf32_Addr/Elf64_Addr - 4 or 8 bytes.
-    /**
-     * Reserved for the physical address of the segment on systems where physical addressing is relevant.
-     */
-    public final long physical_address; // Elf32_addr/Elf64_Addr - 4 or 8 bytes.
-
-    /**
-     * Elf{32,64}_Phdr#p_filesz. File image size of segment in bytes, may be 0.
-     */
-    public final long file_size; // Elf32_Word/Elf64_Xword -
-    /**
-     * Elf{32,64}_Phdr#p_memsz. Memory image size of segment in bytes, may be 0.
-     */
-    public final long mem_size; // Elf32_Word
+    public final int p_type; // Elf32_Word/Elf64_Word - 4 bytes in both.
     /**
      * Flags relevant to this segment. Values for flags are defined in ELFSectionHeader.
      */
-    public final int flags; // Elf32_Word
-    public final long alignment; // Elf32_Word
+    public final int p_flags; // Elf32_Word
+    /**
+     * Elf{32,64}_Phdr#p_offset. File offset at which the first byte of the segment resides.
+     */
+    public final long p_offset; // Elf32_Off/Elf64_Off - 4 or 8 bytes.
+    /**
+     * Elf{32,64}_Phdr#p_vaddr. Virtual address at which the first byte of the segment resides in memory.
+     */
+    public final long p_vaddr; // Elf32_Addr/Elf64_Addr - 4 or 8 bytes.
+    /**
+     * Reserved for the physical address of the segment on systems where physical addressing is relevant.
+     */
+    public final long p_paddr; // Elf32_addr/Elf64_Addr - 4 or 8 bytes.
+    /**
+     * Elf{32,64}_Phdr#p_filesz. File image size of segment in bytes, may be 0.
+     */
+    public final long p_filesz; // Elf32_Word/Elf64_Xword -
+    /**
+     * Elf{32,64}_Phdr#p_memsz. Memory image size of segment in bytes, may be 0.
+     */
+    public final long p_memsz; // Elf32_Word
+    /**
+     * Elf{32,64}_Phdr#p_align. The value to which the segments are aligned in memory and in the file.
+     */
+    public final long p_align; // Elf32_Word
 
     private MemoizedObject<String> ptInterpreter;
 
     ElfSegment(final ElfParser parser, long offset) {
         parser.seek(offset);
-        if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
+        if (parser.elfFile.ei_class == ElfFile.CLASS_32) {
             // typedef struct {
             // Elf32_Word p_type;
             // Elf32_Off p_offset;
@@ -113,14 +115,14 @@ public class ElfSegment {
             // Elf32_Word p_flags;
             // Elf32_Word p_align;
             // } Elf32_Phdr;
-            type = parser.readInt();
-            this.offset = parser.readInt();
-            virtual_address = parser.readInt();
-            physical_address = parser.readInt();
-            file_size = parser.readInt();
-            mem_size = parser.readInt();
-            flags = parser.readInt();
-            alignment = parser.readInt();
+            p_type = parser.readInt();
+            this.p_offset = parser.readInt();
+            p_vaddr = parser.readInt();
+            p_paddr = parser.readInt();
+            p_filesz = parser.readInt();
+            p_memsz = parser.readInt();
+            p_flags = parser.readInt();
+            p_align = parser.readInt();
         } else {
             // typedef struct {
             // Elf64_Word p_type;
@@ -132,22 +134,22 @@ public class ElfSegment {
             // Elf64_Xword p_memsz;
             // Elf64_Xword p_align;
             // } Elf64_Phdr;
-            type = parser.readInt();
-            flags = parser.readInt();
-            this.offset = parser.readLong();
-            virtual_address = parser.readLong();
-            physical_address = parser.readLong();
-            file_size = parser.readLong();
-            mem_size = parser.readLong();
-            alignment = parser.readLong();
+            p_type = parser.readInt();
+            p_flags = parser.readInt();
+            this.p_offset = parser.readLong();
+            p_vaddr = parser.readLong();
+            p_paddr = parser.readLong();
+            p_filesz = parser.readLong();
+            p_memsz = parser.readLong();
+            p_align = parser.readLong();
         }
 
-        switch (type) {
+        switch (p_type) {
             case PT_INTERP:
                 ptInterpreter = new MemoizedObject<String>() {
                     @Override
                     protected String computeValue() throws ElfException {
-                        parser.seek(ElfSegment.this.offset);
+                        parser.seek(ElfSegment.this.p_offset);
                         StringBuilder buffer = new StringBuilder();
                         int b;
                         while ((b = parser.readUnsignedByte()) != 0)
@@ -162,7 +164,7 @@ public class ElfSegment {
     @Override
     public String toString() {
         String typeString;
-        switch (type) {
+        switch (p_type) {
             case PT_NULL:
                 typeString = "PT_NULL";
                 break;
@@ -185,7 +187,7 @@ public class ElfSegment {
                 typeString = "PT_PHDR";
                 break;
             default:
-                typeString = "0x" + Long.toHexString(type);
+                typeString = "0x" + Long.toHexString(p_type);
                 break;
         }
 
@@ -194,10 +196,10 @@ public class ElfSegment {
         if (isWriteable()) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "write";
         if (isExecutable()) pFlagsString += (pFlagsString.isEmpty() ? "" : "|") + "execute";
 
-        if (pFlagsString.isEmpty()) pFlagsString = "0x" + Long.toHexString(flags);
+        if (pFlagsString.isEmpty()) pFlagsString = "0x" + Long.toHexString(p_flags);
 
-        return "ElfProgramHeader[p_type=" + typeString + ", p_filesz=" + file_size + ", p_memsz=" + mem_size + ", p_flags=" + pFlagsString + ", p_align="
-                + alignment + ", range=[0x" + Long.toHexString(virtual_address) + "-0x" + Long.toHexString(virtual_address + mem_size) + "]]";
+        return "ElfProgramHeader[p_type=" + typeString + ", p_filesz=" + p_filesz + ", p_memsz=" + p_memsz + ", p_flags=" + pFlagsString + ", p_align="
+                + p_align + ", range=[0x" + Long.toHexString(p_vaddr) + "-0x" + Long.toHexString(p_vaddr + p_memsz) + "]]";
     }
 
     /**
@@ -210,14 +212,14 @@ public class ElfSegment {
     }
 
     public boolean isReadable() {
-        return (flags & /* PF_R= */4) != 0;
+        return (p_flags & /* PF_R= */4) != 0;
     }
 
     public boolean isWriteable() {
-        return (flags & /* PF_W= */2) != 0;
+        return (p_flags & /* PF_W= */2) != 0;
     }
 
     public boolean isExecutable() {
-        return (flags & /* PF_X= */1) != 0;
+        return (p_flags & /* PF_X= */1) != 0;
     }
 }

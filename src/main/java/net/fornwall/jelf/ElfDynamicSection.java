@@ -208,7 +208,7 @@ public class ElfDynamicSection extends ElfSection {
      */
     public static class ElfDynamicStructure {
         public ElfDynamicStructure(long d_tag, long d_val_or_ptr) {
-            this.tag = d_tag;
+            this.d_tag = d_tag;
             this.d_val_or_ptr = d_val_or_ptr;
         }
 
@@ -217,9 +217,9 @@ public class ElfDynamicSection extends ElfSection {
          * <p>
          * One of the DT_* constants in {@link ElfDynamicSection}.
          */
-        public final long tag;
+        public final long d_tag;
         /**
-         * A field whose value is to be interpreted as specified by the {@link #tag}.
+         * A field whose value is to be interpreted as specified by the {@link #d_tag}.
          */
         public final long d_val_or_ptr;
 
@@ -227,7 +227,7 @@ public class ElfDynamicSection extends ElfSection {
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + (int) (tag ^ (tag >>> 32));
+            result = prime * result + (int) (d_tag ^ (d_tag >>> 32));
             result = prime * result + (int) (d_val_or_ptr ^ (d_val_or_ptr >>> 32));
             return result;
         }
@@ -238,21 +238,21 @@ public class ElfDynamicSection extends ElfSection {
             if (obj == null) return false;
             if (getClass() != obj.getClass()) return false;
             ElfDynamicStructure other = (ElfDynamicStructure) obj;
-            if (tag != other.tag) return false;
+            if (d_tag != other.d_tag) return false;
             return d_val_or_ptr == other.d_val_or_ptr;
         }
 
         @Override
         public String toString() {
-            return "ElfDynamicSectionEntry{tag=" + tag + ", d_val_or_ptr=" + d_val_or_ptr + "}";
+            return "ElfDynamicSectionEntry{tag=" + d_tag + ", d_val_or_ptr=" + d_val_or_ptr + "}";
         }
     }
 
     public ElfDynamicSection(final ElfParser parser, ElfSectionHeader header) {
         super(header);
 
-        parser.seek(header.section_offset);
-        int numEntries = (int) (header.size / 8);
+        parser.seek(header.sh_offset);
+        int numEntries = (int) (header.sh_size / 8);
 
         // Except for the DT_NULL element at the end of the array, and the relative order of DT_NEEDED elements, entries
         // may appear in any order. So important to use lazy evaluation to only evaluating e.g. DT_STRTAB after the
@@ -288,7 +288,7 @@ public class ElfDynamicSection extends ElfSection {
 
     private ElfDynamicStructure firstEntryWithTag(long desiredTag) {
         for (ElfDynamicStructure entry : this.entries) {
-            if (entry.tag == desiredTag) return entry;
+            if (entry.d_tag == desiredTag) return entry;
         }
         return null;
     }
@@ -297,7 +297,7 @@ public class ElfDynamicSection extends ElfSection {
         ElfStringTable stringTable = dtStringTable.getValue();
         List<String> result = new ArrayList<>();
         for (ElfDynamicStructure entry : this.entries) {
-            if (entry.tag == DT_NEEDED) result.add(stringTable.get((int) entry.d_val_or_ptr));
+            if (entry.d_tag == DT_NEEDED) result.add(stringTable.get((int) entry.d_val_or_ptr));
         }
         return result;
     }

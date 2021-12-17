@@ -14,9 +14,9 @@ public class ElfGnuHashTable extends ElfSection {
     private final ElfParser parser;
     private final int ELFCLASS_BITS;
     // The number of .dynsym symbols skipped.
-    final int symbolOffset;
-    final int bloomShift;
-    final long[] bloomFilter;
+    final int symoffset;
+    final int bloom_shift;
+    final long[] bloom;
     final int[] buckets;
     int[] chain;
 
@@ -24,18 +24,18 @@ public class ElfGnuHashTable extends ElfSection {
         super(header);
         this.parser = parser;
 
-        ELFCLASS_BITS = parser.elfFile.objectSize == ElfFile.CLASS_32 ? 32 : 64;
+        ELFCLASS_BITS = parser.elfFile.ei_class == ElfFile.CLASS_32 ? 32 : 64;
 
-        parser.seek(header.section_offset);
+        parser.seek(header.sh_offset);
         int numberOfBuckets = parser.readInt();
-        symbolOffset = parser.readInt();
+        symoffset = parser.readInt();
         int bloomSize = parser.readInt();
-        bloomShift = parser.readInt();
-        bloomFilter = new long[bloomSize];
+        bloom_shift = parser.readInt();
+        bloom = new long[bloomSize];
         buckets = new int[numberOfBuckets];
 
         for (int i = 0; i < bloomSize; i++) {
-            bloomFilter[i] = parser.readIntOrLong();
+            bloom[i] = parser.readIntOrLong();
         }
         for (int i = 0; i < numberOfBuckets; i++) {
             buckets[i] = parser.readInt();
@@ -45,9 +45,9 @@ public class ElfGnuHashTable extends ElfSection {
 
     ElfSymbol lookupSymbol(String symbolName, ElfSymbolTableSection symbolTable) {
         if (chain == null) {
-            int chainSize = ((ElfSymbolTableSection) parser.elfFile.firstSectionByType(ElfSectionHeader.SHT_DYNSYM)).symbols.length - symbolOffset;
+            int chainSize = ((ElfSymbolTableSection) parser.elfFile.firstSectionByType(ElfSectionHeader.SHT_DYNSYM)).symbols.length - symoffset;
             chain = new int[chainSize];
-            parser.seek(header.section_offset + 4*4 + bloomFilter.length*(ELFCLASS_BITS/8) + buckets.length * 4);
+            parser.seek(header.sh_offset + 4*4 + bloom.length*(ELFCLASS_BITS/8) + buckets.length * 4);
             for (int i = 0; i < chainSize; i++) {
                 chain[i] = parser.readInt();
             }
@@ -55,9 +55,9 @@ public class ElfGnuHashTable extends ElfSection {
 
         final int nameHash = gnuHash(symbolName);
 
-        long word = bloomFilter[(Integer.remainderUnsigned(Integer.divideUnsigned(nameHash, ELFCLASS_BITS), bloomFilter.length))];
+        long word = bloom[(Integer.remainderUnsigned(Integer.divideUnsigned(nameHash, ELFCLASS_BITS), bloom.length))];
         long mask = 1L << (long) (Integer.remainderUnsigned(nameHash, ELFCLASS_BITS))
-                | 1L << (long) (Integer.remainderUnsigned((nameHash >>> bloomShift), ELFCLASS_BITS));
+                | 1L << (long) (Integer.remainderUnsigned((nameHash >>> bloom_shift), ELFCLASS_BITS));
 
         if ((word & mask) != mask) {
             // If at least one bit is not set, a symbol is surely missing.
@@ -65,12 +65,12 @@ public class ElfGnuHashTable extends ElfSection {
         }
 
         int symix = buckets[Integer.remainderUnsigned(nameHash, buckets.length)];
-        if (symix < symbolOffset) {
+        if (symix < symoffset) {
             return null;
         }
 
         while (true) {
-            int hash = chain[symix - symbolOffset];
+            int hash = chain[symix - symoffset];
 
             if ((((long) nameHash)|1L) == (((long) hash)|1L)) {
                 // The chain contains contiguous sequences of hashes for symbols hashing to the same index,

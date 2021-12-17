@@ -15,7 +15,7 @@ public class ElfHashTable extends ElfSection {
     ElfHashTable(ElfParser parser, ElfSectionHeader header) {
         super(header);
 
-        parser.seek(header.section_offset);
+        parser.seek(header.sh_offset);
 
         int num_buckets = parser.readInt();
         int num_chains = parser.readInt();
@@ -33,8 +33,8 @@ public class ElfHashTable extends ElfSection {
         // Make sure that the amount of bytes we were supposed to read
         // was what we actually read.
         int actual = num_buckets * 4 + num_chains * 4 + 8;
-        if (header.size != actual) {
-            throw new ElfException("Error reading string table (read " + actual + "bytes, expected to read " + header.size + "bytes).");
+        if (header.sh_size != actual) {
+            throw new ElfException("Error reading string table (read " + actual + "bytes, expected to read " + header.sh_size + "bytes).");
         }
     }
 

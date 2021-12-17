@@ -19,7 +19,7 @@ public class TestHelper {
 		ElfFile fromStream = ElfFile.from(BasicTest.class.getResourceAsStream('/' + fileName));
 		consumer.test(fromStream);
 
-		Path path = Paths.get(BasicTest.class.getResource('/' + fileName).getPath());
+		Path path = Paths.get(BasicTest.class.getResource('/' + fileName).toURI());
 		try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet.of(StandardOpenOption.READ))) {
 			MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
 			ElfFile fromMappedBuffer = ElfFile.from(mappedByteBuffer);
@@ -56,7 +56,7 @@ public class TestHelper {
 		if (gnuHashTable != null) {
 			int i = 0;
 			for (ElfSymbol s : dynsym.symbols) {
-				if (i++ < gnuHashTable.symbolOffset)
+				if (i++ < gnuHashTable.symoffset)
 					continue;
 				Assertions.assertSame(s, gnuHashTable.lookupSymbol(s.getName(), dynsym));
 			}

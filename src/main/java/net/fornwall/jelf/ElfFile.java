@@ -50,53 +50,126 @@ public final class ElfFile {
     public static final int ET_CORE = 4;
 
     /**
-     * 32-bit objects.
+     * 32-bit objects. A possible value of {@link #ei_class}.
      */
     public static final byte CLASS_32 = 1;
     /**
-     * 64-bit objects.
+     * 64-bit objects. A possible value of {@link #ei_class}
      */
     public static final byte CLASS_64 = 2;
 
     /**
-     * LSB data encoding.
+     * System V application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_SYSTEMV = 0x00;
+    /**
+     * HP-UX application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_HPUX = 0x01;
+    /**
+     * NetBSD application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_NETBSD = 0x02;
+    /**
+     * Linux application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_LINUX = 0x03;
+    /**
+     * GNU Hurd application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_GNUHERD = 0x04;
+    /**
+     * Solaris application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_SOLARIS = 0x06;
+    /**
+     * AIX application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_AIX = 0x07;
+    /**
+     * IRIX application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_IRIX = 0x08;
+    /**
+     * FreeBSD application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_FREEBSD = 0x09;
+    /**
+     * Tru64 application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_TRU64 = 0x0A;
+    /**
+     * Novell Modesto application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_MODESTO = 0x0B;
+    /**
+     * OpenBSD application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_OPENBSD = 0x0C;
+    /**
+     * OpenVMS application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_OPENVMS = 0x0D;
+    /**
+     * NonStop Kernel application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_NONSTOP = 0x0E;
+    /**
+     * AROS application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_AROS = 0x0F;
+    /**
+     * Fenix OS application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_FENIX = 0x10;
+    /**
+     * CloudABI application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_CLOUD = 0x11;
+    /**
+     * Stratus Technologies OpenVOS application binary interface. A possible value of {@link #ei_osabi}.
+     */
+    public static final byte ABI_OPENVOS = 0x12;
+
+    /**
+     * LSB data encoding. A possible value of {@link #ei_data}.
      */
     public static final byte DATA_LSB = 1;
     /**
-     * MSB data encoding.
+     * MSB data encoding. A possible value of {@link #ei_data}.
      */
     public static final byte DATA_MSB = 2;
 
     /**
-     * No architecture type.
+     * No architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_NONE = 0;
     /**
-     * AT&amp;T architecture type.
+     * AT&amp;T architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_ATT = 1;
     /**
-     * SPARC architecture type.
+     * SPARC architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_SPARC = 2;
     /**
-     * Intel 386 architecture type.
+     * Intel 386 architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_i386 = 3;
     /**
-     * Motorola 68000 architecture type.
+     * Motorola 68000 architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_68k = 4;
     /**
-     * Motorola 88000 architecture type.
+     * Motorola 88000 architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_88k = 5;
     /**
-     * Intel 860 architecture type.
+     * Intel 860 architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_i860 = 7;
     /**
-     * MIPS architecture type.
+     * MIPS architecture type. A possible value of {@link #e_machine}
      */
     public static final int ARCH_MIPS = 8;
     public static final int ARCH_ARM = 0x28;
@@ -104,75 +177,87 @@ public final class ElfFile {
     public static final int ARCH_AARCH64 = 0xB7;
 
     /**
-     * Identifies the object file type. One of the ET_* constants in the class.
+     * Byte identifying the size of objects, either {@link #CLASS_32} or {link {@value #CLASS_64}.
      */
-    public final short e_type; // Elf32_Half
-    /**
-     * Byte identifying the size of objects, either {@link #CLASS_32} or {link {@value #CLASS_64} .
-     */
-    public final byte objectSize;
+    public final byte ei_class;
 
     /**
      * Returns a byte identifying the data encoding of the processor specific data. This byte will be either
      * DATA_INVALID, DATA_LSB or DATA_MSB.
      */
-    public final byte encoding;
+    public final byte ei_data;
 
-    public final byte elfVersion;
-    public final byte abi;
-    public final byte abiVersion;
+    /**
+     * Set to 1 for the original and current (as of writing) version of ELF.
+     */
+    public final byte ei_version;
+
+    /**
+     * Identifies the target operating system ABI.
+     */
+    public final byte ei_osabi;
+
+    /**
+     * Further specifies the ABI version. Its interpretation depends on the target ABI.
+     */
+    public final byte es_abiversion;
+
+    /**
+     * Identifies the object file type. One of the ET_* constants in the class.
+     */
+    public final short e_type; // Elf32_Half
 
     /**
      * The required architecture. One of the ARCH_* constants in the class.
      */
-    public final short arch; // Elf32_Half
+    public final short e_machine; // Elf32_Half
     /**
      * Version
      */
-    public final int version; // Elf32_Word
+    public final int e_version; // Elf32_Word
     /**
      * Virtual address to which the system first transfers control. If there is no entry point for the file the value is
      * 0.
      */
-    public final long entry_point; // Elf32_Addr
+    public final long e_entry; // Elf32_Addr
     /**
      * e_phoff. Program header table offset in bytes. If there is no program header table the value is 0.
      */
-    public final long ph_offset; // Elf32_Off
+    public final long e_phoff; // Elf32_Off
     /**
      * e_shoff. Section header table offset in bytes. If there is no section header table the value is 0.
      */
-    public final long sh_offset; // Elf32_Off
+    public final long e_shoff; // Elf32_Off
     /**
      * e_flags. Processor specific flags.
      */
-    public final int flags; // Elf32_Word
+    public final int e_flags; // Elf32_Word
     /**
      * e_ehsize. ELF header size in bytes.
      */
-    public final short eh_size; // Elf32_Half
+    public final short e_ehsize; // Elf32_Half
     /**
      * e_phentsize. Size of one entry in the file's program header table in bytes. All entries are the same size.
      */
-    public final short ph_entry_size; // Elf32_Half
+    public final short e_phentsize; // Elf32_Half
     /**
      * e_phnum. Number of {@link ElfSegment} entries in the program header table, 0 if no entries.
      */
-    public final short num_ph; // Elf32_Half
+    public final short e_phnum; // Elf32_Half
     /**
      * e_shentsize. Section header entry size in bytes - all entries are the same size.
      */
-    public final short sh_entry_size; // Elf32_Half
+    public final short e_shentsize; // Elf32_Half
     /**
      * e_shnum. Number of entries in the section header table, 0 if no entries.
      */
-    public final short num_sh; // Elf32_Half
+    public final short e_shnum; // Elf32_Half
 
     /**
      * Elf{32,64}_Ehdr#e_shstrndx. Index into the section header table associated with the section name string table.
      * SH_UNDEF if there is no section name string table.
      */
-    private final short sh_string_ndx; // Elf32_Half
+    public final short sh_string_ndx; // Elf32_Half
 
     /**
      * MemoizedObject array of section headers associated with this ELF file.
@@ -206,11 +291,11 @@ public final class ElfFile {
     }
 
     public List<ElfSection> sectionsOfType(int sectionType) throws ElfException {
-        if (num_sh < 2) return Collections.emptyList();
+        if (e_shnum < 2) return Collections.emptyList();
         List<ElfSection> result = new ArrayList<>();
-        for (int i = 1; i < num_sh; i++) {
+        for (int i = 1; i < e_shnum; i++) {
             ElfSection section = getSection(i);
-            if (section.header.type == sectionType) {
+            if (section.header.sh_type == sectionType) {
                 result.add(section);
             }
         }
@@ -280,15 +365,15 @@ public final class ElfFile {
     }
 
     public ElfSection firstSectionByType(int type) throws ElfException {
-        for (int i = 1; i < num_sh; i++) {
+        for (int i = 1; i < e_shnum; i++) {
             ElfSection sh = getSection(i);
-            if (sh.header.type == type) return sh;
+            if (sh.header.sh_type == type) return sh;
         }
         return null;
     }
 
     public <T extends ElfSection> T firstSectionByType(Class<T> type) throws ElfException {
-        for (int i = 1; i < num_sh; i++) {
+        for (int i = 1; i < e_shnum; i++) {
             ElfSection sh = getSection(i);
             if (type.isInstance(sh)) return type.cast(sh);
         }
@@ -296,7 +381,7 @@ public final class ElfFile {
     }
 
     public ElfSection firstSectionByName(String sectionName) throws ElfException {
-        for (int i = 1; i < num_sh; i++) {
+        for (int i = 1; i < e_shnum; i++) {
             ElfSection sh = getSection(i);
             if (sectionName.equals(sh.header.getName())) return sh;
         }
@@ -441,30 +526,30 @@ public final class ElfFile {
         if (!(0x7f == ident[0] && 'E' == ident[1] && 'L' == ident[2] && 'F' == ident[3]))
             throw new ElfException("Bad magic number for file");
 
-        objectSize = ident[4];
-        if (!(objectSize == CLASS_32 || objectSize == CLASS_64))
-            throw new ElfException("Invalid object size class: " + objectSize);
-        encoding = ident[5];
-        if (!(encoding == DATA_LSB || encoding == DATA_MSB)) throw new ElfException("Invalid encoding: " + encoding);
-        elfVersion = ident[6];
-        if (elfVersion != 1) throw new ElfException("Invalid elf version: " + elfVersion);
-        abi = ident[7]; // EI_OSABI, target operating system ABI
-        abiVersion = ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
+        ei_class = ident[4];
+        if (!(ei_class == CLASS_32 || ei_class == CLASS_64))
+            throw new ElfException("Invalid object size class: " + ei_class);
+        ei_data = ident[5];
+        if (!(ei_data == DATA_LSB || ei_data == DATA_MSB)) throw new ElfException("Invalid encoding: " + ei_data);
+        ei_version = ident[6];
+        if (ei_version != 1) throw new ElfException("Invalid elf version: " + ei_version);
+        ei_osabi = ident[7]; // EI_OSABI, target operating system ABI
+        es_abiversion = ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
         // ident[9-15] // EI_PAD, currently unused.
 
         e_type = parser.readShort();
-        arch = parser.readShort();
-        version = parser.readInt();
-        entry_point = parser.readIntOrLong();
-        ph_offset = parser.readIntOrLong();
-        sh_offset = parser.readIntOrLong();
-        flags = parser.readInt();
-        eh_size = parser.readShort();
-        ph_entry_size = parser.readShort();
-        num_ph = parser.readShort();
-        sh_entry_size = parser.readShort();
-        num_sh = parser.readShort();
-        if (num_sh == 0) {
+        e_machine = parser.readShort();
+        e_version = parser.readInt();
+        e_entry = parser.readIntOrLong();
+        e_phoff = parser.readIntOrLong();
+        e_shoff = parser.readIntOrLong();
+        e_flags = parser.readInt();
+        e_ehsize = parser.readShort();
+        e_phentsize = parser.readShort();
+        e_phnum = parser.readShort();
+        e_shentsize = parser.readShort();
+        e_shnum = parser.readShort();
+        if (e_shnum == 0) {
             throw new ElfException("e_shnum is SHN_UNDEF(0), which is not supported yet"
                     + " (the actual number of section header table entries is contained in the sh_size field of the section header at index 0)");
         }
@@ -474,21 +559,21 @@ public final class ElfFile {
                     + " (the actual index of the section name string table section is contained in the sh_link field of the section header at index 0)");
         }
 
-        sections = MemoizedObject.uncheckedArray(num_sh);
-        for (int i = 0; i < num_sh; i++) {
-            final long sectionHeaderOffset = sh_offset + (i * sh_entry_size);
+        sections = MemoizedObject.uncheckedArray(e_shnum);
+        for (int i = 0; i < e_shnum; i++) {
+            final long sectionHeaderOffset = e_shoff + (i * e_shentsize);
             sections[i] = new MemoizedObject<ElfSection>() {
                 @Override
                 public ElfSection computeValue() throws ElfException {
                     ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, sectionHeaderOffset);
-                    switch (elfSectionHeader.type) {
+                    switch (elfSectionHeader.sh_type) {
                         case ElfSectionHeader.SHT_DYNAMIC:
                             return new ElfDynamicSection(parser, elfSectionHeader);
                         case ElfSectionHeader.SHT_SYMTAB:
                         case ElfSectionHeader.SHT_DYNSYM:
                             return new ElfSymbolTableSection(parser, elfSectionHeader);
                         case ElfSectionHeader.SHT_STRTAB:
-                            return new ElfStringTable(parser, elfSectionHeader.section_offset, (int) elfSectionHeader.size, elfSectionHeader);
+                            return new ElfStringTable(parser, elfSectionHeader.sh_offset, (int) elfSectionHeader.sh_size, elfSectionHeader);
                         case ElfSectionHeader.SHT_HASH:
                             return new ElfHashTable(parser, elfSectionHeader);
                         case ElfSectionHeader.SHT_NOTE:
@@ -506,9 +591,9 @@ public final class ElfFile {
             };
         }
 
-        programHeaders = MemoizedObject.uncheckedArray(num_ph);
-        for (int i = 0; i < num_ph; i++) {
-            final long programHeaderOffset = ph_offset + (i * ph_entry_size);
+        programHeaders = MemoizedObject.uncheckedArray(e_phnum);
+        for (int i = 0; i < e_phnum; i++) {
+            final long programHeaderOffset = e_phoff + (i * e_phentsize);
             programHeaders[i] = new MemoizedObject<ElfSegment>() {
                 @Override
                 public ElfSegment computeValue() {
@@ -526,7 +611,7 @@ public final class ElfFile {
     public String getInterpreter() {
         for (MemoizedObject<ElfSegment> programHeader : programHeaders) {
             ElfSegment ph = programHeader.getValue();
-            if (ph.type == ElfSegment.PT_INTERP) return ph.getIntepreter();
+            if (ph.p_type == ElfSegment.PT_INTERP) return ph.getIntepreter();
         }
         return null;
     }
