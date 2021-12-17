@@ -54,7 +54,7 @@ public final class ElfFile {
      */
     public static final byte CLASS_32 = 1;
     /**
-     * 64-bit objects. A possible value of {@link #ei_class}
+     * 64-bit objects. A possible value of {@link #ei_class}.
      */
     public static final byte CLASS_64 = 2;
 
@@ -141,35 +141,35 @@ public final class ElfFile {
     public static final byte DATA_MSB = 2;
 
     /**
-     * No architecture type. A possible value of {@link #e_machine}
+     * No architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_NONE = 0;
     /**
-     * AT&amp;T architecture type. A possible value of {@link #e_machine}
+     * AT&amp;T architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_ATT = 1;
     /**
-     * SPARC architecture type. A possible value of {@link #e_machine}
+     * SPARC architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_SPARC = 2;
     /**
-     * Intel 386 architecture type. A possible value of {@link #e_machine}
+     * Intel 386 architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_i386 = 3;
     /**
-     * Motorola 68000 architecture type. A possible value of {@link #e_machine}
+     * Motorola 68000 architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_68k = 4;
     /**
-     * Motorola 88000 architecture type. A possible value of {@link #e_machine}
+     * Motorola 88000 architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_88k = 5;
     /**
-     * Intel 860 architecture type. A possible value of {@link #e_machine}
+     * Intel 860 architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_i860 = 7;
     /**
-     * MIPS architecture type. A possible value of {@link #e_machine}
+     * MIPS architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_MIPS = 8;
     public static final int ARCH_ARM = 0x28;
@@ -257,7 +257,7 @@ public final class ElfFile {
      * Elf{32,64}_Ehdr#e_shstrndx. Index into the section header table associated with the section name string table.
      * SH_UNDEF if there is no section name string table.
      */
-    public final short sh_string_ndx; // Elf32_Half
+    public final short e_shstrndx; // Elf32_Half
 
     /**
      * MemoizedObject array of section headers associated with this ELF file.
@@ -309,7 +309,7 @@ public final class ElfFile {
      * @return the section header string table for this file
      */
     public ElfStringTable getSectionNameStringTable() throws ElfException {
-        return (ElfStringTable) getSection(sh_string_ndx);
+        return (ElfStringTable) getSection(e_shstrndx);
     }
 
     /**
@@ -553,8 +553,8 @@ public final class ElfFile {
             throw new ElfException("e_shnum is SHN_UNDEF(0), which is not supported yet"
                     + " (the actual number of section header table entries is contained in the sh_size field of the section header at index 0)");
         }
-        sh_string_ndx = parser.readShort();
-        if (sh_string_ndx == /* SHN_XINDEX= */0xffff) {
+        e_shstrndx = parser.readShort();
+        if (e_shstrndx == /* SHN_XINDEX= */0xffff) {
             throw new ElfException("e_shstrndx is SHN_XINDEX(0xffff), which is not supported yet"
                     + " (the actual index of the section name string table section is contained in the sh_link field of the section header at index 0)");
         }
