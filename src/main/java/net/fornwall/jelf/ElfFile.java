@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -423,14 +424,14 @@ public final class ElfFile {
     }
 
     public static ElfFile from(byte[] buffer) throws ElfException, IOException {
-        return new ElfFile(new BackingFile(new ByteArrayInputStream(buffer)));
+        return new ElfFile(new ByteArrayAsFile(buffer));
     }
 
     public static ElfFile from(MappedByteBuffer mappedByteBuffer) throws ElfException, IOException {
-        return new ElfFile(new BackingFile(mappedByteBuffer));
+        return new ElfFile(new MappedFile(mappedByteBuffer));
     }
 
-    private ElfFile(BackingFile backingFile) throws ElfException {
+    public ElfFile(BackingFile backingFile) throws ElfException {
         final ElfParser parser = new ElfParser(this, backingFile);
 
         byte[] ident = new byte[16];
