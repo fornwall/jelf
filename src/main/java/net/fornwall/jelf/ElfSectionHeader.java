@@ -6,11 +6,11 @@ package net.fornwall.jelf;
  * <p>
  * An object file's section header table lets one locate all the file's sections. The section header table is an array
  * of Elf32_Shdr or Elf64_Shdr structures. A section header table index is a subscript into this array. The ELF header's
- * {@link ElfFile#sh_offset e_shoff member} gives the byte offset from the beginning of the file to the section header
- * table with each section header entry being {@link ElfFile#sh_entry_size e_shentsize} bytes big.
+ * {@link ElfFile#e_shoff e_shoff member} gives the byte offset from the beginning of the file to the section header
+ * table with each section header entry being {@link ElfFile#e_shentsize e_shentsize} bytes big.
  *
  * <p>
- * {@link ElfFile#num_sh e_shnum} normally tells how many entries the section header table contains, but if the number
+ * {@link ElfFile#e_shnum e_shnum} normally tells how many entries the section header table contains, but if the number
  * of sections is greater than or equal to SHN_LORESERVE (0xff00), e_shnum has the value SHN_UNDEF (0) and the actual
  * number of section header table entries is contained in the sh_size field of the section header at index 0 (otherwise,
  * the sh_size member of the initial entry contains 0).
@@ -33,7 +33,7 @@ public class ElfSectionHeader {
      */
     public static final int SHT_PROGBITS = 1;
     /**
-     * The {@link #type} value for a section containing complete symbol table information necessary for link editing.
+     * The {@link #sh_type} value for a section containing complete symbol table information necessary for link editing.
      * <p>
      * See {@link ElfSymbolTableSection}, which is the class representing sections of this type, for more information.
      */
@@ -72,7 +72,7 @@ public class ElfSectionHeader {
      */
     public static final int SHT_SHLIB = 10;
     /**
-     * The {@link #type} value for a section containing a minimal set of symbols needed for dynamic linking at runtime.
+     * The {@link #sh_type} value for a section containing a minimal set of symbols needed for dynamic linking at runtime.
      * <p>
      * See {@link ElfSymbolTableSection}, which is the class representing sections of this type, for more information.
      */
@@ -154,44 +154,44 @@ public class ElfSectionHeader {
     /**
      * Index into the section header string table which gives the name of the section.
      */
-    public final int name_ndx; // Elf32_Word or Elf64_Word - 4 bytes in both.
+    public final int sh_name; // Elf32_Word or Elf64_Word - 4 bytes in both.
     /**
      * Section content and semantics.
      */
-    public final int type; // Elf32_Word or Elf64_Word - 4 bytes in both.
+    public final int sh_type; // Elf32_Word or Elf64_Word - 4 bytes in both.
     /**
      * Flags.
      */
-    public final long flags; // Elf32_Word or Elf64_Xword.
+    public final long sh_flags; // Elf32_Word or Elf64_Xword.
     /**
      * sh_addr. If the section will be in the memory image of a process this will be the address at which the first byte
      * of section will be loaded. Otherwise, this value is 0.
      */
-    public final long address; // Elf32_Addr
+    public final long sh_addr; // Elf32_Addr
     /**
      * Offset from beginning of file to first byte of the section.
      */
-    public final long section_offset; // Elf32_Off
+    public final long sh_offset; // Elf32_Off
     /**
      * Size in bytes of the section. TYPE_NOBITS is a special case.
      */
-    public final /* uint32_t */ long size;
+    public final /* uint32_t */ long sh_size;
     /**
      * Section header table index link.
      */
-    public final /* uint32_t */ int link;
+    public final /* uint32_t */ int sh_link;
     /**
      * Extra information determined by the section type.
      */
-    public final /* uint32_t */ int info;
+    public final /* uint32_t */ int sh_info;
     /**
      * Address alignment constraints for the section.
      */
-    public final /* uint32_t */ long address_alignment;
+    public final /* uint32_t */ long sh_addralign;
     /**
      * Size of a fixed-size entry, 0 if none.
      */
-    public final long entry_size; // Elf32_Word
+    public final long sh_entsize; // Elf32_Word
 
     private final ElfFile elfHeader;
 
@@ -202,16 +202,16 @@ public class ElfSectionHeader {
         this.elfHeader = parser.elfFile;
         parser.seek(offset);
 
-        name_ndx = parser.readInt();
-        type = parser.readInt();
-        flags = parser.readIntOrLong();
-        address = parser.readIntOrLong();
-        section_offset = parser.readIntOrLong();
-        size = parser.readIntOrLong();
-        link = parser.readInt();
-        info = parser.readInt();
-        address_alignment = parser.readIntOrLong();
-        entry_size = parser.readIntOrLong();
+        sh_name = parser.readInt();
+        sh_type = parser.readInt();
+        sh_flags = parser.readIntOrLong();
+        sh_addr = parser.readIntOrLong();
+        sh_offset = parser.readIntOrLong();
+        sh_size = parser.readIntOrLong();
+        sh_link = parser.readInt();
+        sh_info = parser.readInt();
+        sh_addralign = parser.readIntOrLong();
+        sh_entsize = parser.readIntOrLong();
     }
 
     /**
@@ -220,14 +220,14 @@ public class ElfSectionHeader {
      * @return the name of the section, if any
      */
     public String getName() {
-        if (name_ndx == 0) return null;
+        if (sh_name == 0) return null;
         ElfStringTable tbl = elfHeader.getSectionNameStringTable();
-        return tbl.get(name_ndx);
+        return tbl.get(sh_name);
     }
 
     @Override
     public String toString() {
-        return "ElfSectionHeader[name=" + getName() + ", type=0x" + Long.toHexString(type) + "]";
+        return "ElfSectionHeader[name=" + getName() + ", type=0x" + Long.toHexString(sh_type) + "]";
     }
 
 }

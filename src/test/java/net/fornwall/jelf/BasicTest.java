@@ -12,16 +12,16 @@ class BasicTest {
 	@Test
 	void testAndroidArmBinTset() throws Exception {
 		TestHelper.parseFile("android_arm_tset", file -> {
-			Assertions.assertEquals(ElfFile.CLASS_32, file.objectSize);
-			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
+			Assertions.assertEquals(ElfFile.CLASS_32, file.ei_class);
+			Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
 			Assertions.assertEquals(ElfFile.ET_EXEC, file.e_type);
-			Assertions.assertEquals(ElfFile.ARCH_ARM, file.arch);
-			Assertions.assertEquals(32, file.ph_entry_size);
-			Assertions.assertEquals(7, file.num_ph);
-			Assertions.assertEquals(52, file.ph_offset);
-			Assertions.assertEquals(40, file.sh_entry_size);
-			Assertions.assertEquals(25, file.num_sh);
-			Assertions.assertEquals(15856, file.sh_offset);
+			Assertions.assertEquals(ElfFile.ARCH_ARM, file.e_machine);
+			Assertions.assertEquals(32, file.e_phentsize);
+			Assertions.assertEquals(7, file.e_phnum);
+			Assertions.assertEquals(52, file.e_phoff);
+			Assertions.assertEquals(40, file.e_shentsize);
+			Assertions.assertEquals(25, file.e_shnum);
+			Assertions.assertEquals(15856, file.e_shoff);
 			TestHelper.assertSectionNames(file, null, ".interp", ".dynsym", ".dynstr", ".hash", ".rel.dyn", ".rel.plt",
 					".plt", ".text");
 			Assertions.assertEquals("/system/bin/linker", file.getInterpreter());
@@ -29,8 +29,8 @@ class BasicTest {
 			ElfDynamicSection dynamic = file.getDynamicSection();
 			Assertions.assertNotNull(dynamic);
 			Assertions.assertEquals(".dynamic", dynamic.header.getName());
-			Assertions.assertEquals(8, dynamic.header.entry_size);
-			Assertions.assertEquals(248, dynamic.header.size);
+			Assertions.assertEquals(8, dynamic.header.sh_entsize);
+			Assertions.assertEquals(248, dynamic.header.sh_size);
 			Assertions.assertEquals(ElfDynamicSection.DF_BIND_NOW, dynamic.getFlags());
 			Assertions.assertEquals(ElfDynamicSection.DF_1_NOW, dynamic.getFlags1());
 
@@ -52,17 +52,17 @@ class BasicTest {
 	@Test
 	void testAndroidArmLibNcurses() throws Exception {
 		TestHelper.parseFile("android_arm_libncurses", file -> {
-			Assertions.assertEquals(ElfFile.CLASS_32, file.objectSize);
-			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
+			Assertions.assertEquals(ElfFile.CLASS_32, file.ei_class);
+			Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
 			Assertions.assertEquals(ElfFile.ET_DYN, file.e_type);
-			Assertions.assertEquals(ElfFile.ARCH_ARM, file.arch);
+			Assertions.assertEquals(ElfFile.ARCH_ARM, file.e_machine);
 			Assertions.assertEquals("/system/bin/linker", file.getInterpreter());
 
 			List<ElfSection> noteSections = file.sectionsOfType(ElfSectionHeader.SHT_NOTE);
 			Assertions.assertEquals(1, noteSections.size());
 			Assertions.assertEquals(".note.gnu.gold-version", noteSections.get(0).header.getName());
 			Assertions.assertEquals("GNU", ((ElfNoteSection) noteSections.get(0)).getName());
-			Assertions.assertEquals(ElfNoteSection.NT_GNU_GOLD_VERSION, ((ElfNoteSection) noteSections.get(0)).type);
+			Assertions.assertEquals(ElfNoteSection.NT_GNU_GOLD_VERSION, ((ElfNoteSection) noteSections.get(0)).n_type);
 			Assertions.assertEquals("gold 1.11", ((ElfNoteSection) noteSections.get(0)).descriptorAsString());
 
 			ElfNoteSection noteSection = file.firstSectionByType(ElfNoteSection.class);
@@ -130,16 +130,16 @@ class BasicTest {
 	@Test
 	void testLinxAmd64BinDash() throws Exception {
 		TestHelper.parseFile("linux_amd64_bindash", file -> {
-			Assertions.assertEquals(ElfFile.CLASS_64, file.objectSize);
-			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
+			Assertions.assertEquals(ElfFile.CLASS_64, file.ei_class);
+			Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
 			Assertions.assertEquals(ElfFile.ET_DYN, file.e_type);
-			Assertions.assertEquals(ElfFile.ARCH_X86_64, file.arch);
-			Assertions.assertEquals(56, file.ph_entry_size);
-			Assertions.assertEquals(9, file.num_ph);
-			Assertions.assertEquals(64, file.sh_entry_size);
-			Assertions.assertEquals(64, file.ph_offset);
-			Assertions.assertEquals(27, file.num_sh);
-			Assertions.assertEquals(119544, file.sh_offset);
+			Assertions.assertEquals(ElfFile.ARCH_X86_64, file.e_machine);
+			Assertions.assertEquals(56, file.e_phentsize);
+			Assertions.assertEquals(9, file.e_phnum);
+			Assertions.assertEquals(64, file.e_shentsize);
+			Assertions.assertEquals(64, file.e_phoff);
+			Assertions.assertEquals(27, file.e_shnum);
+			Assertions.assertEquals(119544, file.e_shoff);
 			TestHelper.assertSectionNames(file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash",
 					".dynsym");
 
@@ -150,7 +150,7 @@ class BasicTest {
 
 			ElfSection rodata = file.firstSectionByName(ElfSectionHeader.NAME_RODATA);
 			Assertions.assertNotNull(rodata);
-			Assertions.assertEquals(ElfSectionHeader.SHT_PROGBITS, rodata.header.type);
+			Assertions.assertEquals(ElfSectionHeader.SHT_PROGBITS, rodata.header.sh_type);
 
 			List<ElfSection> noteSections = file.sectionsOfType(ElfSectionHeader.SHT_NOTE);
 			Assertions.assertEquals(2, noteSections.size());
@@ -158,7 +158,7 @@ class BasicTest {
 			ElfNoteSection note2 = (ElfNoteSection) noteSections.get(1);
 			Assertions.assertEquals(".note.ABI-tag", note1.header.getName());
 			Assertions.assertEquals("GNU", note1.getName());
-			Assertions.assertEquals(ElfNoteSection.NT_GNU_ABI_TAG, note1.type);
+			Assertions.assertEquals(ElfNoteSection.NT_GNU_ABI_TAG, note1.n_type);
 			Assertions.assertEquals(ElfNoteSection.GnuAbiDescriptor.ELF_NOTE_OS_LINUX,
 					note1.descriptorAsGnuAbi().operatingSystem);
 			Assertions.assertEquals(2, note1.descriptorAsGnuAbi().majorVersion);
@@ -166,7 +166,7 @@ class BasicTest {
 			Assertions.assertEquals(24, note1.descriptorAsGnuAbi().subminorVersion);
 			Assertions.assertEquals(".note.gnu.build-id", note2.header.getName());
 			Assertions.assertEquals("GNU", note2.getName());
-			Assertions.assertEquals(ElfNoteSection.NT_GNU_BUILD_ID, note2.type);
+			Assertions.assertEquals(ElfNoteSection.NT_GNU_BUILD_ID, note2.n_type);
 			Assertions.assertEquals(0x14, note2.descriptorBytes().length);
 			Assertions.assertEquals(0x0f, note2.descriptorBytes()[0]);
 			Assertions.assertArrayEquals(new byte[] { 0x0f, 0x7f, (byte) 0xf2, (byte) 0x87, (byte) 0xcf, 0x26,
@@ -180,8 +180,8 @@ class BasicTest {
 	@Test
 	public void testObjectFile() throws Exception {
 		TestHelper.parseFile("objectFile.o", file -> {
-			Assertions.assertEquals(ElfFile.CLASS_32, file.objectSize);
-			Assertions.assertEquals(ElfFile.DATA_LSB, file.encoding);
+			Assertions.assertEquals(ElfFile.CLASS_32, file.ei_class);
+			Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
 			Assertions.assertEquals(ElfFile.ET_REL, file.e_type);
 			TestHelper.assertSectionNames(file, null, ".text", ".rel.text", ".data", ".bss", ".comment",
 					".ARM.attributes", ".symtab", ".strtab", ".shstrtab");

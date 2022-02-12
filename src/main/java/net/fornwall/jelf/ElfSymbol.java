@@ -164,7 +164,7 @@ public final class ElfSymbol {
         this.elfHeader = parser.elfFile;
         parser.seek(offset);
         this.offset = offset;
-        if (parser.elfFile.objectSize == ElfFile.CLASS_32) {
+        if (parser.elfFile.ei_class == ElfFile.CLASS_32) {
             st_name = parser.readInt();
             st_value = parser.readInt();
             st_size = parser.readInt();
