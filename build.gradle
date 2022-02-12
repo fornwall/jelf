@@ -1,11 +1,12 @@
 plugins {
-	id 'signing'
-	id "maven-publish"
-	id "java-library"
+  id 'signing'
+  id "maven-publish"
+  id "java-library"
+  id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
 }
 
 repositories {
-	mavenCentral()
+  mavenCentral()
 }
 
 group = "net.fornwall"
@@ -13,40 +14,43 @@ version = "0.7.0"
 sourceCompatibility = 1.8
 
 dependencies {
-	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
-	testRuntimeOnly "org.junit.platform:junit-platform-commons:1.7.0"
+  testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
+  testRuntimeOnly "org.junit.platform:junit-platform-commons:1.7.0"
 }
 
 java {
-	withJavadocJar()
-	withSourcesJar()
+  withJavadocJar()
+  withSourcesJar()
 }
 
 test {
-	systemProperty "jelf.version", project.version.toString()
-	useJUnitPlatform()
-	afterTest { desc, result ->
-		println "Test ${desc.name} [${desc.className}] result: ${result.resultType}"
-	}
+  systemProperty "jelf.version", project.version.toString()
+  useJUnitPlatform()
+  afterTest { desc, result ->
+    println "Test ${desc.name} [${desc.className}] result: ${result.resultType}"
+  }
 }
 
 // See https://docs.gradle.org/current/userguide/publishing_maven.html
-// and https://github.com/igr/repo-url-parser/blob/master/build.gradle
-//
-// Setup signing credentials with as described in
-// https://docs.gradle.org/current/userguide/signing_plugin.html
-// with the following gradle properties:
-//    signing.keyId=XXX
-//    signing.password=YYY
-//    signing.secretKeyRingFile=ZZZ
-//
-// Then publish to local (~/.m2/) and remote with:
-//    ./gradlew publishToMavenLocal
-//    ./gradlew -PsonatypeUsername=XXX -PsonatypePassword=YYY publishMavenJavaPublicationToMavenRepository
-//
-// Finally sign in to https://oss.sonatype.org/ to Close and Release as described at
-// https://central.sonatype.org/publish/release/
-ext.admin = hasProperty('sonatypeUsername')
+// and https://github.com/gradle-nexus/publish-plugin
+/*
+ gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
+
+ gradle --info \
+   -PsonatypeUsername=xxx \
+   -PsonatypePassword=xxx \
+   -Psigning.keyId=xxx \
+   -Psigning.password=xxx \
+   -Psigning.secretKeyRingFile=$HOME/.gnupg/secring.gpg \
+   publishToSonatype \
+   closeAndReleaseSonatypeStagingRepository
+*/
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
+}
+
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
@@ -72,18 +76,7 @@ publishing {
 				scm {
 					connection = 'scm:git:git://github.com/fornwall/jelf.git'
 					developerConnection = 'scm:git:ssh://git@github.com/fornwall/jelf.git'
-					url = 'http://github.com/fornwall/jelf/'
-				}
-			}
-		}
-	}
-	repositories {
-		maven {
-			url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-			if (admin) {
-				credentials {
-					username = project.property('sonatypeUsername')
-					password = project.property('sonatypePassword')
+					url = 'https://github.com/fornwall/jelf/'
 				}
 			}
 		}
@@ -91,12 +84,12 @@ publishing {
 }
 
 signing {
-	sign publishing.publications.mavenJava
+  sign publishing.publications.mavenJava
 }
 
 javadoc {
-	if (JavaVersion.current().isJava9Compatible()) {
-		options.addBooleanOption('html5', true)
-	}
+  if (JavaVersion.current().isJava9Compatible()) {
+    options.addBooleanOption('html5', true)
+  }
 }
 
