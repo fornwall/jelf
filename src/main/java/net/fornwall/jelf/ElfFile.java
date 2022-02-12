@@ -1,13 +1,11 @@
 package net.fornwall.jelf;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -508,11 +506,11 @@ public final class ElfFile {
         return from(buffer);
     }
 
-    public static ElfFile from(byte[] buffer) throws ElfException, IOException {
+    public static ElfFile from(byte[] buffer) throws ElfException {
         return new ElfFile(new ByteArrayAsFile(buffer));
     }
 
-    public static ElfFile from(MappedByteBuffer mappedByteBuffer) throws ElfException, IOException {
+    public static ElfFile from(MappedByteBuffer mappedByteBuffer) throws ElfException {
         return new ElfFile(new MappedFile(mappedByteBuffer));
     }
 

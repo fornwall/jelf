@@ -1,8 +1,5 @@
 package net.fornwall.jelf;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.MappedByteBuffer;
 import java.nio.ByteBuffer;
 

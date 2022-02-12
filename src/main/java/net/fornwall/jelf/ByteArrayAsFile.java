@@ -2,8 +2,6 @@ package net.fornwall.jelf;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.MappedByteBuffer;
 
 class ByteArrayAsFile implements BackingFile{
     private final ByteArrayInputStream byteArray;
