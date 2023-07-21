@@ -85,7 +85,7 @@ public class ElfNoteSection extends ElfSection {
     private final GnuAbiDescriptor gnuAbiDescriptor;
 
     ElfNoteSection(ElfParser parser, ElfSectionHeader header) throws ElfException {
-        super(header);
+        super(parser, header);
 
         parser.seek(header.sh_offset);
         n_namesz = parser.readInt();

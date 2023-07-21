@@ -11,7 +11,6 @@ package net.fornwall.jelf;
  */
 public class ElfGnuHashTable extends ElfSection {
 
-    private final ElfParser parser;
     private final int ELFCLASS_BITS;
     // The number of .dynsym symbols skipped.
     final int symoffset;
@@ -21,8 +20,7 @@ public class ElfGnuHashTable extends ElfSection {
     int[] chain;
 
     ElfGnuHashTable(ElfParser parser, ElfSectionHeader header) {
-        super(header);
-        this.parser = parser;
+        super(parser, header);
 
         ELFCLASS_BITS = parser.elfFile.ei_class == ElfFile.CLASS_32 ? 32 : 64;
 

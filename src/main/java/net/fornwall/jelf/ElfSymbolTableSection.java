@@ -14,7 +14,7 @@ public class ElfSymbolTableSection extends ElfSection {
     public final ElfSymbol[] symbols;
 
     public ElfSymbolTableSection(ElfParser parser, ElfSectionHeader header) {
-        super(header);
+        super(parser, header);
 
         int num_entries = (int) (header.sh_size / header.sh_entsize);
         symbols = new ElfSymbol[num_entries];

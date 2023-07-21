@@ -584,7 +584,7 @@ public final class ElfFile {
                         case ElfSectionHeader.SHT_GNU_HASH:
                             return new ElfGnuHashTable(parser, elfSectionHeader);
                         default:
-                            return new ElfSection(elfSectionHeader);
+                            return new ElfSection(parser, elfSectionHeader);
                     }
                 }
             };

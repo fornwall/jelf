@@ -249,7 +249,7 @@ public class ElfDynamicSection extends ElfSection {
     }
 
     public ElfDynamicSection(final ElfParser parser, ElfSectionHeader header) {
-        super(header);
+        super(parser, header);
 
         parser.seek(header.sh_offset);
         int numEntries = (int) (header.sh_size / 8);

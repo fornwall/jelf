@@ -4,7 +4,7 @@ public final class ElfRelocationSection extends ElfSection {
 	public final ElfRelocation[] relocations;
 
 	public ElfRelocationSection(ElfParser parser, ElfSectionHeader header) {
-		super(header);
+		super(parser, header);
 
 		int num_entries = (int) (header.sh_size / header.sh_entsize);
 		relocations = new ElfRelocation[num_entries];

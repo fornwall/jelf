@@ -13,7 +13,7 @@ public class ElfHashTable extends ElfSection {
     private final int[] chain;
 
     ElfHashTable(ElfParser parser, ElfSectionHeader header) {
-        super(header);
+        super(parser, header);
 
         parser.seek(header.sh_offset);
 
