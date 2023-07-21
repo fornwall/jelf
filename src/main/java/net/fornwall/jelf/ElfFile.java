@@ -23,10 +23,9 @@ import java.util.List;
  * <p>
  * Resources about ELF files:
  * <ul>
- *  <li>http://man7.org/linux/man-pages/man5/elf.5.html</li>
- *  <li>http://en.wikipedia.org/wiki/Executable_and_Linkable_Format</li>
- *  <li>http://www.ibm.com/developerworks/library/l-dynamic-libraries/</li>
- *  <li>http://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf</li>
+ *  <li><a href="https://man7.org/linux/man-pages/man5/elf.5.html">elf(5) — Linux manual page</a></li>
+ *  <li><a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">Wikipedia - Executable and Linkable Format</a></li>
+ *  <li><a href="https://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf">ELF-64 Object File Format</a></li>
  * </ul>
  */
 public final class ElfFile {

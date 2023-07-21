@@ -10,7 +10,7 @@ package net.fornwall.jelf;
  * These elf relocation entries can be obtained from {@link ElfRelocationSection}:s.
  * <p>
  * Corresponds to the below C structs:
- * <code><pre>
+ * <pre><code>
  * typedef struct {
  *   Elf32_Addr r_offset;
  *   Elf32_Word r_info;
@@ -20,7 +20,7 @@ package net.fornwall.jelf;
  *   Elf64_Addr	r_offset;
  *   Elf64_Xword r_info;
  * } Elf64_Rel;
- * </pre></code>
+ * </code></pre>
  */
 public final class ElfRelocation {
 	/**
