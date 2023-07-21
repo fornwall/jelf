@@ -513,7 +513,7 @@ public final class ElfFile {
         return new ElfFile(new MappedFile(mappedByteBuffer));
     }
 
-    public ElfFile(BackingFile backingFile) throws ElfException {
+    ElfFile(BackingFile backingFile) throws ElfException {
         final ElfParser parser = new ElfParser(this, backingFile);
 
         byte[] ident = new byte[16];
