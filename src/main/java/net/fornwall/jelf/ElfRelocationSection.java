@@ -1,6 +1,6 @@
 package net.fornwall.jelf;
 
-public class ElfRelocationSection extends ElfSection {
+public final class ElfRelocationSection extends ElfSection {
 	public final ElfRelocation[] relocations;
 
 	public ElfRelocationSection(ElfParser parser, ElfSectionHeader header) {

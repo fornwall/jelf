@@ -278,6 +278,10 @@ public final class ElfFile {
 
     private ElfDynamicSection dynamicSection;
 
+    public boolean is32Bits() {
+        return ei_class == CLASS_32;
+    }
+
     /**
      * Returns the section header at the specified index. The section header at index 0 is defined as being a undefined
      * section.

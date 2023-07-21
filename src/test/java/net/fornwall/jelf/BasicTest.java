@@ -66,10 +66,12 @@ class BasicTest {
 			Assertions.assertEquals("gold 1.11", ((ElfNoteSection) noteSections.get(0)).descriptorAsString());
 
 			ElfNoteSection noteSection = file.firstSectionByType(ElfNoteSection.class);
+			Assertions.assertNotNull(noteSection);
 			Assertions.assertEquals(".note.gnu.gold-version", noteSection.header.getName());
 			Assertions.assertSame(noteSection, noteSections.get(0));
 
 			ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
+			Assertions.assertNotNull(dynsym);
 			Assertions.assertEquals(".dynsym", dynsym.header.getName());
 			Assertions.assertEquals(768, dynsym.symbols.length);
 
@@ -93,6 +95,7 @@ class BasicTest {
 			Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
 
 			ElfSymbolTableSection symtab = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_SYMTAB);
+			Assertions.assertNotNull(symtab);
 			Assertions.assertEquals(".symtab", symtab.header.getName());
 			Assertions.assertEquals(2149, symtab.symbols.length);
 			symbol = symtab.symbols[0];
@@ -114,6 +117,7 @@ class BasicTest {
 			TestHelper.validateHashTable(file);
 
 			ElfDynamicSection dynamic = file.firstSectionByType(ElfDynamicSection.class);
+			Assertions.assertNotNull(dynamic);
 			Assertions.assertEquals(ElfDynamicSection.DF_SYMBOLIC | ElfDynamicSection.DF_BIND_NOW, dynamic.getFlags());
 			Assertions.assertEquals(ElfDynamicSection.DF_1_NOW, dynamic.getFlags1());
 
@@ -128,7 +132,7 @@ class BasicTest {
 	}
 
 	@Test
-	void testLinxAmd64BinDash() throws Exception {
+	void testLinuxAmd64BinDash() throws Exception {
 		TestHelper.parseFile("linux_amd64_bindash", file -> {
 			Assertions.assertEquals(ElfFile.CLASS_64, file.ei_class);
 			Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
@@ -191,9 +195,56 @@ class BasicTest {
 			ElfRelocationSection relocations = (ElfRelocationSection) sections.get(0);
 			Assertions.assertEquals(1, relocations.relocations.length);
 
+			// "Relocation section '.rel.text' at offset 0x14c contains 1 entry:
+			// Offset     Info    Type            Sym.Value  Sym. Name
+			//00000006  0000080a R_ARM_THM_CALL    00000001   callee"
 			ElfRelocation rel = relocations.relocations[0];
 			Assertions.assertEquals(0x0000_0006, rel.r_offset);
 			Assertions.assertEquals(0x0000_080A, rel.r_info);
+			Assertions.assertEquals(ElfRelocationTypes.R_ARM_THM_CALL, rel.getType());
+			Assertions.assertEquals("callee", rel.getSymbol().getName());
+		});
+	}
+
+	@Test
+	public void testObjectFile64() throws Exception {
+		TestHelper.parseFile("objectFile-64.o", file -> {
+			Assertions.assertEquals(ElfFile.CLASS_64, file.ei_class);
+			Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
+			Assertions.assertEquals(ElfFile.ET_REL, file.e_type);
+			TestHelper.assertSectionNames(file, null, ".text", ".rela.text", ".data", ".bss", ".comment",
+					".note.GNU-stack", ".note.gnu.property", ".eh_frame", ".rela.eh_frame", ".symtab", ".strtab", ".shstrtab");
+
+			List<ElfSection> sections = file.sectionsOfType(ElfSectionHeader.SHT_RELA);
+			Assertions.assertEquals(2, sections.size());
+			Assertions.assertEquals(".rela.text", sections.get(0).header.getName());
+			Assertions.assertEquals(".rela.eh_frame", sections.get(1).header.getName());
+
+			ElfRelocationAddendSection relocations = (ElfRelocationAddendSection) sections.get(0);
+			// readelf -a:
+			// "Relocation section '.rela.text' at offset 0x1a0 contains 1 entry:
+			//  Offset          Info           Type           Sym. Value    Sym. Name + Addend
+			//00000000000d  000400000002 R_X86_64_PC32     0000000000000000 value_to_add - 4"
+			Assertions.assertEquals(1, relocations.relocations.length);
+			ElfRelocationAddend rel = relocations.relocations[0];
+			Assertions.assertEquals(0x0000_000d, rel.r_offset);
+			Assertions.assertEquals(0x0004_0000_0002L, rel.r_info);
+			Assertions.assertEquals(-4, rel.r_addend);
+			Assertions.assertEquals(ElfRelocationTypes.R_X86_64_PC32, rel.getType());
+			Assertions.assertEquals("value_to_add", rel.getSymbol().getName());
+
+			relocations = (ElfRelocationAddendSection) sections.get(1);
+			// readelf -a:
+			// "Relocation section '.rela.eh_frame' at offset 0x1b8 contains 1 entry:
+			// Offset          Info           Type           Sym. Value    Sym. Name + Addend
+			// 000000000020  000200000002 R_X86_64_PC32     0000000000000000 .text + 0
+			// No processor specific unwind information to decode"
+			Assertions.assertEquals(1, relocations.relocations.length);
+			rel = relocations.relocations[0];
+			Assertions.assertEquals(0x0000_0020, rel.r_offset);
+			Assertions.assertEquals(0x0002_0000_0002L, rel.r_info);
+			Assertions.assertEquals(0, rel.r_addend);
+			Assertions.assertEquals(ElfRelocationTypes.R_X86_64_PC32, rel.getType());
 		});
 	}
 
