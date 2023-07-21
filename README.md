@@ -28,6 +28,9 @@ dependencies {
 }
 ```
 
+## Using JElf
+See the [ElfFile](https://www.javadoc.io/doc/net.fornwall/jelf/latest/net/fornwall/jelf/ElfFile.html) class for how to parse and query an ELF file.
+
 ## ELF Resources
 - [Wikipedia entry on the ELF format](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
 - [elf(5) man page](http://man7.org/linux/man-pages/man5/elf.5.html)
