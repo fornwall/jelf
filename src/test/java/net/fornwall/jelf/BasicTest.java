@@ -248,4 +248,12 @@ class BasicTest {
 		});
 	}
 
+	@Test
+	void testLinuxUsrBinYes() throws Exception {
+		TestHelper.parseFile("usr-bin-yes", file -> {
+			ElfSymbol s = file.getELFSymbol("fputc_unlocked");
+			Assertions.assertNotNull(s);
+			Assertions.assertEquals("fputc_unlocked", s.getName());
+		});
+	}
 }

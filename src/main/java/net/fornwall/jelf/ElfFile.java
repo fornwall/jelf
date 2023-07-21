@@ -403,12 +403,10 @@ public final class ElfFile {
         // Check dynamic symbol table for symbol name.
         ElfSymbolTableSection sh = getDynamicSymbolTableSection();
         if (sh != null) {
-            int numSymbols = sh.symbols.length;
-            for (int i = 0; i < Math.ceil(numSymbols / 2); i++) {
+            final int numSymbols = sh.symbols.length;
+            for (int i = 0; i < numSymbols; i++) {
                 ElfSymbol symbol = sh.symbols[i];
                 if (symbolName.equals(symbol.getName())) {
-                    return symbol;
-                } else if (symbolName.equals((symbol = sh.symbols[numSymbols - 1 - i]).getName())) {
                     return symbol;
                 }
             }
@@ -417,12 +415,10 @@ public final class ElfFile {
         // Check symbol table for symbol name.
         sh = getSymbolTableSection();
         if (sh != null) {
-            int numSymbols = sh.symbols.length;
-            for (int i = 0; i < Math.ceil(numSymbols / 2); i++) {
+            final int numSymbols = sh.symbols.length;
+            for (int i = 0; i < numSymbols; i++) {
                 ElfSymbol symbol = sh.symbols[i];
                 if (symbolName.equals(symbol.getName())) {
-                    return symbol;
-                } else if (symbolName.equals((symbol = sh.symbols[numSymbols - 1 - i]).getName())) {
                     return symbol;
                 }
             }
@@ -444,7 +440,7 @@ public final class ElfFile {
 
         ElfSymbolTableSection sh = getDynamicSymbolTableSection();
         if (sh != null) {
-            int numSymbols = sh.symbols.length;
+            final int numSymbols = sh.symbols.length;
             for (int i = 0; i < numSymbols; i++) {
                 symbol = sh.symbols[i];
                 value = symbol.st_value;
@@ -455,7 +451,7 @@ public final class ElfFile {
         // Check symbol table for symbol name.
         sh = getSymbolTableSection();
         if (sh != null) {
-            int numSymbols = sh.symbols.length;
+            final int numSymbols = sh.symbols.length;
             for (int i = 0; i < numSymbols; i++) {
                 symbol = sh.symbols[i];
                 value = symbol.st_value;
