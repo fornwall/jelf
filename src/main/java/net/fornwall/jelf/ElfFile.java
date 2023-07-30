@@ -513,6 +513,10 @@ public final class ElfFile {
         return new ElfFile(new MappedFile(mappedByteBuffer));
     }
 
+    public static ElfFile from(BackingFile backingFile) throws ElfException {
+        return new ElfFile(backingFile);
+    }
+
     ElfFile(BackingFile backingFile) throws ElfException {
         final ElfParser parser = new ElfParser(this, backingFile);
 
