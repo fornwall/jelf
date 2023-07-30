@@ -1,6 +1,6 @@
 package net.fornwall.jelf;
 
-interface BackingFile {
+public interface BackingFile {
 
     void seek(long offset);
     void skip(int bytesToSkip);
