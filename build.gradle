@@ -15,7 +15,7 @@ dependencies {
 
 java {
   group = "net.fornwall"
-  version = "0.9.0"
+  version = "0.10.0"
   sourceCompatibility = 17
   withJavadocJar()
   withSourcesJar()
