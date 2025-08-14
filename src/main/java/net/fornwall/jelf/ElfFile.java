@@ -241,7 +241,7 @@ public final class ElfFile {
     /**
      * e_phnum. Number of {@link ElfSegment} entries in the program header table, 0 if no entries.
      */
-    public final short e_phnum; // Elf32_Half
+    public short e_phnum; // Elf32_Half
     /**
      * e_shentsize. Section header entry size in bytes - all entries are the same size.
      */
@@ -249,13 +249,13 @@ public final class ElfFile {
     /**
      * e_shnum. Number of entries in the section header table, 0 if no entries.
      */
-    public final short e_shnum; // Elf32_Half
+    public short e_shnum; // Elf32_Half
 
     /**
      * Elf{32,64}_Ehdr#e_shstrndx. Index into the section header table associated with the section name string table.
      * SH_UNDEF if there is no section name string table.
      */
-    public final short e_shstrndx; // Elf32_Half
+    public short e_shstrndx; // Elf32_Half
 
     /**
      * MemoizedObject array of section headers associated with this ELF file.
@@ -551,14 +551,14 @@ public final class ElfFile {
         e_phnum = parser.readShort();
         e_shentsize = parser.readShort();
         e_shnum = parser.readShort();
-        if (e_shnum == 0) {
-            throw new ElfException("e_shnum is SHN_UNDEF(0), which is not supported yet"
-                    + " (the actual number of section header table entries is contained in the sh_size field of the section header at index 0)");
-        }
         e_shstrndx = parser.readShort();
-        if (e_shstrndx == /* SHN_XINDEX= */0xffff) {
-            throw new ElfException("e_shstrndx is SHN_XINDEX(0xffff), which is not supported yet"
-                    + " (the actual index of the section name string table section is contained in the sh_link field of the section header at index 0)");
+
+
+        if (e_shnum == 0 && e_shstrndx == 0xffff) {
+            ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, e_shoff);
+            e_shnum = (short) elfSectionHeader.sh_size;
+            e_shstrndx = (short) elfSectionHeader.sh_link;
+            e_phnum = (short) elfSectionHeader.sh_info;
         }
 
         sections = MemoizedObject.uncheckedArray(e_shnum);
