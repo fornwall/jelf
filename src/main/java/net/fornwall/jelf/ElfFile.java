@@ -147,6 +147,10 @@ public final class ElfFile {
      */
     public static final int ARCH_ATT = 1;
     /**
+     * AT&amp;T architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_M32 = ARCH_ATT;
+    /**
      * SPARC architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_SPARC = 2;
@@ -155,27 +159,732 @@ public final class ElfFile {
      */
     public static final int ARCH_i386 = 3;
     /**
+     * Intel 386 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_386 = ARCH_i386;
+    /**
      * Motorola 68000 architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_68k = 4;
+    /**
+     * Motorola 68000 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_68K = ARCH_68k;
     /**
      * Motorola 88000 architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_88k = 5;
     /**
+     * Motorola 8800 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_88K = ARCH_88k;
+    /**
+     * Intel MCU architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_IAMCU = 6;
+    /**
      * Intel 860 architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_i860 = 7;
     /**
-     * MIPS architecture type. A possible value of {@link #e_machine}.
+     * Intel 860 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_860 = ARCH_i860;
+    /**
+     * MIPS R3000 big-endian architecture type. A possible value of {@link #e_machine}.
      */
     public static final int ARCH_MIPS = 8;
-    public static final int ARCH_ARM = 0x28;
-    public static final int ARCH_X86_64 = 0x3E;
-    public static final int ARCH_AARCH64 = 0xB7;
+    /**
+     * IBM System/370 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_S370 = 9;
+    /**
+     * MIPS R3000 little-endian architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MIPS_RS3_LE = 10;
+    /**
+     * HPPA architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PARISC = 15;
+    /**
+     * Fujitsu VPP500 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_VPP500 = 17;
+    /**
+     * Sun's "v8plus" architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SPARC32PLUS = 18;
+    /**
+     * Intel 80960 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_960 = 19;
+    /**
+     * PowerPC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PPC = 20;
+    /**
+     * PowerPC 64-bit architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PPC64 = 21;
+    /**
+     * IBM S390 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_S390 = 22;
+    /**
+     * IBM SPU/SPC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SPU = 23;
+    /**
+     * NEC V800 series architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_V800 = 36;
+    /**
+     * Fujitsu FR20 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_FR20 = 37;
+    /**
+     * TRW RH-32 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_RH32 = 38;
+    /**
+     * Motorola RCE architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_RCE = 39;
+    /**
+     * ARM architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ARM = 40;
+    /**
+     * Digital Alpha architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_FAKE_ALPHA = 41;
+    /**
+     * Hitachi SH architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SH = 42;
+    /**
+     * SPARC v9 64-bit architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SPARCV9 = 43;
+    /**
+     * Siemens Tricore architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TRICORE = 44;
+    /**
+     * Argonaut RISC Core architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ARC = 45;
+    /**
+     * Hitachi H8/300 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_H8_300 = 46;
+    /**
+     * Hitachi H8/300H architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_H8_300H = 47;
+    /**
+     * Hitachi H8S architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_H8S = 48;
+    /**
+     * Hitachi H8/500 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_H8_500 = 49;
+    /**
+     * Intel Merced architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_IA_64 = 50;
+    /**
+     * Stanford MIPS-X architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MIPS_X = 51;
+    /**
+     * Motorola Coldfire architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_COLDFIRE = 52;
+    /**
+     * Motorola M68HC12 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_68HC12 = 53;
+    /**
+     * Fujitsu MMA Multimedia Accelerator architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MMA = 54;
+    /**
+     * Siemens PCP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PCP = 55;
+    /**
+     * Sony nCPU embedded RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_NCPU = 56;
+    /**
+     * Denso NDR1 microprocessor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_NDR1 = 57;
+    /**
+     * Motorola Start*Core processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_STARCORE = 58;
+    /**
+     * Toyota ME16 processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ME16 = 59;
+    /**
+     * STMicroelectronic ST100 processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ST100 = 60;
+    /**
+     * Advanced Logic Corp. Tinyj emb.fam architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TINYJ = 61;
+    /**
+     * AMD x86-64 architecture architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_X86_64 = 62;
+    /**
+     * Sony DSP Processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PDSP = 63;
+    /**
+     * Digital PDP-10 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PDP10 = 64;
+    /**
+     * Digital PDP-11 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PDP11 = 65;
+    /**
+     * Siemens FX66 microcontroller architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_FX66 = 66;
+    /**
+     * STMicroelectronics ST9+ 8/16 mc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ST9PLUS = 67;
+    /**
+     * STmicroelectronics ST7 8 bit mc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ST7 = 68;
+    /**
+     * Motorola MC68HC16 microcontroller architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_68HC16 = 69;
+    /**
+     * Motorola MC68HC11 microcontroller architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_68HC11 = 70;
+    /**
+     * Motorola MC68HC08 microcontroller architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_68HC08 = 71;
+    /**
+     * Motorola MC68HC05 microcontroller architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_68HC05 = 72;
+    /**
+     * Silicon Graphics SVx architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SVX = 73;
+    /**
+     * STMicroelectronics ST19 8 bit mc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ST19 = 74;
+    /**
+     * Digital VAX architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_VAX = 75;
+    /**
+     * Axis Communications 32-bit emb.proc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CRIS = 76;
+    /**
+     * Infineon Technologies 32-bit emb.proc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_JAVELIN = 77;
+    /**
+     * Element 14 64-bit DSP Processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_FIREPATH = 78;
+    /**
+     * LSI Logic 16-bit DSP Processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ZSP = 79;
+    /**
+     * Donald Knuth's educational 64-bit proc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MMIX = 80;
+    /**
+     * Harvard University machine-independent object files architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_HUANY = 81;
+    /**
+     * SiTera Prism architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PRISM = 82;
+    /**
+     * Atmel AVR 8-bit microcontroller architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_AVR = 83;
+    /**
+     * Fujitsu FR30 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_FR30 = 84;
+    /**
+     * Mitsubishi D10V architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_D10V = 85;
+    /**
+     * Mitsubishi D30V architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_D30V = 86;
+    /**
+     * NEC v850 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_V850 = 87;
+    /**
+     * Mitsubishi M32R architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_M32R = 88;
+    /**
+     * Matsushita MN10300 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MN10300 = 89;
+    /**
+     * Matsushita MN10200 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MN10200 = 90;
+    /**
+     * picoJava architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_PJ = 91;
+    /**
+     * OpenRISC 32-bit embedded processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_OPENRISC = 92;
+    /**
+     * ARC International ARCompact architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ARC_COMPACT = 93;
+    /**
+     * Tensilica Xtensa Architecture architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_XTENSA = 94;
+    /**
+     * Alphamosaic VideoCore architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_VIDEOCORE = 95;
+    /**
+     * Thompson Multimedia General Purpose Proc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TMM_GPP = 96;
+    /**
+     * National Semi. 32000 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_NS32K = 97;
+    /**
+     * Tenor Network TPC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TPC = 98;
+    /**
+     * Trebia SNP 1000 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SNP1K = 99;
+    /**
+     * STMicroelectronics ST200 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ST200 = 100;
+    /**
+     * Ubicom IP2xxx architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_IP2K = 101;
+    /**
+     * MAX processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MAX = 102;
+    /**
+     * National Semi. CompactRISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CR = 103;
+    /**
+     * Fujitsu F2MC16 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_F2MC16 = 104;
+    /**
+     * Texas Instruments msp430 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MSP430 = 105;
+    /**
+     * Analog Devices Blackfin DSP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_BLACKFIN = 106;
+    /**
+     * Seiko Epson S1C33 family architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SE_C33 = 107;
+    /**
+     * Sharp embedded microprocessor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SEP = 108;
+    /**
+     * Arca RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ARCA = 109;
+    /**
+     * PKU-Unity &amp; MPRC Peking Uni. mc series architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_UNICORE = 110;
+    /**
+     * eXcess configurable cpu architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_EXCESS = 111;
+    /**
+     * Icera Semi. Deep Execution Processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_DXP = 112;
+    /**
+     * Altera Nios II architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ALTERA_NIOS2 = 113;
+    /**
+     * National Semi. CompactRISC CRX architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CRX = 114;
+    /**
+     * Motorola XGATE architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_XGATE = 115;
+    /**
+     * Infineon C16x/XC16x architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_C166 = 116;
+    /**
+     * Renesas M16C architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_M16C = 117;
+    /**
+     * Microchip Technology dsPIC30F architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_DSPIC30F = 118;
+    /**
+     * Freescale Communication Engine RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CE = 119;
+    /**
+     * Renesas M32C architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_M32C = 120;
+    /**
+     * Altium TSK3000 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TSK3000 = 131;
+    /**
+     * Freescale RS08 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_RS08 = 132;
+    /**
+     * Analog Devices SHARC family architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SHARC = 133;
+    /**
+     * Cyan Technology eCOG2 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ECOG2 = 134;
+    /**
+     * Sunplus S+core7 RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SCORE7 = 135;
+    /**
+     * New Japan Radio (NJR) 24-bit DSP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_DSP24 = 136;
+    /**
+     * Broadcom VideoCore III architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_VIDEOCORE3 = 137;
+    /**
+     * RISC for Lattice FPGA architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_LATTICEMICO32 = 138;
+    /**
+     * Seiko Epson C17 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SE_C17 = 139;
+    /**
+     * Texas Instruments TMS320C6000 DSP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TI_C6000 = 140;
+    /**
+     * Texas Instruments TMS320C2000 DSP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TI_C2000 = 141;
+    /**
+     * Texas Instruments TMS320C55x DSP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TI_C5500 = 142;
+    /**
+     * Texas Instruments App. Specific RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TI_ARP32 = 143;
+    /**
+     * Texas Instruments Prog. Realtime Unit architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TI_PRU = 144;
+    /**
+     * STMicroelectronics 64bit VLIW DSP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MMDSP_PLUS = 160;
+    /**
+     * Cypress M8C architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CYPRESS_M8C = 161;
+    /**
+     * Renesas R32C architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_R32C = 162;
+    /**
+     * NXP Semi. TriMedia architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TRIMEDIA = 163;
+    /**
+     * QUALCOMM DSP6 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_QDSP6 = 164;
+    /**
+     * Intel 8051 and variants architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_8051 = 165;
+    /**
+     * STMicroelectronics STxP7x architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_STXP7X = 166;
+    /**
+     * Andes Tech. compact code emb. RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_NDS32 = 167;
+    /**
+     * Cyan Technology eCOG1X architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ECOG1X = 168;
+    /**
+     * Dallas Semi. MAXQ30 mc architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MAXQ30 = 169;
+    /**
+     * New Japan Radio (NJR) 16-bit DSP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_XIMO16 = 170;
+    /**
+     * M2000 Reconfigurable RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MANIK = 171;
+    /**
+     * Cray NV2 vector architecture architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CRAYNV2 = 172;
+    /**
+     * Renesas RX architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_RX = 173;
+    /**
+     * Imagination Tech. META architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_METAG = 174;
+    /**
+     * MCST Elbrus architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MCST_ELBRUS = 175;
+    /**
+     * Cyan Technology eCOG16 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ECOG16 = 176;
+    /**
+     * National Semi. CompactRISC CR16 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CR16 = 177;
+    /**
+     * Freescale Extended Time Processing Unit architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ETPU = 178;
+    /**
+     * Infineon Tech. SLE9X architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_SLE9X = 179;
+    /**
+     * Intel L10M architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_L10M = 180;
+    /**
+     * Intel K10M architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_K10M = 181;
+    /**
+     * ARM AARCH64 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_AARCH64 = 183;
+    /**
+     * Amtel 32-bit microprocessor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_AVR32 = 185;
+    /**
+     * STMicroelectronics STM8 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_STM8 = 186;
+    /**
+     * Tilera TILE64 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TILE64 = 187;
+    /**
+     * Tilera TILEPro architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TILEPRO = 188;
+    /**
+     * Xilinx MicroBlaze architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MICROBLAZE = 189;
+    /**
+     * NVIDIA CUDA architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CUDA = 190;
+    /**
+     * Tilera TILE-Gx architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_TILEGX = 191;
+    /**
+     * CloudShield architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CLOUDSHIELD = 192;
+    /**
+     * KIPO-KAIST Core-A 1st gen. architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_COREA_1ST = 193;
+    /**
+     * KIPO-KAIST Core-A 2nd gen. architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_COREA_2ND = 194;
+    /**
+     * Synopsys ARCv2 ISA.  architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_ARCV2 = 195;
+    /**
+     * Open8 RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_OPEN8 = 196;
+    /**
+     * Renesas RL78 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_RL78 = 197;
+    /**
+     * Broadcom VideoCore V architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_VIDEOCORE5 = 198;
+    /**
+     * Renesas 78KOR architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_78KOR = 199;
+    /**
+     * Freescale 56800EX DSC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_56800EX = 200;
+    /**
+     * Beyond BA1 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_BA1 = 201;
+    /**
+     * Beyond BA2 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_BA2 = 202;
+    /**
+     * XMOS xCORE architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_XCORE = 203;
+    /**
+     * Microchip 8-bit PIC(r) architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MCHP_PIC = 204;
+    /**
+     * Intel Graphics Technology architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_INTELGT = 205;
+    /**
+     * KM211 KM32 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_KM32 = 210;
+    /**
+     * KM211 KMX32 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_KMX32 = 211;
+    /**
+     * KM211 KMX16 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_EMX16 = 212;
+    /**
+     * KM211 KMX8 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_EMX8 = 213;
+    /**
+     * KM211 KVARC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_KVARC = 214;
+    /**
+     * Paneve CDP architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CDP = 215;
+    /**
+     * Cognitive Smart Memory Processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_COGE = 216;
+    /**
+     * Bluechip CoolEngine architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_COOL = 217;
+    /**
+     * Nanoradio Optimized RISC architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_NORC = 218;
+    /**
+     * CSR Kalimba architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CSR_KALIMBA = 219;
+    /**
+     * Zilog Z80 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_Z80 = 220;
+    /**
+     * Controls and Data Services VISIUMcore architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_VISIUM = 221;
+    /**
+     * FTDI Chip FT32 architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_FT32 = 222;
+    /**
+     * Moxie processor architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_MOXIE = 223;
+    /**
+     * AMD GPU architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_AMDGPU = 224;
+    /**
+     * RISC-V architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_RISCV = 243;
+    /**
+     * Linux BPF -- in-kernel virtual machine architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_BPF = 247;
+    /**
+     * C-SKY architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_CSKY = 252;     /*  */
+    /**
+     * LoongArch architecture type. A possible value of {@link #e_machine}.
+     */
+    public static final int ARCH_LOONGARCH = 258;
 
     /**
-     * Byte identifying the size of objects, either {@link #CLASS_32} or {link {@value #CLASS_64}.
+     * Byte identifying the size of objects, either {@link #CLASS_32} or {@link #CLASS_64}.
      */
     public final byte ei_class;
 
@@ -282,7 +991,7 @@ public final class ElfFile {
     }
 
     /**
-     * Returns the section header at the specified index. The section header at index 0 is defined as being a undefined
+     * Returns the section header at the specified index. The section header at index 0 is defined as being an undefined
      * section.
      *
      * @param index the index of the ELF section to fetch
