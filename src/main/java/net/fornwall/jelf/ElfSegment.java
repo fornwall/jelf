@@ -144,20 +144,18 @@ public class ElfSegment {
             p_align = parser.readLong();
         }
 
-        switch (p_type) {
-            case PT_INTERP:
-                ptInterpreter = new MemoizedObject<String>() {
-                    @Override
-                    protected String computeValue() throws ElfException {
-                        parser.seek(ElfSegment.this.p_offset);
-                        StringBuilder buffer = new StringBuilder();
-                        int b;
-                        while ((b = parser.readUnsignedByte()) != 0)
-                            buffer.append((char) b);
-                        return buffer.toString();
-                    }
-                };
-                break;
+        if (p_type == PT_INTERP) {
+            ptInterpreter = new MemoizedObject<String>() {
+                @Override
+                protected String computeValue() throws ElfException {
+                    parser.seek(ElfSegment.this.p_offset);
+                    StringBuilder buffer = new StringBuilder();
+                    int b;
+                    while ((b = parser.readUnsignedByte()) != 0)
+                        buffer.append((char) b);
+                    return buffer.toString();
+                }
+            };
         }
     }
 

@@ -99,12 +99,10 @@ public class ElfNoteSection extends ElfSection {
         }
         parser.skip(bytesRead % 4);
 
-        switch (n_type) {
-            case NT_GNU_ABI_TAG:
-                gnuAbiDescriptor = new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
-                break;
-            default:
-                gnuAbiDescriptor = null;
+        if (n_type == NT_GNU_ABI_TAG) {
+            gnuAbiDescriptor = new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
+        } else {
+            gnuAbiDescriptor = null;
         }
 
         bytesRead = parser.read(descriptorBytes);
