@@ -18,7 +18,7 @@ dependencies {
 
 java {
   group = "net.fornwall"
-  version = "0.10.0"
+  version = "0.11.0"
   sourceCompatibility = org.gradle.api.JavaVersion.VERSION_17
   withJavadocJar()
   withSourcesJar()
