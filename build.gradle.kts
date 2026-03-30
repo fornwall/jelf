@@ -18,7 +18,7 @@ dependencies {
 
 java {
   group = "net.fornwall"
-  version = "0.11.0"
+  version = "0.12.0-SNAPSHOT"
   sourceCompatibility = org.gradle.api.JavaVersion.VERSION_17
   withJavadocJar()
   withSourcesJar()
@@ -88,4 +88,8 @@ publishing {
 
 signing {
   sign(publishing.publications["mavenJava"])
+}
+
+tasks.withType<Sign>().configureEach {
+  onlyIf { gradle.taskGraph.allTasks.none { it is org.gradle.api.publish.maven.tasks.PublishToMavenLocal } }
 }
