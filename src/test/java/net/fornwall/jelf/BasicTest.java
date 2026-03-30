@@ -296,4 +296,19 @@ class BasicTest {
             Assertions.fail();
         });
     }
+
+    @Test
+    void testUnalignedNoteName() throws Exception {
+        TestHelper.parseFile("netbsd_amd64_yes", file -> {
+            List<ElfSection> noteSections = file.sectionsOfType(ElfSectionHeader.SHT_NOTE);
+            int numNoteSections = noteSections.size();
+            Assertions.assertEquals(2, numNoteSections);
+            ElfNoteSection note = (ElfNoteSection) noteSections.get(0);
+            String name = "NetBSD";
+            int length = name.length() + 1;
+            Assertions.assertEquals(name, note.getName());
+            Assertions.assertEquals(length, note.n_namesz);
+            Assertions.assertNotEquals(0, length % 4);
+        });
+    }
 }
