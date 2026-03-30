@@ -97,7 +97,7 @@ public class ElfNoteSection extends ElfSection {
         if (bytesRead != n_namesz) {
             throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + n_namesz + ")");
         }
-        parser.skip(bytesRead % 4);
+        parser.skip(noteAlign(n_namesz) - n_namesz);
 
         if (n_type == NT_GNU_ABI_TAG) {
             gnuAbiDescriptor = new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
@@ -110,7 +110,13 @@ public class ElfNoteSection extends ElfSection {
             throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + n_descsz + ")");
         }
 
-        n_name = new String(nameBytes, 0, n_namesz - 1); // unnecessary trailing 0
+        int nameLen = 0;
+
+        while (nameLen < n_namesz && nameBytes[nameLen] != 0) {
+            nameLen++;
+        }
+
+        n_name = new String(nameBytes, 0, nameLen);
     }
 
     public String getName() {
@@ -129,4 +135,7 @@ public class ElfNoteSection extends ElfSection {
         return gnuAbiDescriptor;
     }
 
+    private static int noteAlign(int n) {
+        return (n + 3) & ~3;
+    }
 }
