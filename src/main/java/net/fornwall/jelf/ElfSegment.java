@@ -100,9 +100,11 @@ public class ElfSegment {
      */
     public final long p_align; // Elf32_Word
 
+    private final ElfParser parser;
     private MemoizedObject<String> ptInterpreter;
 
     ElfSegment(final ElfParser parser, long offset) {
+        this.parser = parser;
         parser.seek(offset);
         if (parser.elfFile.ei_class == ElfFile.CLASS_32) {
             // typedef struct {
@@ -157,6 +159,27 @@ public class ElfSegment {
                 }
             };
         }
+    }
+
+    /**
+     *  Get the bytes contained in this ELF segment.
+     *
+     * @return the bytes contained in this ELF segment
+     * @throws ElfException if the ELF segment is too large
+     */
+    public byte[] getData() {
+        if (p_filesz == 0) {
+            return new byte[0];
+        }
+
+        if (p_filesz > (long) Integer.MAX_VALUE) {
+            throw new ElfException("Too big segment: " + p_filesz);
+        }
+
+        byte[] result = new byte[(int) p_filesz];
+        parser.seek(p_offset);
+        parser.read(result);
+        return result;
     }
 
     @Override

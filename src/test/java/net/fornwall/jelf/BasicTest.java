@@ -263,4 +263,37 @@ class BasicTest {
             }, interpSection.getData());
         });
     }
+
+    @Test
+    void testSegmentGetData() throws Exception {
+        TestHelper.parseFile("linux_amd64_bindash", file -> {
+            ElfSegment interp = null;
+
+            for (int i = 0; i < file.e_phnum; i++) {
+                ElfSegment programHeader = file.getProgramHeader(i);
+
+                if (programHeader.p_type == ElfSegment.PT_INTERP) {
+                    interp = programHeader;
+                    break;
+                }
+            }
+
+            Assertions.assertNotNull(interp);
+            byte[] interpData = interp.getData();
+            String interpString = new String(interpData, 0, interpData.length - 1);
+            Assertions.assertEquals("/lib64/ld-linux-x86-64.so.2", interpString);
+
+            for (int i = 0; i < file.e_phnum; i++) {
+                ElfSegment programHeader = file.getProgramHeader(i);
+
+                if (programHeader.p_type == ElfSegment.PT_NOTE) {
+                    byte[] data = programHeader.getData();
+                    Assertions.assertTrue(data.length > 0);
+                    return;
+                }
+            }
+
+            Assertions.fail();
+        });
+    }
 }
