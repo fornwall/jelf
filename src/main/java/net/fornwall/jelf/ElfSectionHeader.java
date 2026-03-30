@@ -84,6 +84,10 @@ public class ElfSectionHeader {
     public static final int SHT_SYMTAB_SHNDX = 18;
 
     /**
+     * Object attributes.
+     */
+    public static final int SHT_GNU_ATTRIBUTES = 0x6ffffff5;
+    /**
      * A hash table for fast lookup of dynamic symbols.
      * <p>
      * See {@link ElfGnuHashTable}.
