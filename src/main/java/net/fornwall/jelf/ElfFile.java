@@ -6,6 +6,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.List;
  *     <li>{@link #from(byte[])}</li>
  *     <li>{@link #from(InputStream)}</li>
  *     <li>{@link #from(MappedByteBuffer)}</li>
+ *     <li>{@link #from(Path)}</li>
  * </ul>
  * <p>
  * Resources about ELF files:
@@ -1212,6 +1216,13 @@ public final class ElfFile {
             }
         }
         return from(buffer);
+    }
+
+    public static ElfFile from(Path path) throws ElfException, IOException {
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+            MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+            return from(buffer);
+        }
     }
 
     public static ElfFile from(byte[] buffer) throws ElfException {
