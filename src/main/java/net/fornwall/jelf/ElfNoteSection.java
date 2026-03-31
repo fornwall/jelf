@@ -77,6 +77,8 @@ public class ElfNoteSection extends ElfSection {
         }
     }
 
+    static final int NHDR_SIZE = 3 * Integer.BYTES;
+
     public final /* uint32_t */ int n_namesz;
     public final /* uint32_t */ int n_descsz;
     public final /* uint32_t */ int n_type;
@@ -91,13 +93,28 @@ public class ElfNoteSection extends ElfSection {
         n_namesz = parser.readInt();
         n_descsz = parser.readInt();
         n_type = parser.readInt();
+        long pos = NHDR_SIZE;
+
+        if (n_namesz < 0 || pos + n_namesz > header.sh_size) {
+            throw new ElfException("Invalid note namesz: " + Integer.toUnsignedString(n_namesz));
+        }
+
         byte[] nameBytes = new byte[n_namesz];
-        descriptorBytes = new byte[n_descsz];
         int bytesRead = parser.read(nameBytes);
+
         if (bytesRead != n_namesz) {
             throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + n_namesz + ")");
         }
-        parser.skip(noteAlign(n_namesz) - n_namesz);
+
+        int alignedNamesz = noteAlign(n_namesz);
+        parser.skip(alignedNamesz - n_namesz);
+        pos += alignedNamesz;
+
+        if (n_descsz < 0 || pos + n_descsz > header.sh_size) {
+            throw new ElfException("Invalid note descsz: " + Integer.toUnsignedString(n_descsz));
+        }
+
+        descriptorBytes = new byte[n_descsz];
 
         if (n_type == NT_GNU_ABI_TAG) {
             gnuAbiDescriptor = new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());

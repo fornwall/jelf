@@ -3,6 +3,9 @@ package net.fornwall.jelf;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -310,5 +313,55 @@ class BasicTest {
             Assertions.assertEquals(length, note.n_namesz);
             Assertions.assertNotEquals(0, length % 4);
         });
+    }
+
+    private record NotePatch(int offset, int value) {}
+
+    private static void assertParsingFailsContainingMessage(String message, NotePatch... patches) throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            ElfNoteSection noteSection = (ElfNoteSection) originalFile.sectionsOfType(ElfSectionHeader.SHT_NOTE).get(0);
+            int noteOffset = (int) noteSection.header.sh_offset;
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+
+            for (NotePatch patch : patches) {
+                ByteBuffer.wrap(data, noteOffset + patch.offset, Integer.BYTES).order(order).putInt(patch.value);
+            }
+
+            ElfFile patchedFile = ElfFile.from(data);
+            ElfException e = Assertions.assertThrows(ElfException.class, () -> patchedFile.sectionsOfType(ElfSectionHeader.SHT_NOTE));
+            Assertions.assertTrue(e.getMessage().contains(message), e.getMessage());
+        }
+    }
+
+    private static final int NAMESZ_OFFSET = 0;
+
+    private static final int DESCSZ_OFFSET = Integer.BYTES;
+
+    @Test
+    void testNegativeNamesz() throws Exception {
+        assertParsingFailsContainingMessage("namesz", new NotePatch(NAMESZ_OFFSET, -1));
+    }
+
+    @Test
+    void testNegativeDescsz() throws Exception {
+        assertParsingFailsContainingMessage("descsz", new NotePatch(DESCSZ_OFFSET, Integer.MIN_VALUE));
+    }
+
+    @Test
+    void testNameszExceedsShSize() throws Exception {
+        assertParsingFailsContainingMessage("namesz", new NotePatch(NAMESZ_OFFSET, Integer.MAX_VALUE));
+    }
+
+    @Test
+    void testDescszExceedsShSize() throws Exception {
+        assertParsingFailsContainingMessage("descsz", new NotePatch(DESCSZ_OFFSET, Integer.MAX_VALUE));
+    }
+
+    @Test
+    void testCombinedNameszDescszExceedsShSize() throws Exception {
+        assertParsingFailsContainingMessage("descsz", new NotePatch(NAMESZ_OFFSET, ElfNoteSection.NHDR_SIZE), new NotePatch(DESCSZ_OFFSET, ElfNoteSection.NHDR_SIZE));
     }
 }
