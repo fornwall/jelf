@@ -5,8 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import java.util.List;
  *     <li>{@link #from(byte[])}</li>
  *     <li>{@link #from(InputStream)}</li>
  *     <li>{@link #from(MappedByteBuffer)}</li>
+ *     <li>{@link #from(SeekableByteChannel)}</li>
  *     <li>{@link #from(Path)}</li>
  * </ul>
  * <p>
@@ -1231,6 +1234,29 @@ public final class ElfFile {
 
     public static ElfFile from(MappedByteBuffer mappedByteBuffer) throws ElfException {
         return new ElfFile(new MappedFile(mappedByteBuffer));
+    }
+
+    public static ElfFile from(SeekableByteChannel channel) throws ElfException, IOException {
+        if (channel instanceof FileChannel fc) {
+            return new ElfFile(new MappedFile(fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size())));
+        }
+
+        long size = channel.size();
+
+        if (size > Integer.MAX_VALUE) {
+            throw new ElfException("Channel too large: " + size);
+        }
+
+        ByteBuffer buf = ByteBuffer.allocate((int) size);
+        channel.position(0);
+
+        while (buf.hasRemaining()) {
+            if (channel.read(buf) == -1) {
+                break;
+            }
+        }
+
+        return new ElfFile(new ByteArrayAsFile(buf.array()));
     }
 
     public static ElfFile from(BackingFile backingFile) throws ElfException {
