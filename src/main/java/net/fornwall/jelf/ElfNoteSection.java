@@ -51,6 +51,10 @@ public class ElfNoteSection extends ElfSection {
          * A possible value of {@link #operatingSystem}.
          */
         public static final int ELF_NOTE_OS_FREEBSD = 3;
+        /**
+         * A possible value of {@link #operatingSystem}.
+         */
+        public static final int ELF_NOTE_OS_KNETBSD = 4;
 
         /**
          * One of the ELF_NOTE_OS_* constants in this class.
