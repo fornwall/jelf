@@ -2,6 +2,7 @@ package net.fornwall.jelf;
 
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +21,15 @@ public class TestHelper {
 		consumer.test(fromStream);
 
 		Path path = Paths.get(BasicTest.class.getResource('/' + fileName).toURI());
+
+		ElfFile fromPath = ElfFile.from(path);
+		consumer.test(fromPath);
+
+		try (SeekableByteChannel channel = Files.newByteChannel(path, EnumSet.of(StandardOpenOption.READ))) {
+			ElfFile fromChannel = ElfFile.from(channel);
+			consumer.test(fromChannel);
+		}
+
 		try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet.of(StandardOpenOption.READ))) {
 			MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
 			ElfFile fromMappedBuffer = ElfFile.from(mappedByteBuffer);
