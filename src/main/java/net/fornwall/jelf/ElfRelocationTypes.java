@@ -5,6 +5,8 @@ package net.fornwall.jelf;
  * @see ElfRelocationAddend#getType()
  */
 public final class ElfRelocationTypes {
+    private ElfRelocationTypes() {}
+
     /**
      * AMD x86-64: No reloc
      */
