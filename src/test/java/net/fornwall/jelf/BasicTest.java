@@ -364,4 +364,22 @@ class BasicTest {
     void testCombinedNameszDescszExceedsShSize() throws Exception {
         assertParsingFailsContainingMessage("descsz", new NotePatch(NAMESZ_OFFSET, ElfNoteSection.NHDR_SIZE), new NotePatch(DESCSZ_OFFSET, ElfNoteSection.NHDR_SIZE));
     }
+
+    @Test
+    void testAlign8GnuPropertyNote() throws Exception {
+        TestHelper.parseFile("usr-bin-yes", file -> {
+            for (ElfSection section : file.sectionsOfType(ElfSectionHeader.SHT_NOTE)) {
+                ElfNoteSection noteSection = (ElfNoteSection) section;
+
+                if (noteSection.header.sh_addralign == Long.BYTES) {
+                    Assertions.assertEquals("GNU", noteSection.getName());
+                    Assertions.assertEquals(5, noteSection.n_type); // NT_GNU_PROPERTY_TYPE_0
+                    Assertions.assertTrue(noteSection.n_descsz > 0);
+                    return;
+                }
+            }
+
+            Assertions.fail();
+        });
+    }
 }
