@@ -27,7 +27,7 @@ package net.fornwall.jelf;
  */
 public final class ElfSymbol {
 
-    enum Visibility {
+    public enum Visibility {
         /**
          * The visibility of symbols with the STV_DEFAULT attribute is as specified by the symbol's binding type.
          * <p>

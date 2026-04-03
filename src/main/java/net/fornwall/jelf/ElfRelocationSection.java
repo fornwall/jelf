@@ -3,7 +3,7 @@ package net.fornwall.jelf;
 public final class ElfRelocationSection extends ElfSection {
 	public final ElfRelocation[] relocations;
 
-	public ElfRelocationSection(ElfParser parser, ElfSectionHeader header) {
+	ElfRelocationSection(ElfParser parser, ElfSectionHeader header) {
 		super(parser, header);
 
 		int num_entries = (int) (header.sh_size / header.sh_entsize);
