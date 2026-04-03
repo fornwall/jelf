@@ -1009,7 +1009,9 @@ public final class ElfFile {
     }
 
     public List<ElfSection> sectionsOfType(int sectionType) throws ElfException {
-        if (e_shnum < 2) return Collections.emptyList();
+        if (e_shnum < 2) {
+            return Collections.emptyList();
+        }
         List<ElfSection> result = new ArrayList<>();
         for (int i = 1; i < e_shnum; i++) {
             ElfSection section = getSection(i);
@@ -1020,6 +1022,19 @@ public final class ElfFile {
         return result;
     }
 
+    public <T extends ElfSection> List<T> sectionsOfType(Class<T> type) throws ElfException {
+        if (e_shnum < 2) {
+            return Collections.emptyList();
+        }
+        List<T> result = new ArrayList<>();
+        for (int i = 1; i < e_shnum; i++) {
+            ElfSection section = getSection(i);
+            if (type.isInstance(section)) {
+                result.add(type.cast(section));
+            }
+        }
+        return result;
+    }
 
     /**
      * Returns the section header string table associated with this ELF file.
