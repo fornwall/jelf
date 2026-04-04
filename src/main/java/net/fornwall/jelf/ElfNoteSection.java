@@ -33,7 +33,7 @@ public class ElfNoteSection extends ElfSection {
      * <p>
      * Accessible in {@link #descriptorAsGnuAbi()}.
      */
-    public final static class GnuAbiDescriptor {
+    public static final class GnuAbiDescriptor {
 
         /**
          * A possible value of {@link #operatingSystem}.
@@ -123,7 +123,8 @@ public class ElfNoteSection extends ElfSection {
         descriptorBytes = new byte[n_descsz];
 
         if (n_type == NT_GNU_ABI_TAG) {
-            gnuAbiDescriptor = new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
+            gnuAbiDescriptor =
+                    new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
         } else {
             gnuAbiDescriptor = null;
         }

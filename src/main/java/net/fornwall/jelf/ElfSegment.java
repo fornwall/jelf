@@ -153,8 +153,7 @@ public class ElfSegment {
                     parser.seek(ElfSegment.this.p_offset);
                     StringBuilder buffer = new StringBuilder();
                     int b;
-                    while ((b = parser.readUnsignedByte()) != 0)
-                        buffer.append((char) b);
+                    while ((b = parser.readUnsignedByte()) != 0) buffer.append((char) b);
                     return buffer.toString();
                 }
             };
@@ -219,8 +218,9 @@ public class ElfSegment {
 
         if (pFlagsString.isEmpty()) pFlagsString = "0x" + Long.toHexString(p_flags);
 
-        return "ElfProgramHeader[p_type=" + typeString + ", p_filesz=" + p_filesz + ", p_memsz=" + p_memsz + ", p_flags=" + pFlagsString + ", p_align="
-                + p_align + ", range=[0x" + Long.toHexString(p_vaddr) + "-0x" + Long.toHexString(p_vaddr + p_memsz) + "]]";
+        return "ElfProgramHeader[p_type=" + typeString + ", p_filesz=" + p_filesz + ", p_memsz=" + p_memsz
+                + ", p_flags=" + pFlagsString + ", p_align=" + p_align + ", range=[0x" + Long.toHexString(p_vaddr)
+                + "-0x" + Long.toHexString(p_vaddr + p_memsz) + "]]";
     }
 
     /**
@@ -233,14 +233,14 @@ public class ElfSegment {
     }
 
     public boolean isReadable() {
-        return (p_flags & /* PF_R= */4) != 0;
+        return (p_flags & /* PF_R= */ 4) != 0;
     }
 
     public boolean isWriteable() {
-        return (p_flags & /* PF_W= */2) != 0;
+        return (p_flags & /* PF_W= */ 2) != 0;
     }
 
     public boolean isExecutable() {
-        return (p_flags & /* PF_X= */1) != 0;
+        return (p_flags & /* PF_X= */ 1) != 0;
     }
 }

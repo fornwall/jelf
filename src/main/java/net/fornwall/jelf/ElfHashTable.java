@@ -34,7 +34,8 @@ public class ElfHashTable extends ElfSection {
         // was what we actually read.
         int actual = num_buckets * 4 + num_chains * 4 + 8;
         if (header.sh_size != actual) {
-            throw new ElfException("Error reading string table (read " + actual + "bytes, expected to read " + header.sh_size + "bytes).");
+            throw new ElfException("Error reading string table (read " + actual + "bytes, expected to read "
+                    + header.sh_size + "bytes).");
         }
     }
 
@@ -60,5 +61,4 @@ public class ElfHashTable extends ElfSection {
         }
         return hash;
     }
-
 }

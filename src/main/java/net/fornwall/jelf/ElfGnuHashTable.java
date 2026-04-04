@@ -45,7 +45,8 @@ public class ElfGnuHashTable extends ElfSection {
         if (chain == null) {
             int chainSize = symbolTable.symbols.length - symoffset;
             chain = new int[chainSize];
-            parser.seek(header.sh_offset + 4 * 4 + (long) bloom.length * (ELFCLASS_BITS / 8) + (long) buckets.length * 4);
+            parser.seek(
+                    header.sh_offset + 4 * 4 + (long) bloom.length * (ELFCLASS_BITS / 8) + (long) buckets.length * 4);
             for (int i = 0; i < chainSize; i++) {
                 chain[i] = parser.readInt();
             }
@@ -70,7 +71,7 @@ public class ElfGnuHashTable extends ElfSection {
         while (true) {
             int hash = chain[symix - symoffset];
 
-            if ((((long) nameHash)|1L) == (((long) hash)|1L)) {
+            if ((((long) nameHash) | 1L) == (((long) hash) | 1L)) {
                 // The chain contains contiguous sequences of hashes for symbols hashing to the same index,
                 // with the lowest bit discarded (used to signal end of chain).
                 ElfSymbol symbol = symbolTable.symbols[symix];

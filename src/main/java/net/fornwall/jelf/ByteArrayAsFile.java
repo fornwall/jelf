@@ -3,10 +3,10 @@ package net.fornwall.jelf;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-class ByteArrayAsFile implements BackingFile{
+class ByteArrayAsFile implements BackingFile {
     private final ByteArrayInputStream byteArray;
 
-    public ByteArrayAsFile(byte[] buffer)  {
+    public ByteArrayAsFile(byte[] buffer) {
         this(new ByteArrayInputStream(buffer));
     }
 
@@ -22,7 +22,8 @@ class ByteArrayAsFile implements BackingFile{
     public void skip(int bytesToSkip) {
         long skipped = byteArray.skip(bytesToSkip);
         if (skipped != bytesToSkip) {
-            throw new IllegalArgumentException("Wanted to skip " + bytesToSkip + " bytes, but only able to skip " + skipped);
+            throw new IllegalArgumentException(
+                    "Wanted to skip " + bytesToSkip + " bytes, but only able to skip " + skipped);
         }
     }
 
@@ -40,5 +41,4 @@ class ByteArrayAsFile implements BackingFile{
             throw new RuntimeException("Error reading " + data.length + " bytes", e);
         }
     }
-
 }
