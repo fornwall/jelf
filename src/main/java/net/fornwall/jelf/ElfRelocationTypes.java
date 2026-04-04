@@ -171,6 +171,7 @@ public final class ElfRelocationTypes {
      * AMD x86-64:Load from 32 bit signed pc relative offset to GOT entry with REX prefix, relaxable.
      */
     public static final int R_X86_64_REX_GOTPCRELX = 42;
+
     public static final int R_X86_64_NUM = 43;
 
     public static final int R_ARM_NONE = 0;
@@ -192,5 +193,4 @@ public final class ElfRelocationTypes {
     public static final int R_ARM_THM_MOVT_ABS = 48;
     public static final int R_ARM_THM_MOVW_PREL_NC = 49;
     public static final int R_ARM_THM_MOVT_PREL = 50;
-
 }

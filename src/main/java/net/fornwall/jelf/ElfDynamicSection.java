@@ -74,6 +74,7 @@ public class ElfDynamicSection extends ElfSection {
      * These entries' relative order is significant, though their relation to entries of other types is not.
      */
     public static final int DT_NEEDED = 1;
+
     public static final int DT_PLTRELSZ = 2;
     public static final int DT_PLTGOT = 3;
     public static final int DT_HASH = 4;
@@ -81,6 +82,7 @@ public class ElfDynamicSection extends ElfSection {
      * DT_STRTAB entry holds the address, not offset, of the dynamic string table.
      */
     public static final int DT_STRTAB = 5;
+
     public static final int DT_SYMTAB = 6;
     public static final int DT_RELA = 7;
     public static final int DT_RELASZ = 8;
@@ -89,6 +91,7 @@ public class ElfDynamicSection extends ElfSection {
      * The size in bytes of the {@link #DT_STRTAB} string table.
      */
     public static final int DT_STRSZ = 10;
+
     public static final int DT_SYMENT = 11;
     public static final int DT_INIT = 12;
     public static final int DT_FINI = 13;
@@ -138,12 +141,14 @@ public class ElfDynamicSection extends ElfSection {
      * Set RTLD_NODELETE for this object.
      */
     public static final int DF_1_NODELETE = 0x00000008;
+
     public static final int DF_1_LOADFLTR = 0x00000010;
     public static final int DF_1_INITFIRST = 0x00000020;
     /**
      * Object can not be used with dlopen(3)
      */
     public static final int DF_1_NOOPEN = 0x00000040;
+
     public static final int DF_1_ORIGIN = 0x00000080;
     public static final int DF_1_DIRECT = 0x00000100;
     public static final int DF_1_TRANS = 0x00000200;
@@ -153,6 +158,7 @@ public class ElfDynamicSection extends ElfSection {
      * Object cannot be dumped with dldump(3)
      */
     public static final int DF_1_NODUMP = 0x00001000;
+
     public static final int DF_1_CONFALT = 0x00002000;
     public static final int DF_1_ENDFILTEE = 0x00004000;
     public static final int DF_1_DISPRELDNE = 0x00008000;
@@ -266,24 +272,25 @@ public class ElfDynamicSection extends ElfSection {
                 case DT_NULL:
                     // A DT_NULL element ends the array (may be following DT_NULL values, but no need to look at them).
                     break loop;
-                case DT_STRTAB: {
-                    dtStringTable = new MemoizedObject<ElfStringTable>() {
-                        @Override
-                        protected ElfStringTable computeValue() throws ElfException {
-                            long fileOffsetForStringTable = parser.virtualMemoryAddrToFileOffset(d_val_or_ptr);
-                            return new ElfStringTable(parser, fileOffsetForStringTable, dt_strtab_size, null); // FIXME: null header
-                        }
-                    };
-                    dt_strtab_offset = d_val_or_ptr;
-                }
-                break;
+                case DT_STRTAB:
+                    {
+                        dtStringTable = new MemoizedObject<ElfStringTable>() {
+                            @Override
+                            protected ElfStringTable computeValue() throws ElfException {
+                                long fileOffsetForStringTable = parser.virtualMemoryAddrToFileOffset(d_val_or_ptr);
+                                return new ElfStringTable(
+                                        parser, fileOffsetForStringTable, dt_strtab_size, null); // FIXME: null header
+                            }
+                        };
+                        dt_strtab_offset = d_val_or_ptr;
+                    }
+                    break;
                 case DT_STRSZ:
                     if (d_val_or_ptr > Integer.MAX_VALUE) throw new ElfException("Too large DT_STRSZ: " + d_val_or_ptr);
                     dt_strtab_size = (int) d_val_or_ptr;
                     break;
             }
         }
-
     }
 
     private ElfDynamicStructure firstEntryWithTag(long desiredTag) {

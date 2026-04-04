@@ -4,6 +4,7 @@ plugins {
   id("java-library")
   id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
   id("com.adarshr.test-logger") version "4.0.0"
+  id("com.diffplug.spotless") version "8.4.0"
 }
 
 repositories {
@@ -22,6 +23,12 @@ java {
   sourceCompatibility = org.gradle.api.JavaVersion.VERSION_17
   withJavadocJar()
   withSourcesJar()
+}
+
+spotless {
+  java {
+    palantirJavaFormat()
+  }
 }
 
 tasks {

@@ -7,18 +7,17 @@ package net.fornwall.jelf;
  */
 public class ElfException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public ElfException(String message) {
-		super(message);
-	}
+    public ElfException(String message) {
+        super(message);
+    }
 
-	public ElfException(Throwable cause) {
-		super(cause);
-	}
+    public ElfException(Throwable cause) {
+        super(cause);
+    }
 
-	public ElfException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
+    public ElfException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

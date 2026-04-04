@@ -23,53 +23,54 @@ package net.fornwall.jelf;
  * </code></pre>
  */
 public final class ElfRelocation {
-	/**
-	 * The location at which to apply the relocation. For a relocatable file,
-	 * this is the byte offset from the beginning of the section. For an
-	 * executable or shared object, the value is the virtual address.
-	 */
-	public final long r_offset; // Elf32_Addr or Elf64_Addr
+    /**
+     * The location at which to apply the relocation. For a relocatable file,
+     * this is the byte offset from the beginning of the section. For an
+     * executable or shared object, the value is the virtual address.
+     */
+    public final long r_offset; // Elf32_Addr or Elf64_Addr
 
-	/**
-	 * This member gives both the symbol table index to which the relocation
-	 * must be made, and the type of relocation to apply. Relocation types are
-	 * processor specific.
-	 */
-	public final long r_info; // Elf32_Word or Elf64_Xword
-	private final ElfFile elfFile;
+    /**
+     * This member gives both the symbol table index to which the relocation
+     * must be made, and the type of relocation to apply. Relocation types are
+     * processor specific.
+     */
+    public final long r_info; // Elf32_Word or Elf64_Xword
 
-	ElfRelocation(ElfParser parser, long offset) {
-		parser.seek(offset);
+    private final ElfFile elfFile;
 
-		r_offset = parser.readIntOrLong();
-		r_info = parser.readIntOrLong();
-		elfFile = parser.elfFile;
-	}
+    ElfRelocation(ElfParser parser, long offset) {
+        parser.seek(offset);
 
-	/**
-	 * Corresponds to the ELF32_R_TYPE / ELF64_R_TYPE macros.
-	 *
-	 * @see ElfRelocationTypes
-	 */
-	public long getType() {
-		return elfFile.is32Bits() ? (r_info & 0xFF) : ((int) r_info);
-	}
+        r_offset = parser.readIntOrLong();
+        r_info = parser.readIntOrLong();
+        elfFile = parser.elfFile;
+    }
 
-	/**
-	 * The symbol table index, with respect to which the relocation must be made.
-	 * Use {@link #getSymbol()} to get the resolved {@link ElfSymbol} from this index.
-	 * <p>
-	 * Corresponds to the ELF32_R_SYM / ELF64_R_SYM macros.
-	 */
-	public int getSymbolIndex() {
-		return (int) (r_info >> (elfFile.is32Bits() ? 8 : 32));
-	}
+    /**
+     * Corresponds to the ELF32_R_TYPE / ELF64_R_TYPE macros.
+     *
+     * @see ElfRelocationTypes
+     */
+    public long getType() {
+        return elfFile.is32Bits() ? (r_info & 0xFF) : ((int) r_info);
+    }
 
-	/**
-	 * The symbol with respect to which the relocation must be made.
-	 * Use {@link #getSymbolIndex()}} to get the resolved {@link ElfSymbol} from this index.
-	 */
-	public ElfSymbol getSymbol() {
-		return elfFile.getSymbolTableSection().symbols[getSymbolIndex()];
-	}
+    /**
+     * The symbol table index, with respect to which the relocation must be made.
+     * Use {@link #getSymbol()} to get the resolved {@link ElfSymbol} from this index.
+     * <p>
+     * Corresponds to the ELF32_R_SYM / ELF64_R_SYM macros.
+     */
+    public int getSymbolIndex() {
+        return (int) (r_info >> (elfFile.is32Bits() ? 8 : 32));
+    }
+
+    /**
+     * The symbol with respect to which the relocation must be made.
+     * Use {@link #getSymbolIndex()}} to get the resolved {@link ElfSymbol} from this index.
+     */
+    public ElfSymbol getSymbol() {
+        return elfFile.getSymbolTableSection().symbols[getSymbolIndex()];
+    }
 }

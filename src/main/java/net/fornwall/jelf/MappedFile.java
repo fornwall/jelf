@@ -1,7 +1,7 @@
 package net.fornwall.jelf;
 
-import java.nio.MappedByteBuffer;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 
 public class MappedFile implements BackingFile {
     private final MappedByteBuffer mappedByteBuffer;
@@ -12,7 +12,7 @@ public class MappedFile implements BackingFile {
     }
 
     public void seek(long offset) {
-        this.mappedByteBuffer.position((int)(offset)); // we may be limited to sub-4GB mapped files
+        this.mappedByteBuffer.position((int) (offset)); // we may be limited to sub-4GB mapped files
     }
 
     public void skip(int bytesToSkip) {

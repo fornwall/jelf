@@ -13,5 +13,4 @@ public final class ElfRelocationAddendSection extends ElfSection {
             relocations[i] = new ElfRelocationAddend(parser, relOffset);
         }
     }
-
 }
