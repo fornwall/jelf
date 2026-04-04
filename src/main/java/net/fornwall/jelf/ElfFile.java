@@ -1195,6 +1195,30 @@ public final class ElfFile {
         return programHeaders[index].getValue();
     }
 
+    public ElfSegment firstSegmentByType(int type) {
+        for (int i = 0; i < e_phnum; i++) {
+            ElfSegment seg = getProgramHeader(i);
+            if (seg.p_type == type) {
+                return seg;
+            }
+        }
+        return null;
+    }
+
+    public List<ElfSegment> segmentsOfType(int type) {
+        if (e_phnum == 0) {
+            return Collections.emptyList();
+        }
+        List<ElfSegment> result = new ArrayList<>();
+        for (int i = 0; i < e_phnum; i++) {
+            ElfSegment seg = getProgramHeader(i);
+            if (seg.p_type == type) {
+                result.add(seg);
+            }
+        }
+        return result;
+    }
+
     public static ElfFile from(InputStream in) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int totalRead = 0;
