@@ -1300,7 +1300,7 @@ public final class ElfFile {
         e_shstrndx = parser.readShort();
 
 
-        if (e_shnum == 0 && e_shstrndx == 0xffff) {
+        if (e_shnum == 0 && e_shstrndx == (short) 0xffff) {
             ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, e_shoff);
             e_shnum = (short) elfSectionHeader.sh_size;
             e_shstrndx = (short) elfSectionHeader.sh_link;
