@@ -43,9 +43,9 @@ public class ElfGnuHashTable extends ElfSection {
 
     ElfSymbol lookupSymbol(String symbolName, ElfSymbolTableSection symbolTable) {
         if (chain == null) {
-            int chainSize = ((ElfSymbolTableSection) parser.elfFile.firstSectionByType(ElfSectionHeader.SHT_DYNSYM)).symbols.length - symoffset;
+            int chainSize = symbolTable.symbols.length - symoffset;
             chain = new int[chainSize];
-            parser.seek(header.sh_offset + 4*4 + bloom.length*(ELFCLASS_BITS/8) + buckets.length * 4);
+            parser.seek(header.sh_offset + 4 * 4 + (long) bloom.length * (ELFCLASS_BITS / 8) + (long) buckets.length * 4);
             for (int i = 0; i < chainSize; i++) {
                 chain[i] = parser.readInt();
             }
