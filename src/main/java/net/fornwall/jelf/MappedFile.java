@@ -3,7 +3,7 @@ package net.fornwall.jelf;
 import java.nio.MappedByteBuffer;
 import java.nio.ByteBuffer;
 
-public class MappedFile implements BackingFile{
+public class MappedFile implements BackingFile {
     private final MappedByteBuffer mappedByteBuffer;
 
     public MappedFile(MappedByteBuffer mappedByteBuffer) {
@@ -12,7 +12,7 @@ public class MappedFile implements BackingFile{
     }
 
     public void seek(long offset) {
-        this.mappedByteBuffer.position((int)(offset)); // we may be limited to sub-4GB mapped filess
+        this.mappedByteBuffer.position((int)(offset)); // we may be limited to sub-4GB mapped files
     }
 
     public void skip(int bytesToSkip) {
@@ -20,11 +20,11 @@ public class MappedFile implements BackingFile{
     }
 
     public short readUnsignedByte() {
-        int val = -1;
-        byte temp = mappedByteBuffer.get();
-        val = temp & 0xFF; // bytes are signed in Java =_= so assigning them to a longer type risks sign extension.
-        if (val < 0) throw new ElfException("Trying to read outside file");
-        return (short) val;
+        if (!mappedByteBuffer.hasRemaining()) {
+            throw new ElfException("Trying to read outside file");
+        }
+
+        return (short) (mappedByteBuffer.get() & 0xFF);
     }
 
     public int read(byte[] data) {
@@ -40,6 +40,7 @@ public class MappedFile implements BackingFile{
         mappedByteBuffer.put(data);
         return data.length;
     }
+
     public void put(byte data) {
         mappedByteBuffer.put(data);
     }
