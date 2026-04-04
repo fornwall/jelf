@@ -110,9 +110,11 @@ public class ElfNoteSection extends ElfSection {
             throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + n_namesz + ")");
         }
 
-        int alignedNamesz = noteAlign(n_namesz);
-        parser.skip(alignedNamesz - n_namesz);
-        pos += alignedNamesz;
+        long namePos = header.sh_offset + NHDR_SIZE;
+        boolean align4 = header.sh_addralign < Long.BYTES;
+        long alignedNameEnd = align4 ? noteAlign4(namePos + n_namesz) : noteAlign8(namePos + n_namesz);
+        parser.skip((int) (alignedNameEnd - namePos - n_namesz));
+        pos = alignedNameEnd - header.sh_offset;
 
         if (n_descsz < 0 || pos + n_descsz > header.sh_size) {
             throw new ElfException("Invalid note descsz: " + Integer.toUnsignedString(n_descsz));
@@ -127,6 +129,7 @@ public class ElfNoteSection extends ElfSection {
         }
 
         bytesRead = parser.read(descriptorBytes);
+
         if (bytesRead != n_descsz) {
             throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + n_descsz + ")");
         }
@@ -156,7 +159,11 @@ public class ElfNoteSection extends ElfSection {
         return gnuAbiDescriptor;
     }
 
-    private static int noteAlign(int n) {
-        return (n + 3) & ~3;
+    static long noteAlign4(long n) {
+        return (n + 3) & -4L;
+    }
+
+    static long noteAlign8(long n) {
+        return (n + 7) & -8L;
     }
 }
