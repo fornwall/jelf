@@ -248,7 +248,7 @@ public class ElfDynamicSection extends ElfSection {
         }
     }
 
-    public ElfDynamicSection(final ElfParser parser, ElfSectionHeader header) {
+    ElfDynamicSection(final ElfParser parser, ElfSectionHeader header) {
         super(parser, header);
 
         parser.seek(header.sh_offset);
