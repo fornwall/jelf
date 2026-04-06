@@ -28,68 +28,68 @@ public final class ElfNoteTypes {
     public static final class Gnu {
         private Gnu() {}
 
-        public static final int ABI_TAG = 1;
+        public static final int NT_GNU_ABI_TAG = 1;
 
-        public static final int HWCAP = 2;
+        public static final int NT_GNU_HWCAP = 2;
 
-        public static final int BUILD_ID = 3;
+        public static final int NT_GNU_BUILD_ID = 3;
 
-        public static final int GOLD_VERSION = 4;
+        public static final int NT_GNU_GOLD_VERSION = 4;
 
-        public static final int PROPERTY_TYPE_0 = 5;
+        public static final int NT_GNU_PROPERTY_TYPE_0 = 5;
 
         public static final class Property {
             private Property() {}
 
-            public static final int STACK_SIZE = 1;
+            public static final int GNU_PROPERTY_STACK_SIZE = 1;
 
-            public static final int NO_COPY_ON_PROTECTED = 2;
+            public static final int GNU_PROPERTY_NO_COPY_ON_PROTECTED = 2;
 
-            public static final int UINT32_AND_LO = 0xb0000000;
+            public static final int GNU_PROPERTY_UINT32_AND_LO = 0xb0000000;
 
-            public static final int UINT32_AND_HI = 0xb0007fff;
+            public static final int GNU_PROPERTY_UINT32_AND_HI = 0xb0007fff;
 
-            public static final int UINT32_OR_LO = 0xb0008000;
+            public static final int GNU_PROPERTY_UINT32_OR_LO = 0xb0008000;
 
-            public static final int UINT32_OR_HI = 0xb000ffff;
+            public static final int GNU_PROPERTY_UINT32_OR_HI = 0xb000ffff;
 
-            public static final int NEEDED = UINT32_OR_LO;
+            public static final int GNU_PROPERTY_1_NEEDED = GNU_PROPERTY_UINT32_OR_LO;
 
-            public static final int NEEDED_INDIRECT_EXTERN_ACCESS = 1 << 0;
+            public static final int GNU_PROPERTY_1_NEEDED_INDIRECT_EXTERN_ACCESS = 1 << 0;
 
-            public static final int LOPROC = 0xc0000000;
+            public static final int GNU_PROPERTY_LOPROC = 0xc0000000;
 
-            public static final int HIPROC = 0xdfffffff;
+            public static final int GNU_PROPERTY_HIPROC = 0xdfffffff;
 
-            public static final int LOUSER = 0xe0000000;
+            public static final int GNU_PROPERTY_LOUSER = 0xe0000000;
 
-            public static final int HIUSER = 0xffffffff;
+            public static final int GNU_PROPERTY_HIUSER = 0xffffffff;
 
-            public static final int AARCH64_FEATURE_1_AND = 0xc0000000;
+            public static final int GNU_PROPERTY_AARCH64_FEATURE_1_AND = 0xc0000000;
 
-            public static final int AARCH64_FEATURE_1_BTI = 1 << 0;
+            public static final int GNU_PROPERTY_AARCH64_FEATURE_1_BTI = 1 << 0;
 
-            public static final int AARCH64_FEATURE_1_PAC = 1 << 1;
+            public static final int GNU_PROPERTY_AARCH64_FEATURE_1_PAC = 1 << 1;
 
-            public static final int AARCH64_FEATURE_1_GCS = 1 << 2;
+            public static final int GNU_PROPERTY_AARCH64_FEATURE_1_GCS = 1 << 2;
 
-            public static final int X86_ISA_1_USED = 0xc0010002;
+            public static final int GNU_PROPERTY_X86_ISA_1_USED = 0xc0010002;
 
-            public static final int X86_ISA_1_NEEDED = 0xc0008002;
+            public static final int GNU_PROPERTY_X86_ISA_1_NEEDED = 0xc0008002;
 
-            public static final int X86_FEATURE_1_AND = 0xc0000002;
+            public static final int GNU_PROPERTY_X86_FEATURE_1_AND = 0xc0000002;
 
-            public static final int X86_ISA_1_BASELINE = 1 << 0;
+            public static final int GNU_PROPERTY_X86_ISA_1_BASELINE = 1 << 0;
 
-            public static final int X86_ISA_1_V2 = 1 << 1;
+            public static final int GNU_PROPERTY_X86_ISA_1_V2 = 1 << 1;
 
-            public static final int X86_ISA_1_V3 = 1 << 2;
+            public static final int GNU_PROPERTY_X86_ISA_1_V3 = 1 << 2;
 
-            public static final int X86_ISA_1_V4 = 1 << 3;
+            public static final int GNU_PROPERTY_X86_ISA_1_V4 = 1 << 3;
 
-            public static final int X86_FEATURE_1_IBT = 1 << 0;
+            public static final int GNU_PROPERTY_X86_FEATURE_1_IBT = 1 << 0;
 
-            public static final int X86_FEATURE_1_SHSTK = 1 << 1;
+            public static final int GNU_PROPERTY_X86_FEATURE_1_SHSTK = 1 << 1;
         }
     }
 
@@ -110,11 +110,11 @@ public final class ElfNoteTypes {
     public static final class NetBsd {
         private NetBsd() {}
 
-        public static final int VERSION = 1;
+        public static final int NT_NETBSD_IDENT = 1;
 
-        public static final int EMULATION = 2;
+        public static final int NT_NETBSD_EMULATION = 2;
 
-        public static final int PAX = 3;
+        public static final int NT_NETBSD_PAX = 3;
 
         public static final int PAX_MPROTECT = 0x01;
 
@@ -128,23 +128,23 @@ public final class ElfNoteTypes {
 
         public static final int PAX_NOASLR = 0x20;
 
-        public static final int MARCH = 5;
+        public static final int NT_NETBSD_MARCH = 5;
 
-        public static final int CMODEL = 6;
+        public static final int NT_NETBSD_CMODEL = 6;
     }
 
     public static final class FreeBsd {
         private FreeBsd() {}
 
-        public static final int VERSION = 1;
+        public static final int NT_FREEBSD_ABI_TAG = 1;
 
-        public static final int PROCSTAT_AUXV = 16;
+        public static final int NT_FREEBSD_PROCSTAT_AUXV = 16;
     }
 
     public static final class OpenBsd {
         private OpenBsd() {}
 
-        public static final int VERSION = 1;
+        public static final int NT_OPENBSD_IDENT = 1;
     }
 
     public static final class DragonFly {
@@ -184,26 +184,26 @@ public final class ElfNoteTypes {
     public static final class Core {
         private Core() {}
 
-        public static final int PRSTATUS = 1;
+        public static final int NT_PRSTATUS = 1;
 
-        public static final int PRFPREG = 2;
+        public static final int NT_PRFPREG = 2;
 
-        public static final int PRPSINFO = 3;
+        public static final int NT_PRPSINFO = 3;
 
-        public static final int PRXREG = 4;
+        public static final int NT_PRXREG = 4;
 
-        public static final int TASKSTRUCT = 4;
+        public static final int NT_TASKSTRUCT = 4;
 
-        public static final int PLATFORM = 5;
+        public static final int NT_PLATFORM = 5;
 
-        public static final int AUXV = 6;
+        public static final int NT_AUXV = 6;
     }
 
     public static final class NetBsdCore {
         private NetBsdCore() {}
 
-        public static final int PROCINFO = 1;
+        public static final int NT_NETBSDCORE_PROCINFO = 1;
 
-        public static final int AUXV = 2;
+        public static final int NT_NETBSDCORE_AUXV = 2;
     }
 }
