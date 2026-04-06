@@ -178,7 +178,10 @@ public class ElfSegment {
 
         byte[] result = new byte[(int) p_filesz];
         parser.seek(p_offset);
-        parser.read(result);
+        int bytesRead = parser.read(result);
+        if (bytesRead != result.length) {
+            throw new ElfException("Error reading segment data (read=" + bytesRead + ", expected=" + result.length + ")");
+        }
         return result;
     }
 

@@ -1,7 +1,8 @@
 package net.fornwall.jelf;
 
-import java.nio.MappedByteBuffer;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 
 public class MappedFile implements BackingFile {
     private final MappedByteBuffer mappedByteBuffer;
@@ -12,11 +13,20 @@ public class MappedFile implements BackingFile {
     }
 
     public void seek(long offset) {
-        this.mappedByteBuffer.position((int)(offset)); // we may be limited to sub-4GB mapped files
+        try {
+            this.mappedByteBuffer.position((int)(offset)); // we may be limited to sub-4GB mapped files
+        } catch (IllegalArgumentException e) {
+            throw new ElfException("Seek out of range (offset=" + offset + ", limit=" + mappedByteBuffer.limit() + ")");
+        }
     }
 
     public void skip(int bytesToSkip) {
-        mappedByteBuffer.position(mappedByteBuffer.position() + bytesToSkip);
+        int target = mappedByteBuffer.position() + bytesToSkip;
+        try {
+            mappedByteBuffer.position(target);
+        } catch (IllegalArgumentException e) {
+            throw new ElfException("Skip out of range (target=" + target + ", limit=" + mappedByteBuffer.limit() + ")");
+        }
     }
 
     public short readUnsignedByte() {
@@ -28,7 +38,12 @@ public class MappedFile implements BackingFile {
     }
 
     public int read(byte[] data) {
-        mappedByteBuffer.get(data);
+        int position = mappedByteBuffer.position();
+        try {
+            mappedByteBuffer.get(data);
+        } catch (BufferUnderflowException e) {
+            throw new ElfException("Error reading " + data.length + " bytes at position " + position + " (remaining=" + (mappedByteBuffer.limit() - position) + ")");
+        }
         return data.length;
     }
 

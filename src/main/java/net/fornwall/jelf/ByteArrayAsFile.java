@@ -22,7 +22,7 @@ class ByteArrayAsFile implements BackingFile{
     public void skip(int bytesToSkip) {
         long skipped = byteArray.skip(bytesToSkip);
         if (skipped != bytesToSkip) {
-            throw new IllegalArgumentException("Wanted to skip " + bytesToSkip + " bytes, but only able to skip " + skipped);
+            throw new ElfException("Wanted to skip " + bytesToSkip + " bytes, but only able to skip " + skipped);
         }
     }
 
