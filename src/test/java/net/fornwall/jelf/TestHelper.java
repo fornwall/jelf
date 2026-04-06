@@ -1,5 +1,7 @@
 package net.fornwall.jelf;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
@@ -8,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Assertions;
 
@@ -17,10 +20,13 @@ public class TestHelper {
 	}
 
 	public static void parseFile(String fileName, TestMethod consumer) throws Exception {
-		ElfFile fromStream = ElfFile.from(BasicTest.class.getResourceAsStream('/' + fileName));
-		consumer.test(fromStream);
+		try (InputStream stream = Objects.requireNonNull(BasicTest.class.getResourceAsStream('/' + fileName))) {
+			ElfFile fromStream = ElfFile.from(stream);
+			consumer.test(fromStream);
+		}
 
-		Path path = Paths.get(BasicTest.class.getResource('/' + fileName).toURI());
+		URL url = Objects.requireNonNull(BasicTest.class.getResource('/' + fileName));
+		Path path = Paths.get(url.toURI());
 
 		ElfFile fromPath = ElfFile.from(path);
 		consumer.test(fromPath);
@@ -51,6 +57,7 @@ public class TestHelper {
 
 	public static void validateHashTable(ElfFile file) {
 		ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
+		Assertions.assertNotNull(dynsym);
 
 		ElfHashTable hashTable = file.firstSectionByType(ElfHashTable.class);
 		if (hashTable != null) {
