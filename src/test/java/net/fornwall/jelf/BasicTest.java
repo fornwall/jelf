@@ -284,13 +284,55 @@ class BasicTest {
     }
 
     @Test
+    void testAlign4Notes() throws Exception {
+        TestHelper.parseFile("linux_amd64_bindash", file -> {
+            List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
+            Assertions.assertEquals(2, noteSections.size());
+            ElfNoteSection abiTag = noteSections.get(0);
+            Assertions.assertEquals(4, abiTag.header.sh_addralign);
+            List<ElfNoteSection.ElfNote> abiNotes = abiTag.notes();
+            Assertions.assertEquals(1, abiNotes.size());
+            ElfNoteSection.ElfNote abiNote = abiNotes.get(0);
+            Assertions.assertEquals(ElfNoteTypes.GNU, abiNote.name);
+            Assertions.assertEquals(ElfNoteTypes.Gnu.ABI_TAG, abiNote.type);
+            Assertions.assertEquals(16, abiNote.descriptorBytes().length);
+            ElfNoteSection buildId = noteSections.get(1);
+            Assertions.assertEquals(4, buildId.header.sh_addralign);
+            List<ElfNoteSection.ElfNote> buildIdNotes = buildId.notes();
+            Assertions.assertEquals(1, buildIdNotes.size());
+            ElfNoteSection.ElfNote buildIdNote = buildIdNotes.get(0);
+            Assertions.assertEquals(ElfNoteTypes.GNU, buildIdNote.name);
+            Assertions.assertEquals(ElfNoteTypes.Gnu.BUILD_ID, buildIdNote.type);
+            Assertions.assertEquals(20, buildIdNote.descriptorBytes().length);
+        });
+    }
+
+    @Test
+    void testAlign8GnuPropertyNotes() throws Exception {
+        TestHelper.parseFile("usr-bin-yes", file -> {
+            for (ElfNoteSection noteSection : file.sectionsOfType(ElfNoteSection.class)) {
+                if (noteSection.header.sh_addralign == Long.BYTES) {
+                    List<ElfNoteSection.ElfNote> notes = noteSection.notes();
+                    Assertions.assertEquals(1, notes.size());
+                    ElfNoteSection.ElfNote note = notes.get(0);
+                    Assertions.assertEquals(ElfNoteTypes.GNU, note.name);
+                    Assertions.assertEquals(ElfNoteTypes.Gnu.PROPERTY_TYPE_0, note.type);
+                    Assertions.assertEquals(32, note.descriptorBytes().length);
+                    return;
+                }
+            }
+
+            Assertions.fail();
+        });
+    }
+
+    @Test
     void testUnalignedNoteName() throws Exception {
         TestHelper.parseFile("netbsd_amd64_yes", file -> {
-            List<ElfSection> noteSections = file.sectionsOfType(ElfSectionHeader.SHT_NOTE);
-            int numNoteSections = noteSections.size();
-            Assertions.assertEquals(2, numNoteSections);
-            ElfNoteSection note = (ElfNoteSection) noteSections.get(0);
-            String name = "NetBSD";
+            List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
+            Assertions.assertEquals(2, noteSections.size());
+            ElfNoteSection note = noteSections.get(0);
+            String name = ElfNoteTypes.NETBSD;
             int length = name.length() + 1;
             Assertions.assertEquals(name, note.getName());
             Assertions.assertEquals(length, note.n_namesz);
@@ -305,7 +347,8 @@ class BasicTest {
             Assertions.assertNotNull(in);
             byte[] data = in.readAllBytes();
             ElfFile originalFile = ElfFile.from(data);
-            ElfNoteSection noteSection = (ElfNoteSection) originalFile.sectionsOfType(ElfSectionHeader.SHT_NOTE).get(0);
+            List<ElfNoteSection> elfNoteSections = originalFile.sectionsOfType(ElfNoteSection.class);
+            ElfNoteSection noteSection = elfNoteSections.get(0);
             int noteOffset = (int) noteSection.header.sh_offset;
             ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 
@@ -351,9 +394,7 @@ class BasicTest {
     @Test
     void testAlign8GnuPropertyNote() throws Exception {
         TestHelper.parseFile("usr-bin-yes", file -> {
-            for (ElfSection section : file.sectionsOfType(ElfSectionHeader.SHT_NOTE)) {
-                ElfNoteSection noteSection = (ElfNoteSection) section;
-
+            for (ElfNoteSection noteSection : file.sectionsOfType(ElfNoteSection.class)) {
                 if (noteSection.header.sh_addralign == Long.BYTES) {
                     Assertions.assertEquals("GNU", noteSection.getName());
                     Assertions.assertEquals(5, noteSection.n_type); // NT_GNU_PROPERTY_TYPE_0
