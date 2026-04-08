@@ -21,7 +21,10 @@ public class ElfSection {
 
         byte[] result = new byte[(int) header.sh_size];
         parser.seek(header.sh_offset);
-        parser.read(result);
+        int bytesRead = parser.read(result);
+        if (bytesRead != result.length) {
+            throw new ElfException("Error reading section data (read=" + bytesRead + ", expected=" + result.length + ")");
+        }
         return result;
     }
 
