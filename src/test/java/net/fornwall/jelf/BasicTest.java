@@ -11,7 +11,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GNU;
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GO;
 import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_NETBSD;
+import static net.fornwall.jelf.ElfNoteTypes.Go.NT_GO_BUILD_ID;
 import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_ABI_TAG;
 import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_BUILD_ID;
 import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_PROPERTY_TYPE_0;
@@ -409,6 +411,30 @@ class BasicTest {
             }
 
             Assertions.fail();
+        });
+    }
+
+    @Test
+    void testNoteNamesz() throws Exception {
+        TestHelper.parseFile("go_amd64_notes", file -> {
+            List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
+            Assertions.assertEquals(2, noteSections.size());
+            ElfNoteSection gnuNoteSection = noteSections.get(0);
+            List<ElfNoteSection.ElfNote> gnuNotes = gnuNoteSection.notes();
+            Assertions.assertEquals(1, gnuNotes.size());
+            ElfNoteSection.ElfNote gnuNote = gnuNotes.get(0);
+            Assertions.assertEquals(ELF_NOTE_GNU, gnuNote.name);
+            Assertions.assertEquals(3, gnuNote.name.length());
+            Assertions.assertEquals(4, gnuNote.namesz);
+            Assertions.assertEquals(NT_GNU_BUILD_ID, gnuNote.type);
+            ElfNoteSection goNoteSection = noteSections.get(1);
+            List<ElfNoteSection.ElfNote> goNotes = goNoteSection.notes();
+            Assertions.assertEquals(1, goNotes.size());
+            ElfNoteSection.ElfNote goNote = goNotes.get(0);
+            Assertions.assertEquals(ELF_NOTE_GO, goNote.name);
+            Assertions.assertEquals(2, goNote.name.length());
+            Assertions.assertEquals(4, goNote.namesz);
+            Assertions.assertEquals(NT_GO_BUILD_ID, goNote.type);
         });
     }
 }

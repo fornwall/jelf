@@ -89,14 +89,17 @@ public class ElfNoteSection extends ElfSection {
     public static final class ElfNote {
         public final String name;
 
+        public final int namesz;
+
         public final int type;
 
         private final byte[] descriptorBytes;
 
         public final byte ei_data;
 
-        ElfNote(String name, int type, byte[] descriptorBytes, byte ei_data) {
+        ElfNote(String name, int namesz, int type, byte[] descriptorBytes, byte ei_data) {
             this.name = name;
+            this.namesz = namesz;
             this.type = type;
             this.descriptorBytes = descriptorBytes;
             this.ei_data = ei_data;
@@ -269,7 +272,7 @@ public class ElfNoteSection extends ElfSection {
             }
 
             String name = new String(nameBytes, 0, nameLen);
-            result.add(new ElfNote(name, type, desc, parser.elfFile.ei_data));
+            result.add(new ElfNote(name, namesz, type, desc, parser.elfFile.ei_data));
         }
 
         return result;
