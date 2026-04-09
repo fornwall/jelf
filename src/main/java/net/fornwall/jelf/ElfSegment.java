@@ -1,5 +1,7 @@
 package net.fornwall.jelf;
 
+import java.util.List;
+
 /**
  * Class corresponding to the Elf32_Phdr/Elf64_Phdr struct.
  * <p>
@@ -183,6 +185,10 @@ public class ElfSegment {
             throw new ElfException("Error reading segment data (read=" + bytesRead + ", expected=" + result.length + ")");
         }
         return result;
+    }
+
+    public List<ElfNoteSection.ElfNote> notes() {
+        return ElfNoteSection.readNotes(parser, p_offset, p_filesz, p_align);
     }
 
     @Override

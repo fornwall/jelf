@@ -3,7 +3,9 @@ package net.fornwall.jelf;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class ElfNoteSection extends ElfSection {
 
@@ -84,6 +86,21 @@ public class ElfNoteSection extends ElfSection {
             this.minorVersion = minorVersion;
             this.subminorVersion = subminorVersion;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            GnuAbiDescriptor that = (GnuAbiDescriptor) o;
+            return operatingSystem == that.operatingSystem && majorVersion == that.majorVersion && minorVersion == that.minorVersion && subminorVersion == that.subminorVersion;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(operatingSystem, majorVersion, minorVersion, subminorVersion);
+        }
     }
 
     public static final class ElfNote {
@@ -120,6 +137,21 @@ public class ElfNoteSection extends ElfSection {
 
             ByteBuffer buf = ByteBuffer.wrap(descriptorBytes).order(ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
             return new GnuAbiDescriptor(buf.getInt(0), buf.getInt(4), buf.getInt(8), buf.getInt(12));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ElfNote note = (ElfNote) o;
+            return type == note.type && ei_data == note.ei_data && Objects.equals(name, note.name) && Objects.deepEquals(descriptorBytes, note.descriptorBytes);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, type, Arrays.hashCode(descriptorBytes), ei_data);
         }
     }
 
@@ -276,5 +308,20 @@ public class ElfNoteSection extends ElfSection {
         }
 
         return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ElfNoteSection that = (ElfNoteSection) o;
+        return n_namesz == that.n_namesz && n_descsz == that.n_descsz && n_type == that.n_type && Objects.equals(n_name, that.n_name) && Objects.deepEquals(descriptorBytes, that.descriptorBytes) && Objects.equals(gnuAbiDescriptor, that.gnuAbiDescriptor);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(n_namesz, n_descsz, n_type, n_name, Arrays.hashCode(descriptorBytes), gnuAbiDescriptor);
     }
 }

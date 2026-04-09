@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -435,6 +436,59 @@ class BasicTest {
             Assertions.assertEquals(2, goNote.name.length());
             Assertions.assertEquals(4, goNote.namesz);
             Assertions.assertEquals(NT_GO_BUILD_ID, goNote.type);
+        });
+    }
+
+    @Test
+    void testSegmentNotes() throws Exception {
+        TestHelper.parseFile("linux_amd64_bindash", file -> {
+            List<ElfSegment> noteSegments = file.segmentsOfType(ElfSegment.PT_NOTE);
+
+            for (ElfSegment seg : noteSegments) {
+                List<ElfNoteSection.ElfNote> notes = seg.notes();
+
+                for (ElfNoteSection.ElfNote note : notes) {
+                    if (ELF_NOTE_GNU.equals(note.name)) {
+                        return;
+                    }
+                }
+
+            }
+
+            Assertions.fail();
+        });
+    }
+
+    @Test
+    void testSectionAndSegmentNotesSame() throws Exception {
+        TestHelper.parseFile("linux_amd64_bindash", file -> {
+            List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
+            int numNoteSections = noteSections.size();
+            List<ElfNoteSection.ElfNote> sectionNotes = new ArrayList<>(numNoteSections);
+
+            for (ElfNoteSection noteSection : noteSections) {
+                List<ElfNoteSection.ElfNote> noteSectionNotes = noteSection.notes();
+                sectionNotes.addAll(noteSectionNotes);
+            }
+
+            List<ElfSegment> noteSegments = file.segmentsOfType(ElfSegment.PT_NOTE);
+            int numNoteSegments = noteSegments.size();
+            List<ElfNoteSection.ElfNote> segmentNotes = new ArrayList<>(numNoteSegments);
+
+            for (ElfSegment noteSegment : noteSegments) {
+                List<ElfNoteSection.ElfNote> noteSegmentNotes = noteSegment.notes();
+                segmentNotes.addAll(noteSegmentNotes);
+            }
+
+            int numSectionNotes = sectionNotes.size();
+            int numSegmentNotes = segmentNotes.size();
+            Assertions.assertEquals(numSectionNotes, numSegmentNotes);
+
+            for (int i = 0; i < numSectionNotes; i++) {
+                ElfNoteSection.ElfNote sectionNote = sectionNotes.get(i);
+                ElfNoteSection.ElfNote segmentNote = segmentNotes.get(i);
+                Assertions.assertEquals(sectionNote, segmentNote);
+            }
         });
     }
 }
