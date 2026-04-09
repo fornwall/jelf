@@ -10,6 +10,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GNU;
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_NETBSD;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_ABI_TAG;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_BUILD_ID;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_PROPERTY_TYPE_0;
+
 class BasicTest {
 
     @Test
@@ -293,16 +299,16 @@ class BasicTest {
             List<ElfNoteSection.ElfNote> abiNotes = abiTag.notes();
             Assertions.assertEquals(1, abiNotes.size());
             ElfNoteSection.ElfNote abiNote = abiNotes.get(0);
-            Assertions.assertEquals(ElfNoteTypes.GNU, abiNote.name);
-            Assertions.assertEquals(ElfNoteTypes.Gnu.ABI_TAG, abiNote.type);
+            Assertions.assertEquals(ELF_NOTE_GNU, abiNote.name);
+            Assertions.assertEquals(NT_GNU_ABI_TAG, abiNote.type);
             Assertions.assertEquals(16, abiNote.descriptorBytes().length);
             ElfNoteSection buildId = noteSections.get(1);
             Assertions.assertEquals(4, buildId.header.sh_addralign);
             List<ElfNoteSection.ElfNote> buildIdNotes = buildId.notes();
             Assertions.assertEquals(1, buildIdNotes.size());
             ElfNoteSection.ElfNote buildIdNote = buildIdNotes.get(0);
-            Assertions.assertEquals(ElfNoteTypes.GNU, buildIdNote.name);
-            Assertions.assertEquals(ElfNoteTypes.Gnu.BUILD_ID, buildIdNote.type);
+            Assertions.assertEquals(ELF_NOTE_GNU, buildIdNote.name);
+            Assertions.assertEquals(NT_GNU_BUILD_ID, buildIdNote.type);
             Assertions.assertEquals(20, buildIdNote.descriptorBytes().length);
         });
     }
@@ -315,8 +321,8 @@ class BasicTest {
                     List<ElfNoteSection.ElfNote> notes = noteSection.notes();
                     Assertions.assertEquals(1, notes.size());
                     ElfNoteSection.ElfNote note = notes.get(0);
-                    Assertions.assertEquals(ElfNoteTypes.GNU, note.name);
-                    Assertions.assertEquals(ElfNoteTypes.Gnu.PROPERTY_TYPE_0, note.type);
+                    Assertions.assertEquals(ELF_NOTE_GNU, note.name);
+                    Assertions.assertEquals(NT_GNU_PROPERTY_TYPE_0, note.type);
                     Assertions.assertEquals(32, note.descriptorBytes().length);
                     return;
                 }
@@ -332,9 +338,8 @@ class BasicTest {
             List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
             Assertions.assertEquals(2, noteSections.size());
             ElfNoteSection note = noteSections.get(0);
-            String name = ElfNoteTypes.NETBSD;
-            int length = name.length() + 1;
-            Assertions.assertEquals(name, note.getName());
+            int length = ELF_NOTE_NETBSD.length() + 1;
+            Assertions.assertEquals(ELF_NOTE_NETBSD, note.getName());
             Assertions.assertEquals(length, note.n_namesz);
             Assertions.assertNotEquals(0, length % 4);
         });

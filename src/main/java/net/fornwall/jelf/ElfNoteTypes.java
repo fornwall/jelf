@@ -3,27 +3,27 @@ package net.fornwall.jelf;
 public final class ElfNoteTypes {
     private ElfNoteTypes() {}
 
-    public static final String GNU = "GNU";
+    public static final String ELF_NOTE_SOLARIS = "SUNW Solaris";
 
-    public static final String SOLARIS = "SUNW Solaris";
+    public static final String ELF_NOTE_GNU = "GNU";
 
-    public static final String FDO = "FDO";
+    public static final String ELF_NOTE_FDO = "FDO";
 
-    public static final String NETBSD = "NetBSD";
+    public static final String ELF_NOTE_GO = "Go";
 
-    public static final String FREEBSD = "FreeBSD";
+    public static final String ELF_NOTE_NETBSD = "NetBSD";
 
-    public static final String OPENBSD = "OpenBSD";
+    public static final String ELF_NOTE_FREEBSD = "FreeBSD";
 
-    public static final String DRAGONFLY = "DragonFly";
+    public static final String ELF_NOTE_OPENBSD = "OpenBSD";
 
-    public static final String GO = "Go";
+    public static final String ELF_NOTE_DRAGONFLY = "DragonFly";
 
-    public static final String ANDROID = "Android";
+    public static final String ELF_NOTE_ANDROID = "Android";
 
-    public static final String CORE = "CORE";
+    public static final String ELF_NOTE_CORE = "CORE";
 
-    public static final String NETBSD_CORE = "NetBSD-CORE";
+    public static final String ELF_NOTE_NETBSD_CORE = "NetBSD-CORE";
 
     public static final class Gnu {
         private Gnu() {}
@@ -156,7 +156,7 @@ public final class ElfNoteTypes {
     public static final class Go {
         private Go() {}
 
-        public static final int BUILD_ID = 4;
+        public static final int NT_GO_BUILD_ID = 4;
     }
 
     public static final class Android {
