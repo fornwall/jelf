@@ -6,9 +6,18 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GNU;
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GO;
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_NETBSD;
+import static net.fornwall.jelf.ElfNoteTypes.Go.NT_GO_BUILD_ID;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_ABI_TAG;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_BUILD_ID;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_PROPERTY_TYPE_0;
 
 class BasicTest {
 
@@ -293,16 +302,16 @@ class BasicTest {
             List<ElfNoteSection.ElfNote> abiNotes = abiTag.notes();
             Assertions.assertEquals(1, abiNotes.size());
             ElfNoteSection.ElfNote abiNote = abiNotes.get(0);
-            Assertions.assertEquals(ElfNoteTypes.GNU, abiNote.name);
-            Assertions.assertEquals(ElfNoteTypes.Gnu.ABI_TAG, abiNote.type);
+            Assertions.assertEquals(ELF_NOTE_GNU, abiNote.name);
+            Assertions.assertEquals(NT_GNU_ABI_TAG, abiNote.type);
             Assertions.assertEquals(16, abiNote.descriptorBytes().length);
             ElfNoteSection buildId = noteSections.get(1);
             Assertions.assertEquals(4, buildId.header.sh_addralign);
             List<ElfNoteSection.ElfNote> buildIdNotes = buildId.notes();
             Assertions.assertEquals(1, buildIdNotes.size());
             ElfNoteSection.ElfNote buildIdNote = buildIdNotes.get(0);
-            Assertions.assertEquals(ElfNoteTypes.GNU, buildIdNote.name);
-            Assertions.assertEquals(ElfNoteTypes.Gnu.BUILD_ID, buildIdNote.type);
+            Assertions.assertEquals(ELF_NOTE_GNU, buildIdNote.name);
+            Assertions.assertEquals(NT_GNU_BUILD_ID, buildIdNote.type);
             Assertions.assertEquals(20, buildIdNote.descriptorBytes().length);
         });
     }
@@ -315,8 +324,8 @@ class BasicTest {
                     List<ElfNoteSection.ElfNote> notes = noteSection.notes();
                     Assertions.assertEquals(1, notes.size());
                     ElfNoteSection.ElfNote note = notes.get(0);
-                    Assertions.assertEquals(ElfNoteTypes.GNU, note.name);
-                    Assertions.assertEquals(ElfNoteTypes.Gnu.PROPERTY_TYPE_0, note.type);
+                    Assertions.assertEquals(ELF_NOTE_GNU, note.name);
+                    Assertions.assertEquals(NT_GNU_PROPERTY_TYPE_0, note.type);
                     Assertions.assertEquals(32, note.descriptorBytes().length);
                     return;
                 }
@@ -332,9 +341,8 @@ class BasicTest {
             List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
             Assertions.assertEquals(2, noteSections.size());
             ElfNoteSection note = noteSections.get(0);
-            String name = ElfNoteTypes.NETBSD;
-            int length = name.length() + 1;
-            Assertions.assertEquals(name, note.getName());
+            int length = ELF_NOTE_NETBSD.length() + 1;
+            Assertions.assertEquals(ELF_NOTE_NETBSD, note.getName());
             Assertions.assertEquals(length, note.n_namesz);
             Assertions.assertNotEquals(0, length % 4);
         });
@@ -404,6 +412,83 @@ class BasicTest {
             }
 
             Assertions.fail();
+        });
+    }
+
+    @Test
+    void testNoteNamesz() throws Exception {
+        TestHelper.parseFile("go_amd64_notes", file -> {
+            List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
+            Assertions.assertEquals(2, noteSections.size());
+            ElfNoteSection gnuNoteSection = noteSections.get(0);
+            List<ElfNoteSection.ElfNote> gnuNotes = gnuNoteSection.notes();
+            Assertions.assertEquals(1, gnuNotes.size());
+            ElfNoteSection.ElfNote gnuNote = gnuNotes.get(0);
+            Assertions.assertEquals(ELF_NOTE_GNU, gnuNote.name);
+            Assertions.assertEquals(3, gnuNote.name.length());
+            Assertions.assertEquals(4, gnuNote.namesz);
+            Assertions.assertEquals(NT_GNU_BUILD_ID, gnuNote.type);
+            ElfNoteSection goNoteSection = noteSections.get(1);
+            List<ElfNoteSection.ElfNote> goNotes = goNoteSection.notes();
+            Assertions.assertEquals(1, goNotes.size());
+            ElfNoteSection.ElfNote goNote = goNotes.get(0);
+            Assertions.assertEquals(ELF_NOTE_GO, goNote.name);
+            Assertions.assertEquals(2, goNote.name.length());
+            Assertions.assertEquals(4, goNote.namesz);
+            Assertions.assertEquals(NT_GO_BUILD_ID, goNote.type);
+        });
+    }
+
+    @Test
+    void testSegmentNotes() throws Exception {
+        TestHelper.parseFile("linux_amd64_bindash", file -> {
+            List<ElfSegment> noteSegments = file.segmentsOfType(ElfSegment.PT_NOTE);
+
+            for (ElfSegment seg : noteSegments) {
+                List<ElfNoteSection.ElfNote> notes = seg.notes();
+
+                for (ElfNoteSection.ElfNote note : notes) {
+                    if (ELF_NOTE_GNU.equals(note.name)) {
+                        return;
+                    }
+                }
+
+            }
+
+            Assertions.fail();
+        });
+    }
+
+    @Test
+    void testSectionAndSegmentNotesSame() throws Exception {
+        TestHelper.parseFile("linux_amd64_bindash", file -> {
+            List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
+            int numNoteSections = noteSections.size();
+            List<ElfNoteSection.ElfNote> sectionNotes = new ArrayList<>(numNoteSections);
+
+            for (ElfNoteSection noteSection : noteSections) {
+                List<ElfNoteSection.ElfNote> noteSectionNotes = noteSection.notes();
+                sectionNotes.addAll(noteSectionNotes);
+            }
+
+            List<ElfSegment> noteSegments = file.segmentsOfType(ElfSegment.PT_NOTE);
+            int numNoteSegments = noteSegments.size();
+            List<ElfNoteSection.ElfNote> segmentNotes = new ArrayList<>(numNoteSegments);
+
+            for (ElfSegment noteSegment : noteSegments) {
+                List<ElfNoteSection.ElfNote> noteSegmentNotes = noteSegment.notes();
+                segmentNotes.addAll(noteSegmentNotes);
+            }
+
+            int numSectionNotes = sectionNotes.size();
+            int numSegmentNotes = segmentNotes.size();
+            Assertions.assertEquals(numSectionNotes, numSegmentNotes);
+
+            for (int i = 0; i < numSectionNotes; i++) {
+                ElfNoteSection.ElfNote sectionNote = sectionNotes.get(i);
+                ElfNoteSection.ElfNote segmentNote = segmentNotes.get(i);
+                Assertions.assertEquals(sectionNote, segmentNote);
+            }
         });
     }
 }
