@@ -1,5 +1,8 @@
 package net.fornwall.jelf;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class ElfSection {
     public final ElfSectionHeader header;
     protected final ElfParser parser;
@@ -28,4 +31,18 @@ public class ElfSection {
         return result;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ElfSection section = (ElfSection) o;
+        return Objects.equals(header, section.header) && Arrays.equals(getData(), section.getData());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(header, Arrays.hashCode(getData()));
+    }
 }
