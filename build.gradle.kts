@@ -12,9 +12,8 @@ repositories {
 }
 
 dependencies {
-  testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")
+  testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
 }
 
 java {
@@ -32,6 +31,13 @@ spotless {
 }
 
 tasks {
+  withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Xlint:all")
+  }
+  withType<Javadoc>().configureEach {
+    // Report javadoc problems, but do not require documenting every public member.
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:all,-missing", "-quiet")
+  }
   test {
     systemProperty("jelf.version", project.version.toString())
     useJUnitPlatform()

@@ -22,7 +22,7 @@ abstract class MemoizedObject<T> {
         return value;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> MemoizedObject<T>[] uncheckedArray(int size) {
         return new MemoizedObject[size];
     }

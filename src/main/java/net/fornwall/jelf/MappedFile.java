@@ -9,7 +9,7 @@ public class MappedFile implements BackingFile {
 
     public MappedFile(MappedByteBuffer mappedByteBuffer) {
         this.mappedByteBuffer = mappedByteBuffer;
-        this.mappedByteBuffer.position((int) 0);
+        this.mappedByteBuffer.position(0);
     }
 
     public void seek(long offset) {

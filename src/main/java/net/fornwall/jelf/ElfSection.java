@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class ElfSection {
     public final ElfSectionHeader header;
-    protected final ElfParser parser;
+    final ElfParser parser;
 
     ElfSection(ElfParser parser, ElfSectionHeader header) {
         this.header = header;

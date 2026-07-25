@@ -39,9 +39,9 @@ class ElfParser {
         int ch3 = readUnsignedByte();
         int ch4 = readUnsignedByte();
         if (elfFile.ei_data == ElfFile.DATA_LSB) {
-            return ((int) ch4 & 0xff) << 24 | ((int) ch3 & 0xff) << 16 | ((int) ch2 & 0xff) << 8 | ((int) ch1 & 0xff);
+            return (ch4 & 0xff) << 24 | (ch3 & 0xff) << 16 | (ch2 & 0xff) << 8 | (ch1 & 0xff);
         } else {
-            return ((int) ch1 & 0xff) << 24 | ((int) ch2 & 0xff) << 16 | ((int) ch3 & 0xff) << 8 | ((int) ch4 & 0xff);
+            return (ch1 & 0xff) << 24 | (ch2 & 0xff) << 16 | (ch3 & 0xff) << 8 | (ch4 & 0xff);
         }
     }
 
