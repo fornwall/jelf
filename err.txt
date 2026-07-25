@@ -1,0 +1,23 @@
+Calculating task graph as no cached configuration is available for tasks: publishToSonatype closeAndReleaseSonatypeStagingRepository
+
+1 problem was found storing the configuration cache.
+- Task `:publishMavenJavaPublicationToSonatypeRepository` of type `org.gradle.api.publish.maven.tasks.PublishToMavenRepository`: error writing value of type 'org.gradle.api.publish.maven.tasks.PublishToMavenRepository$RepositorySpec$Configured'
+
+See the complete report at file:///home/fornwall/src/jelf/build/reports/configuration-cache/2tt6h3b2olus3ixk62ayfw0eq/elbroohno5o04ggweiya88bev/configuration-cache-report.html
+
+[Incubating] Problems report is available at: file:///home/fornwall/src/jelf/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Configuration cache state could not be cached: field `repository` of `org.gradle.api.publish.maven.tasks.PublishToMavenRepository$PublishSpec` bean found in field `value` of `org.gradle.internal.Try$Success` bean found in field `result` of `org.gradle.internal.serialization.Cached$Fixed` bean found in field `spec` of task `:publishMavenJavaPublicationToSonatypeRepository` of type `org.gradle.api.publish.maven.tasks.PublishToMavenRepository`: error writing value of type 'org.gradle.api.publish.maven.tasks.PublishToMavenRepository$RepositorySpec$Configured'
+> No staging repository with name sonatype created
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 360ms
+Configuration cache entry discarded due to serialization error.
