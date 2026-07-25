@@ -1,8 +1,6 @@
 plugins {
-  id("signing")
-  id("maven-publish")
   id("java-library")
-  id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+  id("com.vanniktech.maven.publish") version "0.37.0"
   id("com.adarshr.test-logger") version "4.0.0"
   id("com.diffplug.spotless") version "8.8.0"
 }
@@ -20,8 +18,6 @@ java {
   group = "net.fornwall"
   version = "0.12.0"
   sourceCompatibility = org.gradle.api.JavaVersion.VERSION_17
-  withJavadocJar()
-  withSourcesJar()
 }
 
 spotless {
@@ -44,63 +40,53 @@ tasks {
   }
 }
 
-// See https://docs.gradle.org/current/userguide/publishing_maven.html
-// and https://github.com/gradle-nexus/publish-plugin
+// See https://vanniktech.github.io/gradle-maven-publish-plugin/central/
 /*
- gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
+ Export the signing key once, as gpg 2.1+ no longer keeps a secring.gpg around:
 
- gradle --info \
-   -PsonatypeUsername=xxx \
-   -PsonatypePassword=xxx \
-   -Psigning.keyId=xxx \
-   -Psigning.password=xxx \
-   -Psigning.secretKeyRingFile=$HOME/.gnupg/secring.gpg \
-   publishToSonatype \
-   closeAndReleaseSonatypeStagingRepository
+   gpg --export-secret-keys > ~/.gnupg/secring.gpg
+
+ Then put the credentials in ~/.gradle/gradle.properties, never in this repository:
+
+   mavenCentralUsername=xxx           # user token from https://central.sonatype.com/usertoken
+   mavenCentralPassword=xxx
+   signing.keyId=xxx                  # last 8 characters of the key id
+   signing.password=xxx
+   signing.secretKeyRingFile=/home/user/.gnupg/secring.gpg
+
+ and release with:
+
+   ./gradlew publishAndReleaseToMavenCentral
 */
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
-        }
-    }
-}
+mavenPublishing {
+  publishToMavenCentral(automaticRelease = true)
+  signAllPublications()
 
-publishing {
-  publications {
-    create<MavenPublication>("mavenJava") {
-      from(components["java"])
-      //artifactId = 'jelf'
-      pom {
-        name.set("JElf")
-        description.set("ELF parsing library in java")
-        url.set("https://github.com/fornwall/jelf")
-        licenses {
-          license {
-            name.set("The MIT License")
-            url.set("https://opensource.org/licenses/MIT")
-          }
-        }
-        developers {
-          developer {
-            id.set("fornwall")
-            name.set("Fredrik Fornwall")
-            email.set("fredrik@fornwall.net")
-          }
-        }
-        scm {
-          connection.set("scm:git://github.com/fornwall/jelf.git")
-          developerConnection.set("scm:git:ssh://git@github.com/fornwall/jelf.git")
-          url.set("https://github.com/fornwall/jelf/")
-        }
+  coordinates(group.toString(), "jelf", version.toString())
+
+  pom {
+    name.set("JElf")
+    description.set("ELF parsing library in java")
+    url.set("https://github.com/fornwall/jelf")
+    licenses {
+      license {
+        name.set("The MIT License")
+        url.set("https://opensource.org/licenses/MIT")
       }
     }
+    developers {
+      developer {
+        id.set("fornwall")
+        name.set("Fredrik Fornwall")
+        email.set("fredrik@fornwall.net")
+      }
+    }
+    scm {
+      connection.set("scm:git://github.com/fornwall/jelf.git")
+      developerConnection.set("scm:git:ssh://git@github.com/fornwall/jelf.git")
+      url.set("https://github.com/fornwall/jelf/")
+    }
   }
-}
-
-signing {
-  sign(publishing.publications["mavenJava"])
 }
 
 // Do not sign when only installing into the local maven repository. The decision is stored in a
