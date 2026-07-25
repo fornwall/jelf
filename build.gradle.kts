@@ -103,6 +103,19 @@ signing {
   sign(publishing.publications["mavenJava"])
 }
 
-tasks.withType<Sign>().configureEach {
-  onlyIf { gradle.taskGraph.allTasks.none { it is org.gradle.api.publish.maven.tasks.PublishToMavenLocal } }
+// Do not sign when only installing into the local maven repository. The decision is stored in a
+// property computed when the task graph is ready, so that the onlyIf predicate does not capture the
+// Project instance, which the configuration cache does not allow.
+// The enclosing run block keeps signingRequired a local variable: a top level val would be a field
+// of the script object, which the onlyIf lambda below would then capture.
+run {
+  val signingRequired = objects.property(Boolean::class.java).convention(true)
+
+  gradle.taskGraph.whenReady {
+    signingRequired.set(allTasks.none { it is org.gradle.api.publish.maven.tasks.PublishToMavenLocal })
+  }
+
+  tasks.withType<Sign>().configureEach {
+    onlyIf { signingRequired.get() }
+  }
 }
