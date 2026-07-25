@@ -10,5 +10,4 @@ class ElfGnuHashTableTest {
         Assertions.assertEquals(0xfde460be, ElfGnuHashTable.gnuHash("foobar"));
         Assertions.assertEquals(0x90f1e4b0, ElfGnuHashTable.gnuHash("strsigna"));
     }
-
 }

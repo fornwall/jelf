@@ -9,10 +9,10 @@ jobs:
 
     strategy:
       matrix:
-        java: [17, 21, 25]
+        java: [17, 21, 25, 26]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up JDK ${{ matrix.java }}
       uses: actions/setup-java@v5
       with:
@@ -24,7 +24,7 @@ jobs:
   actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Download actionlint
         id: get_actionlint
         run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)

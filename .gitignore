@@ -9,7 +9,6 @@
 .gradle/
 build/
 bin/
-gradle.properties
 
 # Eclipse
 .classpath

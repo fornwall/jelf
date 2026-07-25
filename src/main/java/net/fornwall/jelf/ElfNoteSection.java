@@ -40,7 +40,7 @@ public class ElfNoteSection extends ElfSection {
      * <p>
      * Accessible in {@link #descriptorAsGnuAbi()}.
      */
-    public final static class GnuAbiDescriptor {
+    public static final class GnuAbiDescriptor {
 
         /**
          * A possible value of {@link #operatingSystem}.
@@ -94,7 +94,10 @@ public class ElfNoteSection extends ElfSection {
             }
 
             GnuAbiDescriptor that = (GnuAbiDescriptor) o;
-            return operatingSystem == that.operatingSystem && majorVersion == that.majorVersion && minorVersion == that.minorVersion && subminorVersion == that.subminorVersion;
+            return operatingSystem == that.operatingSystem
+                    && majorVersion == that.majorVersion
+                    && minorVersion == that.minorVersion
+                    && subminorVersion == that.subminorVersion;
         }
 
         @Override
@@ -135,7 +138,8 @@ public class ElfNoteSection extends ElfSection {
                 return null;
             }
 
-            ByteBuffer buf = ByteBuffer.wrap(descriptorBytes).order(ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+            ByteBuffer buf = ByteBuffer.wrap(descriptorBytes)
+                    .order(ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
             return new GnuAbiDescriptor(buf.getInt(0), buf.getInt(4), buf.getInt(8), buf.getInt(12));
         }
 
@@ -146,7 +150,10 @@ public class ElfNoteSection extends ElfSection {
             }
 
             ElfNote note = (ElfNote) o;
-            return type == note.type && ei_data == note.ei_data && Objects.equals(name, note.name) && Objects.deepEquals(descriptorBytes, note.descriptorBytes);
+            return type == note.type
+                    && ei_data == note.ei_data
+                    && Objects.equals(name, note.name)
+                    && Objects.deepEquals(descriptorBytes, note.descriptorBytes);
         }
 
         @Override
@@ -197,7 +204,8 @@ public class ElfNoteSection extends ElfSection {
         descriptorBytes = new byte[n_descsz];
 
         if (n_type == NT_GNU_ABI_TAG) {
-            gnuAbiDescriptor = new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
+            gnuAbiDescriptor =
+                    new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
         } else {
             gnuAbiDescriptor = null;
         }
@@ -269,7 +277,8 @@ public class ElfNoteSection extends ElfSection {
             long descEnd = align == Long.BYTES ? noteAlign8(nameEnd + descsz) : noteAlign4(nameEnd + descsz);
 
             if (nameEnd < pos || descEnd < nameEnd || descEnd > end) {
-                throw new ElfException("Note out of bounds (pos=" + pos + ", nameEnd=" + nameEnd + ", descEnd=" + descEnd + ", end=" + end + ")");
+                throw new ElfException("Note out of bounds (pos=" + pos + ", nameEnd=" + nameEnd + ", descEnd="
+                        + descEnd + ", end=" + end + ")");
             }
 
             byte[] nameBytes = new byte[namesz];
@@ -289,7 +298,8 @@ public class ElfNoteSection extends ElfSection {
             bytesRead = parser.read(desc);
 
             if (bytesRead != descsz) {
-                throw new ElfException("Error reading note descriptor (read=" + bytesRead + ", expected=" + descsz + ")");
+                throw new ElfException(
+                        "Error reading note descriptor (read=" + bytesRead + ", expected=" + descsz + ")");
             }
 
             if (descEnd > pos + descsz) {
@@ -317,7 +327,12 @@ public class ElfNoteSection extends ElfSection {
         }
 
         ElfNoteSection that = (ElfNoteSection) o;
-        return n_namesz == that.n_namesz && n_descsz == that.n_descsz && n_type == that.n_type && Objects.equals(n_name, that.n_name) && Objects.deepEquals(descriptorBytes, that.descriptorBytes) && Objects.equals(gnuAbiDescriptor, that.gnuAbiDescriptor);
+        return n_namesz == that.n_namesz
+                && n_descsz == that.n_descsz
+                && n_type == that.n_type
+                && Objects.equals(n_name, that.n_name)
+                && Objects.deepEquals(descriptorBytes, that.descriptorBytes)
+                && Objects.equals(gnuAbiDescriptor, that.gnuAbiDescriptor);
     }
 
     @Override

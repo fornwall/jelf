@@ -3,10 +3,10 @@ package net.fornwall.jelf;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-class ByteArrayAsFile implements BackingFile{
+class ByteArrayAsFile implements BackingFile {
     private final ByteArrayInputStream byteArray;
 
-    public ByteArrayAsFile(byte[] buffer)  {
+    public ByteArrayAsFile(byte[] buffer) {
         this(new ByteArrayInputStream(buffer));
     }
 
@@ -40,5 +40,4 @@ class ByteArrayAsFile implements BackingFile{
             throw new RuntimeException("Error reading " + data.length + " bytes", e);
         }
     }
-
 }

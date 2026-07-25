@@ -884,7 +884,7 @@ public final class ElfFile {
     /**
      * C-SKY architecture type. A possible value of {@link #e_machine}.
      */
-    public static final int ARCH_CSKY = 252;     /*  */
+    public static final int ARCH_CSKY = 252; /*  */
     /**
      * LoongArch architecture type. A possible value of {@link #e_machine}.
      */
@@ -1076,7 +1076,9 @@ public final class ElfFile {
      * @return the symbol table section for this file, if any
      */
     public ElfSymbolTableSection getSymbolTableSection() throws ElfException {
-        return (symbolTableSection != null) ? symbolTableSection : (symbolTableSection = (ElfSymbolTableSection) firstSectionByType(ElfSectionHeader.SHT_SYMTAB));
+        return (symbolTableSection != null)
+                ? symbolTableSection
+                : (symbolTableSection = (ElfSymbolTableSection) firstSectionByType(ElfSectionHeader.SHT_SYMTAB));
     }
 
     /**
@@ -1085,7 +1087,9 @@ public final class ElfFile {
      * @return the dynamic symbol table section for this file, if any
      */
     public ElfSymbolTableSection getDynamicSymbolTableSection() throws ElfException {
-        return (dynamicSymbolTableSection != null) ? dynamicSymbolTableSection : (dynamicSymbolTableSection = (ElfSymbolTableSection) firstSectionByType(ElfSectionHeader.SHT_DYNSYM));
+        return (dynamicSymbolTableSection != null)
+                ? dynamicSymbolTableSection
+                : (dynamicSymbolTableSection = (ElfSymbolTableSection) firstSectionByType(ElfSectionHeader.SHT_DYNSYM));
     }
 
     /**
@@ -1094,7 +1098,9 @@ public final class ElfFile {
      * @return the dynamic section for this file, if any
      */
     public ElfDynamicSection getDynamicSection() {
-        return (dynamicSection != null) ? dynamicSection : (dynamicSection = (ElfDynamicSection) firstSectionByType(ElfSectionHeader.SHT_DYNAMIC));
+        return (dynamicSection != null)
+                ? dynamicSection
+                : (dynamicSection = (ElfDynamicSection) firstSectionByType(ElfSectionHeader.SHT_DYNAMIC));
     }
 
     public ElfSection firstSectionByType(int type) throws ElfException {
@@ -1308,7 +1314,8 @@ public final class ElfFile {
         byte[] ident = new byte[16];
         int bytesRead = parser.read(ident);
         if (bytesRead != ident.length)
-            throw new ElfException("Error reading elf header (read " + bytesRead + "bytes - expected to read " + ident.length + "bytes)");
+            throw new ElfException("Error reading elf header (read " + bytesRead + "bytes - expected to read "
+                    + ident.length + "bytes)");
 
         if (!(0x7f == ident[0] && 'E' == ident[1] && 'L' == ident[2] && 'F' == ident[3]))
             throw new ElfException("Bad magic number for file");
@@ -1321,7 +1328,8 @@ public final class ElfFile {
         ei_version = ident[6];
         if (ei_version != 1) throw new ElfException("Invalid elf version: " + ei_version);
         ei_osabi = ident[7]; // EI_OSABI, target operating system ABI
-        es_abiversion = ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
+        es_abiversion =
+                ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
         // ident[9-15] // EI_PAD, currently unused.
 
         e_type = parser.readShort();
@@ -1337,7 +1345,6 @@ public final class ElfFile {
         e_shentsize = parser.readShort();
         e_shnum = parser.readShort();
         e_shstrndx = parser.readShort();
-
 
         if (e_shnum == 0 && e_shstrndx == (short) 0xffff) {
             ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, e_shoff);
@@ -1360,7 +1367,11 @@ public final class ElfFile {
                         case ElfSectionHeader.SHT_DYNSYM:
                             return new ElfSymbolTableSection(parser, elfSectionHeader);
                         case ElfSectionHeader.SHT_STRTAB:
-                            return new ElfStringTable(parser, elfSectionHeader.sh_offset, (int) elfSectionHeader.sh_size, elfSectionHeader);
+                            return new ElfStringTable(
+                                    parser,
+                                    elfSectionHeader.sh_offset,
+                                    (int) elfSectionHeader.sh_size,
+                                    elfSectionHeader);
                         case ElfSectionHeader.SHT_HASH:
                             return new ElfHashTable(parser, elfSectionHeader);
                         case ElfSectionHeader.SHT_NOTE:
@@ -1402,5 +1413,4 @@ public final class ElfFile {
         }
         return null;
     }
-
 }
