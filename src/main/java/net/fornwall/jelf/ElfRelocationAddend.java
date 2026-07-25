@@ -1,5 +1,7 @@
 package net.fornwall.jelf;
 
+import java.util.Objects;
+
 /**
  * Relocation is the process of connecting symbolic references with symbolic definitions.
  * For example, when a program calls a function, the associated call instruction must transfer
@@ -88,5 +90,20 @@ public final class ElfRelocationAddend {
      */
     public ElfSymbol getSymbol() {
         return elfFile.getSymbolTableSection().symbols[getSymbolIndex()];
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ElfRelocationAddend that = (ElfRelocationAddend) o;
+        return r_offset == that.r_offset && r_info == that.r_info && r_addend == that.r_addend;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(r_offset, r_info, r_addend);
     }
 }

@@ -1,5 +1,7 @@
 package net.fornwall.jelf;
 
+import java.util.Objects;
+
 /**
  * Class corresponding to the Elf32_Shdr/Elf64_Shdr struct.
  *
@@ -227,6 +229,21 @@ public class ElfSectionHeader {
         if (sh_name == 0) return null;
         ElfStringTable tbl = elfHeader.getSectionNameStringTable();
         return tbl.get(sh_name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ElfSectionHeader that = (ElfSectionHeader) o;
+        return sh_name == that.sh_name && sh_type == that.sh_type && sh_flags == that.sh_flags && sh_addr == that.sh_addr && sh_offset == that.sh_offset && sh_size == that.sh_size && sh_link == that.sh_link && sh_info == that.sh_info && sh_addralign == that.sh_addralign && sh_entsize == that.sh_entsize;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sh_name, sh_type, sh_flags, sh_addr, sh_offset, sh_size, sh_link, sh_info, sh_addralign, sh_entsize);
     }
 
     @Override

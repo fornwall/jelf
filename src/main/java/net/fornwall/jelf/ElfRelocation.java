@@ -1,5 +1,7 @@
 package net.fornwall.jelf;
 
+import java.util.Objects;
+
 /**
  * A relocation connects a symbolic reference with its actual definition.
  * Relocatable files must have information that describes how to modify their
@@ -71,5 +73,20 @@ public final class ElfRelocation {
 	 */
 	public ElfSymbol getSymbol() {
 		return elfFile.getSymbolTableSection().symbols[getSymbolIndex()];
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		ElfRelocation that = (ElfRelocation) o;
+		return r_offset == that.r_offset && r_info == that.r_info;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(r_offset, r_info);
 	}
 }

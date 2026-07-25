@@ -1,6 +1,7 @@
 package net.fornwall.jelf;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Class corresponding to the Elf32_Phdr/Elf64_Phdr struct.
@@ -189,6 +190,21 @@ public class ElfSegment {
 
     public List<ElfNoteSection.ElfNote> notes() {
         return ElfNoteSection.readNotes(parser, p_offset, p_filesz, p_align);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ElfSegment segment = (ElfSegment) o;
+        return p_type == segment.p_type && p_flags == segment.p_flags && p_offset == segment.p_offset && p_vaddr == segment.p_vaddr && p_paddr == segment.p_paddr && p_filesz == segment.p_filesz && p_memsz == segment.p_memsz && p_align == segment.p_align;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(p_type, p_flags, p_offset, p_vaddr, p_paddr, p_filesz, p_memsz, p_align);
     }
 
     @Override

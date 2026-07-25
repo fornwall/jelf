@@ -1,5 +1,7 @@
 package net.fornwall.jelf;
 
+import java.util.Objects;
+
 /**
  * An entry in the {@link ElfSymbolTableSection}, which holds information needed to locate and relocate a program's symbolic definitions and references.
  * <p>
@@ -276,5 +278,20 @@ public final class ElfSymbol {
         }
 
         return "ElfSymbol[name=" + getName() + ", type=" + typeString + ", size=" + st_size + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ElfSymbol elfSymbol = (ElfSymbol) o;
+        return st_name == elfSymbol.st_name && st_value == elfSymbol.st_value && st_size == elfSymbol.st_size && st_info == elfSymbol.st_info && st_other == elfSymbol.st_other && st_shndx == elfSymbol.st_shndx && section_type == elfSymbol.section_type && offset == elfSymbol.offset;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(st_name, st_value, st_size, st_info, st_other, st_shndx, section_type, offset);
     }
 }
