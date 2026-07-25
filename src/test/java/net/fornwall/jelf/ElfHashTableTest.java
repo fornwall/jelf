@@ -11,5 +11,4 @@ class ElfHashTableTest {
         Assertions.assertEquals(0x06d65882, ElfHashTable.elfHash("foobar"));
         Assertions.assertEquals(0x007b7cb3, ElfHashTable.elfHash("tputs"));
     }
-
 }

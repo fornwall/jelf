@@ -1,7 +1,12 @@
 package net.fornwall.jelf;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GNU;
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GO;
+import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_NETBSD;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_ABI_TAG;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_BUILD_ID;
+import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_PROPERTY_TYPE_0;
+import static net.fornwall.jelf.ElfNoteTypes.Go.NT_GO_BUILD_ID;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -10,14 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GNU;
-import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_GO;
-import static net.fornwall.jelf.ElfNoteTypes.ELF_NOTE_NETBSD;
-import static net.fornwall.jelf.ElfNoteTypes.Go.NT_GO_BUILD_ID;
-import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_ABI_TAG;
-import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_BUILD_ID;
-import static net.fornwall.jelf.ElfNoteTypes.Gnu.NT_GNU_PROPERTY_TYPE_0;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 class BasicTest {
 
@@ -34,8 +33,8 @@ class BasicTest {
             Assertions.assertEquals(40, file.e_shentsize);
             Assertions.assertEquals(25, file.e_shnum);
             Assertions.assertEquals(15856, file.e_shoff);
-            TestHelper.assertSectionNames(file, null, ".interp", ".dynsym", ".dynstr", ".hash", ".rel.dyn", ".rel.plt",
-                    ".plt", ".text");
+            TestHelper.assertSectionNames(
+                    file, null, ".interp", ".dynsym", ".dynstr", ".hash", ".rel.dyn", ".rel.plt", ".plt", ".text");
             Assertions.assertEquals("/system/bin/linker", file.getInterpreter());
 
             ElfDynamicSection dynamic = file.getDynamicSection();
@@ -46,8 +45,8 @@ class BasicTest {
             Assertions.assertEquals(ElfDynamicSection.DF_BIND_NOW, dynamic.getFlags());
             Assertions.assertEquals(ElfDynamicSection.DF_1_NOW, dynamic.getFlags1());
 
-            Assertions.assertEquals(Arrays.asList("libncursesw.so.6", "libc.so", "libdl.so"),
-                    dynamic.getNeededLibraries());
+            Assertions.assertEquals(
+                    Arrays.asList("libncursesw.so.6", "libc.so", "libdl.so"), dynamic.getNeededLibraries());
             Assertions.assertEquals("/data/data/com.termux/files/usr/lib", dynamic.getRunPath());
 
             Assertions.assertEquals(26, dynamic.entries.size());
@@ -72,7 +71,8 @@ class BasicTest {
 
             List<ElfSection> noteSections = file.sectionsOfType(ElfSectionHeader.SHT_NOTE);
             Assertions.assertEquals(1, noteSections.size());
-            Assertions.assertEquals(".note.gnu.gold-version", noteSections.get(0).header.getName());
+            Assertions.assertEquals(
+                    ".note.gnu.gold-version", noteSections.get(0).header.getName());
             Assertions.assertEquals("GNU", ((ElfNoteSection) noteSections.get(0)).getName());
             Assertions.assertEquals(ElfNoteSection.NT_GNU_GOLD_VERSION, ((ElfNoteSection) noteSections.get(0)).n_type);
             Assertions.assertEquals("gold 1.11", ((ElfNoteSection) noteSections.get(0)).descriptorAsString());
@@ -156,8 +156,8 @@ class BasicTest {
             Assertions.assertEquals(64, file.e_phoff);
             Assertions.assertEquals(27, file.e_shnum);
             Assertions.assertEquals(119544, file.e_shoff);
-            TestHelper.assertSectionNames(file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash",
-                    ".dynsym");
+            TestHelper.assertSectionNames(
+                    file, null, ".interp", ".note.ABI-tag", ".note.gnu.build-id", ".gnu.hash", ".dynsym");
 
             ElfDynamicSection ds = file.getDynamicSection();
             Assertions.assertEquals(Collections.singletonList("libc.so.6"), ds.getNeededLibraries());
@@ -175,8 +175,8 @@ class BasicTest {
             Assertions.assertEquals(".note.ABI-tag", note1.header.getName());
             Assertions.assertEquals("GNU", note1.getName());
             Assertions.assertEquals(ElfNoteSection.NT_GNU_ABI_TAG, note1.n_type);
-            Assertions.assertEquals(ElfNoteSection.GnuAbiDescriptor.ELF_NOTE_OS_LINUX,
-                    note1.descriptorAsGnuAbi().operatingSystem);
+            Assertions.assertEquals(
+                    ElfNoteSection.GnuAbiDescriptor.ELF_NOTE_OS_LINUX, note1.descriptorAsGnuAbi().operatingSystem);
             Assertions.assertEquals(2, note1.descriptorAsGnuAbi().majorVersion);
             Assertions.assertEquals(6, note1.descriptorAsGnuAbi().minorVersion);
             Assertions.assertEquals(24, note1.descriptorAsGnuAbi().subminorVersion);
@@ -185,9 +185,30 @@ class BasicTest {
             Assertions.assertEquals(ElfNoteSection.NT_GNU_BUILD_ID, note2.n_type);
             Assertions.assertEquals(0x14, note2.descriptorBytes().length);
             Assertions.assertEquals(0x0f, note2.descriptorBytes()[0]);
-            Assertions.assertArrayEquals(new byte[]{0x0f, 0x7f, (byte) 0xf2, (byte) 0x87, (byte) 0xcf, 0x26,
-                    (byte) 0xeb, (byte) 0xa9, (byte) 0xa6, 0x64, 0x3b, 0x12, 0x26, 0x08, (byte) 0x9e, (byte) 0xea, 0x57,
-                    (byte) 0xcb, 0x7e, 0x44}, note2.descriptorBytes());
+            Assertions.assertArrayEquals(
+                    new byte[] {
+                        0x0f,
+                        0x7f,
+                        (byte) 0xf2,
+                        (byte) 0x87,
+                        (byte) 0xcf,
+                        0x26,
+                        (byte) 0xeb,
+                        (byte) 0xa9,
+                        (byte) 0xa6,
+                        0x64,
+                        0x3b,
+                        0x12,
+                        0x26,
+                        0x08,
+                        (byte) 0x9e,
+                        (byte) 0xea,
+                        0x57,
+                        (byte) 0xcb,
+                        0x7e,
+                        0x44
+                    },
+                    note2.descriptorBytes());
 
             TestHelper.validateHashTable(file);
         });
@@ -199,8 +220,18 @@ class BasicTest {
             Assertions.assertEquals(ElfFile.CLASS_32, file.ei_class);
             Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
             Assertions.assertEquals(ElfFile.ET_REL, file.e_type);
-            TestHelper.assertSectionNames(file, null, ".text", ".rel.text", ".data", ".bss", ".comment",
-                    ".ARM.attributes", ".symtab", ".strtab", ".shstrtab");
+            TestHelper.assertSectionNames(
+                    file,
+                    null,
+                    ".text",
+                    ".rel.text",
+                    ".data",
+                    ".bss",
+                    ".comment",
+                    ".ARM.attributes",
+                    ".symtab",
+                    ".strtab",
+                    ".shstrtab");
 
             List<ElfSection> sections = file.sectionsOfType(ElfSectionHeader.SHT_REL);
             Assertions.assertEquals(1, sections.size());
@@ -209,7 +240,7 @@ class BasicTest {
 
             // "Relocation section '.rel.text' at offset 0x14c contains 1 entry:
             // Offset     Info    Type            Sym.Value  Sym. Name
-            //00000006  0000080a R_ARM_THM_CALL    00000001   callee"
+            // 00000006  0000080a R_ARM_THM_CALL    00000001   callee"
             ElfRelocation rel = relocations.relocations[0];
             Assertions.assertEquals(0x0000_0006, rel.r_offset);
             Assertions.assertEquals(0x0000_080A, rel.r_info);
@@ -224,8 +255,21 @@ class BasicTest {
             Assertions.assertEquals(ElfFile.CLASS_64, file.ei_class);
             Assertions.assertEquals(ElfFile.DATA_LSB, file.ei_data);
             Assertions.assertEquals(ElfFile.ET_REL, file.e_type);
-            TestHelper.assertSectionNames(file, null, ".text", ".rela.text", ".data", ".bss", ".comment",
-                    ".note.GNU-stack", ".note.gnu.property", ".eh_frame", ".rela.eh_frame", ".symtab", ".strtab", ".shstrtab");
+            TestHelper.assertSectionNames(
+                    file,
+                    null,
+                    ".text",
+                    ".rela.text",
+                    ".data",
+                    ".bss",
+                    ".comment",
+                    ".note.GNU-stack",
+                    ".note.gnu.property",
+                    ".eh_frame",
+                    ".rela.eh_frame",
+                    ".symtab",
+                    ".strtab",
+                    ".shstrtab");
 
             List<ElfSection> sections = file.sectionsOfType(ElfSectionHeader.SHT_RELA);
             Assertions.assertEquals(2, sections.size());
@@ -236,7 +280,7 @@ class BasicTest {
             // readelf -a:
             // "Relocation section '.rela.text' at offset 0x1a0 contains 1 entry:
             //  Offset          Info           Type           Sym. Value    Sym. Name + Addend
-            //00000000000d  000400000002 R_X86_64_PC32     0000000000000000 value_to_add - 4"
+            // 00000000000d  000400000002 R_X86_64_PC32     0000000000000000 value_to_add - 4"
             Assertions.assertEquals(1, relocations.relocations.length);
             ElfRelocationAddend rel = relocations.relocations[0];
             Assertions.assertEquals(0x0000_000d, rel.r_offset);
@@ -269,10 +313,12 @@ class BasicTest {
 
             ElfSection interpSection = file.getSection(1);
             // objcopy --dump-section .interp=OUT src/test/resources/usr-bin-yes:
-            Assertions.assertArrayEquals(new byte[]{
-                    0x2f, 0x6c, 0x69, 0x62, 0x36, 0x34, 0x2f, 0x6c, 0x64, 0x2d, 0x6c, 0x69, 0x6e, 0x75,
-                    0x78, 0x2d, 0x78, 0x38, 0x36, 0x2d, 0x36, 0x34, 0x2e, 0x73, 0x6f, 0x2e, 0x32, 0x00
-            }, interpSection.getData());
+            Assertions.assertArrayEquals(
+                    new byte[] {
+                        0x2f, 0x6c, 0x69, 0x62, 0x36, 0x34, 0x2f, 0x6c, 0x64, 0x2d, 0x6c, 0x69, 0x6e, 0x75,
+                        0x78, 0x2d, 0x78, 0x38, 0x36, 0x2d, 0x36, 0x34, 0x2e, 0x73, 0x6f, 0x2e, 0x32, 0x00
+                    },
+                    interpSection.getData());
         });
     }
 
@@ -361,11 +407,14 @@ class BasicTest {
             ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
 
             for (NotePatch patch : patches) {
-                ByteBuffer.wrap(data, noteOffset + patch.offset, Integer.BYTES).order(order).putInt(patch.value);
+                ByteBuffer.wrap(data, noteOffset + patch.offset, Integer.BYTES)
+                        .order(order)
+                        .putInt(patch.value);
             }
 
             ElfFile patchedFile = ElfFile.from(data);
-            ElfException e = Assertions.assertThrows(ElfException.class, () -> patchedFile.sectionsOfType(ElfSectionHeader.SHT_NOTE));
+            ElfException e = Assertions.assertThrows(
+                    ElfException.class, () -> patchedFile.sectionsOfType(ElfSectionHeader.SHT_NOTE));
             Assertions.assertTrue(e.getMessage().contains(message), e.getMessage());
         }
     }
@@ -396,7 +445,10 @@ class BasicTest {
 
     @Test
     void testCombinedNameszDescszExceedsShSize() throws Exception {
-        assertParsingFailsContainingMessage("descsz", new NotePatch(NAMESZ_OFFSET, ElfNoteSection.NHDR_SIZE), new NotePatch(DESCSZ_OFFSET, ElfNoteSection.NHDR_SIZE));
+        assertParsingFailsContainingMessage(
+                "descsz",
+                new NotePatch(NAMESZ_OFFSET, ElfNoteSection.NHDR_SIZE),
+                new NotePatch(DESCSZ_OFFSET, ElfNoteSection.NHDR_SIZE));
     }
 
     @Test
@@ -452,7 +504,6 @@ class BasicTest {
                         return;
                     }
                 }
-
             }
 
             Assertions.fail();

@@ -79,6 +79,7 @@ public class ElfSectionHeader {
      * See {@link ElfSymbolTableSection}, which is the class representing sections of this type, for more information.
      */
     public static final int SHT_DYNSYM = 11;
+
     public static final int SHT_INIT_ARRAY = 14;
     public static final int SHT_FINI_ARRAY = 15;
     public static final int SHT_PREINIT_ARRAY = 16;
@@ -95,6 +96,7 @@ public class ElfSectionHeader {
      * See {@link ElfGnuHashTable}.
      */
     public static final int SHT_GNU_HASH = 0x6ffffff6;
+
     public static final int SHT_GNU_verdef = 0x6ffffffd;
     public static final int SHT_GNU_verneed = 0x6ffffffe;
     public static final int SHT_GNU_versym = 0x6fffffff;
@@ -238,17 +240,26 @@ public class ElfSectionHeader {
         }
 
         ElfSectionHeader that = (ElfSectionHeader) o;
-        return sh_name == that.sh_name && sh_type == that.sh_type && sh_flags == that.sh_flags && sh_addr == that.sh_addr && sh_offset == that.sh_offset && sh_size == that.sh_size && sh_link == that.sh_link && sh_info == that.sh_info && sh_addralign == that.sh_addralign && sh_entsize == that.sh_entsize;
+        return sh_name == that.sh_name
+                && sh_type == that.sh_type
+                && sh_flags == that.sh_flags
+                && sh_addr == that.sh_addr
+                && sh_offset == that.sh_offset
+                && sh_size == that.sh_size
+                && sh_link == that.sh_link
+                && sh_info == that.sh_info
+                && sh_addralign == that.sh_addralign
+                && sh_entsize == that.sh_entsize;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sh_name, sh_type, sh_flags, sh_addr, sh_offset, sh_size, sh_link, sh_info, sh_addralign, sh_entsize);
+        return Objects.hash(
+                sh_name, sh_type, sh_flags, sh_addr, sh_offset, sh_size, sh_link, sh_info, sh_addralign, sh_entsize);
     }
 
     @Override
     public String toString() {
         return "ElfSectionHeader[name=" + getName() + ", type=0x" + Long.toHexString(sh_type) + "]";
     }
-
 }

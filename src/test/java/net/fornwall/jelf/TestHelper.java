@@ -11,75 +11,71 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.Objects;
-
 import org.junit.jupiter.api.Assertions;
 
 public class TestHelper {
-	public interface TestMethod {
-		void test(ElfFile file) throws Exception;
-	}
+    public interface TestMethod {
+        void test(ElfFile file) throws Exception;
+    }
 
-	public static void parseFile(String fileName, TestMethod consumer) throws Exception {
-		try (InputStream stream = Objects.requireNonNull(BasicTest.class.getResourceAsStream('/' + fileName))) {
-			ElfFile fromStream = ElfFile.from(stream);
-			consumer.test(fromStream);
-		}
+    public static void parseFile(String fileName, TestMethod consumer) throws Exception {
+        try (InputStream stream = Objects.requireNonNull(BasicTest.class.getResourceAsStream('/' + fileName))) {
+            ElfFile fromStream = ElfFile.from(stream);
+            consumer.test(fromStream);
+        }
 
-		URL url = Objects.requireNonNull(BasicTest.class.getResource('/' + fileName));
-		Path path = Paths.get(url.toURI());
+        URL url = Objects.requireNonNull(BasicTest.class.getResource('/' + fileName));
+        Path path = Paths.get(url.toURI());
 
-		ElfFile fromPath = ElfFile.from(path);
-		consumer.test(fromPath);
+        ElfFile fromPath = ElfFile.from(path);
+        consumer.test(fromPath);
 
-		try (SeekableByteChannel channel = Files.newByteChannel(path, EnumSet.of(StandardOpenOption.READ))) {
-			ElfFile fromChannel = ElfFile.from(channel);
-			consumer.test(fromChannel);
-		}
+        try (SeekableByteChannel channel = Files.newByteChannel(path, EnumSet.of(StandardOpenOption.READ))) {
+            ElfFile fromChannel = ElfFile.from(channel);
+            consumer.test(fromChannel);
+        }
 
-		try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet.of(StandardOpenOption.READ))) {
-			MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
-			ElfFile fromMappedBuffer = ElfFile.from(mappedByteBuffer);
-			consumer.test(fromMappedBuffer);
-		}
-	}
+        try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet.of(StandardOpenOption.READ))) {
+            MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
+            ElfFile fromMappedBuffer = ElfFile.from(mappedByteBuffer);
+            consumer.test(fromMappedBuffer);
+        }
+    }
 
-	public static void assertSectionNames(ElfFile file, String... expectedSectionNames) {
-		for (int i = 0; i < expectedSectionNames.length; i++) {
-			String expected = expectedSectionNames[i];
-			String actual = file.getSection(i).header.getName();
-			if (expected == null) {
-				Assertions.assertNull(actual);
-			} else {
-				Assertions.assertEquals(expected, actual);
-			}
-		}
-	}
+    public static void assertSectionNames(ElfFile file, String... expectedSectionNames) {
+        for (int i = 0; i < expectedSectionNames.length; i++) {
+            String expected = expectedSectionNames[i];
+            String actual = file.getSection(i).header.getName();
+            if (expected == null) {
+                Assertions.assertNull(actual);
+            } else {
+                Assertions.assertEquals(expected, actual);
+            }
+        }
+    }
 
-	public static void validateHashTable(ElfFile file) {
-		ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
-		Assertions.assertNotNull(dynsym);
+    public static void validateHashTable(ElfFile file) {
+        ElfSymbolTableSection dynsym = (ElfSymbolTableSection) file.firstSectionByType(ElfSectionHeader.SHT_DYNSYM);
+        Assertions.assertNotNull(dynsym);
 
-		ElfHashTable hashTable = file.firstSectionByType(ElfHashTable.class);
-		if (hashTable != null) {
-			for (ElfSymbol s : dynsym.symbols) {
-				if (s.getName() != null) {
-					Assertions.assertSame(s, hashTable.lookupSymbol(s.getName(), dynsym));
-				}
-			}
-			Assertions.assertNull(hashTable.lookupSymbol("non_existing", dynsym));
-		}
+        ElfHashTable hashTable = file.firstSectionByType(ElfHashTable.class);
+        if (hashTable != null) {
+            for (ElfSymbol s : dynsym.symbols) {
+                if (s.getName() != null) {
+                    Assertions.assertSame(s, hashTable.lookupSymbol(s.getName(), dynsym));
+                }
+            }
+            Assertions.assertNull(hashTable.lookupSymbol("non_existing", dynsym));
+        }
 
-		ElfGnuHashTable gnuHashTable = file.firstSectionByType(ElfGnuHashTable.class);
-		if (gnuHashTable != null) {
-			int i = 0;
-			for (ElfSymbol s : dynsym.symbols) {
-				if (i++ < gnuHashTable.symoffset)
-					continue;
-				Assertions.assertSame(s, gnuHashTable.lookupSymbol(s.getName(), dynsym));
-			}
-			Assertions.assertNull(gnuHashTable.lookupSymbol("non_existing", dynsym));
-		}
-
-	}
-
+        ElfGnuHashTable gnuHashTable = file.firstSectionByType(ElfGnuHashTable.class);
+        if (gnuHashTable != null) {
+            int i = 0;
+            for (ElfSymbol s : dynsym.symbols) {
+                if (i++ < gnuHashTable.symoffset) continue;
+                Assertions.assertSame(s, gnuHashTable.lookupSymbol(s.getName(), dynsym));
+            }
+            Assertions.assertNull(gnuHashTable.lookupSymbol("non_existing", dynsym));
+        }
+    }
 }

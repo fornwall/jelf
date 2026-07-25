@@ -287,7 +287,14 @@ public final class ElfSymbol {
         }
 
         ElfSymbol elfSymbol = (ElfSymbol) o;
-        return st_name == elfSymbol.st_name && st_value == elfSymbol.st_value && st_size == elfSymbol.st_size && st_info == elfSymbol.st_info && st_other == elfSymbol.st_other && st_shndx == elfSymbol.st_shndx && section_type == elfSymbol.section_type && offset == elfSymbol.offset;
+        return st_name == elfSymbol.st_name
+                && st_value == elfSymbol.st_value
+                && st_size == elfSymbol.st_size
+                && st_info == elfSymbol.st_info
+                && st_other == elfSymbol.st_other
+                && st_shndx == elfSymbol.st_shndx
+                && section_type == elfSymbol.section_type
+                && offset == elfSymbol.offset;
     }
 
     @Override

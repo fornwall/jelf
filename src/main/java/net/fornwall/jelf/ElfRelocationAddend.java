@@ -54,6 +54,7 @@ public final class ElfRelocationAddend {
      * the value to be stored into the relocatable field.
      */
     public final long r_addend; // int32_t or int64_t
+
     private final ElfFile elfFile;
 
     ElfRelocationAddend(ElfParser parser, long offset) {

@@ -1,11 +1,10 @@
 package net.fornwall.jelf;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class ReadmeTest {
 
@@ -16,5 +15,4 @@ public class ReadmeTest {
         Assertions.assertTrue(readmeContent.contains("<version>" + currentVersion + "</version>"));
         Assertions.assertTrue(readmeContent.contains("implementation 'net.fornwall:jelf:" + currentVersion));
     }
-
 }

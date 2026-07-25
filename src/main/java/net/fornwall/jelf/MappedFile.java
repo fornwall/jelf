@@ -14,7 +14,7 @@ public class MappedFile implements BackingFile {
 
     public void seek(long offset) {
         try {
-            this.mappedByteBuffer.position((int)(offset)); // we may be limited to sub-4GB mapped files
+            this.mappedByteBuffer.position((int) (offset)); // we may be limited to sub-4GB mapped files
         } catch (IllegalArgumentException e) {
             throw new ElfException("Seek out of range (offset=" + offset + ", limit=" + mappedByteBuffer.limit() + ")");
         }
@@ -42,7 +42,8 @@ public class MappedFile implements BackingFile {
         try {
             mappedByteBuffer.get(data);
         } catch (BufferUnderflowException e) {
-            throw new ElfException("Error reading " + data.length + " bytes at position " + position + " (remaining=" + (mappedByteBuffer.limit() - position) + ")");
+            throw new ElfException("Error reading " + data.length + " bytes at position " + position + " (remaining="
+                    + (mappedByteBuffer.limit() - position) + ")");
         }
         return data.length;
     }
