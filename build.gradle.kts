@@ -2,7 +2,7 @@ plugins {
   id("java-library")
   id("com.vanniktech.maven.publish") version "0.37.0"
   id("com.adarshr.test-logger") version "4.0.0"
-  id("com.diffplug.spotless") version "8.8.0"
+  id("com.diffplug.spotless") version "8.9.0"
 }
 
 repositories {
