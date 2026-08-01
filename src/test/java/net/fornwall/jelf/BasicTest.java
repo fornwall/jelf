@@ -126,6 +126,29 @@ class BasicTest {
             Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
             Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
 
+            // Relocation entries index into the symbol table linked to by the sh_link field of the
+            // containing relocation section - here .dynsym, and not the .symtab section of the file.
+            List<ElfRelocationSection> relSections = file.sectionsOfType(ElfRelocationSection.class);
+            Assertions.assertEquals(2, relSections.size());
+            Assertions.assertEquals(".rel.dyn", relSections.get(0).header.getName());
+            ElfRelocationSection relPlt = relSections.get(1);
+            Assertions.assertEquals(".rel.plt", relPlt.header.getName());
+            Assertions.assertSame(dynsym, relPlt.getSymbolTableSection());
+            Assertions.assertEquals(83, relPlt.relocations.length);
+
+            // readelf -r:
+            // "Relocation section '.rel.plt' at offset 0x9934 contains 83 entries:
+            //  Offset     Info    Type            Sym.Value  Sym. Name
+            // 0003ceb4  00000216 R_ARM_JUMP_SLOT   00000000   __cxa_atexit"
+            ElfRelocation relocation = relPlt.relocations[0];
+            Assertions.assertEquals(0x0003_ceb4, relocation.r_offset);
+            Assertions.assertEquals(0x0000_0216, relocation.r_info);
+            Assertions.assertEquals(2, relocation.getSymbolIndex());
+            Assertions.assertSame(dynsym, relocation.getSymbolTableSection());
+            Assertions.assertEquals("__cxa_atexit", relocation.getSymbol().getName());
+            // The symbol at the same index in .symtab, which should not be used here:
+            Assertions.assertEquals("$a", symtab.symbols[2].getName());
+
             TestHelper.validateHashTable(file);
 
             ElfDynamicSection dynamic = file.firstSectionByType(ElfDynamicSection.class);
@@ -209,6 +232,33 @@ class BasicTest {
                         0x44
                     },
                     note2.descriptorBytes());
+
+            // This file is stripped and has no .symtab section, so relocations can only be resolved
+            // through the .dynsym section linked to by the sh_link field of the relocation sections.
+            Assertions.assertNull(file.getSymbolTableSection());
+            ElfSymbolTableSection dynsym = file.getDynamicSymbolTableSection();
+            Assertions.assertEquals(".dynsym", dynsym.header.getName());
+
+            List<ElfRelocationAddendSection> relaSections = file.sectionsOfType(ElfRelocationAddendSection.class);
+            Assertions.assertEquals(2, relaSections.size());
+            Assertions.assertEquals(".rela.dyn", relaSections.get(0).header.getName());
+            ElfRelocationAddendSection relaPlt = relaSections.get(1);
+            Assertions.assertEquals(".rela.plt", relaPlt.header.getName());
+            Assertions.assertSame(dynsym, relaPlt.getSymbolTableSection());
+            Assertions.assertEquals(97, relaPlt.relocations.length);
+
+            // readelf -r:
+            // "Relocation section '.rela.plt' at offset 0x3cd0 contains 97 entries:
+            //   Offset          Info           Type           Sym. Value    Sym. Name + Addend
+            // 00000021cc90  000200000007 R_X86_64_JUMP_SLO 0000000000000000 sigprocmask@GLIBC_2.2.5 + 0"
+            ElfRelocationAddend relocation = relaPlt.relocations[0];
+            Assertions.assertEquals(0x0021_cc90, relocation.r_offset);
+            Assertions.assertEquals(0x0002_0000_0007L, relocation.r_info);
+            Assertions.assertEquals(0, relocation.r_addend);
+            Assertions.assertEquals(ElfRelocationTypes.R_X86_64_JUMP_SLOT, relocation.getType());
+            Assertions.assertEquals(2, relocation.getSymbolIndex());
+            Assertions.assertSame(dynsym, relocation.getSymbolTableSection());
+            Assertions.assertEquals("sigprocmask", relocation.getSymbol().getName());
 
             TestHelper.validateHashTable(file);
         });

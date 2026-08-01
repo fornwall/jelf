@@ -23,4 +23,20 @@ public class ElfSymbolTableSection extends ElfSection {
             symbols[i] = new ElfSymbol(parser, symbolOffset, header.sh_type);
         }
     }
+
+    /**
+     * The symbol table section referred to by the {@link ElfSectionHeader#sh_link} field of the specified
+     * section header, which for relocation sections is the symbol table that relocation entries index into.
+     */
+    static ElfSymbolTableSection linkedFrom(ElfFile elfFile, ElfSectionHeader header) throws ElfException {
+        if (header.sh_link == 0) {
+            throw new ElfException("No linked symbol table for section " + header + " (sh_link is zero)");
+        }
+        ElfSection linkedSection = elfFile.getSection(header.sh_link);
+        if (!(linkedSection instanceof ElfSymbolTableSection symbolTableSection)) {
+            throw new ElfException(
+                    "The section linked from " + header + " is not a symbol table, but " + linkedSection.header);
+        }
+        return symbolTableSection;
+    }
 }
