@@ -180,6 +180,9 @@ class BasicTest {
             Assertions.assertEquals(2, note1.descriptorAsGnuAbi().majorVersion);
             Assertions.assertEquals(6, note1.descriptorAsGnuAbi().minorVersion);
             Assertions.assertEquals(24, note1.descriptorAsGnuAbi().subminorVersion);
+            // readelf -x .note.ABI-tag, the 16 descriptor bytes following the "GNU\0" note name:
+            Assertions.assertArrayEquals(
+                    new byte[] {0, 0, 0, 0, 2, 0, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0}, note1.descriptorBytes());
             Assertions.assertEquals(".note.gnu.build-id", note2.header.getName());
             Assertions.assertEquals("GNU", note2.getName());
             Assertions.assertEquals(ElfNoteSection.NT_GNU_BUILD_ID, note2.n_type);
@@ -541,5 +544,72 @@ class BasicTest {
                 Assertions.assertEquals(sectionNote, segmentNote);
             }
         });
+    }
+
+    /**
+     * The descriptor of a note section should be the same one as of the first note in the section - which
+     * used to not be the case for {@link ElfNoteSection#NT_GNU_ABI_TAG} notes, where reading the descriptor
+     * as a {@link ElfNoteSection.GnuAbiDescriptor} advanced past the descriptor before it was read.
+     */
+    @Test
+    void testNoteSectionDescriptorIsThatOfFirstNote() throws Exception {
+        List<String> fileNames = Arrays.asList(
+                "android_arm_libncurses", "go_amd64_notes", "linux_amd64_bindash", "netbsd_amd64_yes", "usr-bin-yes");
+
+        for (String fileName : fileNames) {
+            TestHelper.parseFile(fileName, file -> {
+                List<ElfNoteSection> noteSections = file.sectionsOfType(ElfNoteSection.class);
+                Assertions.assertFalse(noteSections.isEmpty());
+
+                for (ElfNoteSection noteSection : noteSections) {
+                    ElfNoteSection.ElfNote firstNote = noteSection.notes().get(0);
+                    Assertions.assertEquals(noteSection.getName(), firstNote.name);
+                    Assertions.assertEquals(noteSection.n_namesz, firstNote.namesz);
+                    Assertions.assertEquals(noteSection.n_type, firstNote.type);
+                    Assertions.assertEquals(noteSection.n_descsz, firstNote.descriptorBytes().length);
+                    Assertions.assertArrayEquals(firstNote.descriptorBytes(), noteSection.descriptorBytes());
+                    Assertions.assertEquals(firstNote.descriptorAsString(), noteSection.descriptorAsString());
+                    Assertions.assertEquals(firstNote.descriptorAsGnuAbi(), noteSection.descriptorAsGnuAbi());
+                }
+            });
+        }
+    }
+
+    @Test
+    void testGnuAbiNoteWithTooSmallDescriptor() throws Exception {
+        // A NT_GNU_ABI_TAG note descriptor needs four words - a smaller one cannot be interpreted as one:
+        assertGnuAbiDescriptorIsNull(ElfNoteSection.GNU_ABI_DESCRIPTOR_SIZE - Integer.BYTES);
+        assertGnuAbiDescriptorIsNull(0);
+    }
+
+    /**
+     * Patch the descriptor size of the NT_GNU_ABI_TAG note of the linux_amd64_bindash file to the specified
+     * too small size, and assert that the descriptor then is not interpreted as an ABI tag descriptor.
+     */
+    private static void assertGnuAbiDescriptorIsNull(int descsz) throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+
+            ElfFile originalFile = ElfFile.from(data);
+            ElfNoteSection abiTagSection = originalFile.sectionsOfType(ElfNoteSection.class).stream()
+                    .filter(section -> section.n_type == NT_GNU_ABI_TAG)
+                    .findFirst()
+                    .orElseThrow();
+            Assertions.assertNotNull(abiTagSection.descriptorAsGnuAbi());
+
+            // The n_descsz field follows the n_namesz field at the start of the note:
+            int descszOffset = (int) abiTagSection.header.sh_offset + Integer.BYTES;
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+            ByteBuffer.wrap(data, descszOffset, Integer.BYTES).order(order).putInt(descsz);
+
+            ElfNoteSection patchedSection = ElfFile.from(data).sectionsOfType(ElfNoteSection.class).stream()
+                    .filter(section -> section.n_type == NT_GNU_ABI_TAG)
+                    .findFirst()
+                    .orElseThrow();
+            Assertions.assertEquals(descsz, patchedSection.n_descsz);
+            Assertions.assertEquals(descsz, patchedSection.descriptorBytes().length);
+            Assertions.assertNull(patchedSection.descriptorAsGnuAbi());
+        }
     }
 }
