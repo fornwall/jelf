@@ -592,4 +592,58 @@ class BasicTest {
             }
         });
     }
+
+    @Test
+    void testRelocationWithInvalidSymbolTableLink() throws Exception {
+        // No linked section:
+        assertRelocationSymbolLookupFails(0, false);
+        // No linked section, in a file which also has no section name string table:
+        assertRelocationSymbolLookupFails(0, true);
+        // The .interp section, which is not a symbol table:
+        assertRelocationSymbolLookupFails(1, false);
+        // Section indexes past the end of the section header table:
+        assertRelocationSymbolLookupFails(Short.MAX_VALUE, false);
+        assertRelocationSymbolLookupFails(Integer.MIN_VALUE, false);
+    }
+
+    /**
+     * Patch the sh_link field of the .rela.plt section of the linux_amd64_bindash file to the specified
+     * invalid value, and assert that resolving relocation symbols then fails with an {@link ElfException}.
+     */
+    private static void assertRelocationSymbolLookupFails(int shLink, boolean clearSectionNameStringTable)
+            throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+
+            ElfFile originalFile = ElfFile.from(data);
+            Assertions.assertFalse(originalFile.is32Bits());
+            int sectionIndex = -1;
+            for (int i = 1; i < originalFile.e_shnum; i++) {
+                if (".rela.plt".equals(originalFile.getSection(i).header.getName())) {
+                    sectionIndex = i;
+                }
+            }
+            Assertions.assertNotEquals(-1, sectionIndex);
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+
+            // In a 64-bit section header the sh_link field is preceded by the 4 byte sh_name and sh_type
+            // fields and the 8 byte sh_flags, sh_addr, sh_offset and sh_size fields:
+            int shLinkOffset = (int) originalFile.e_shoff + sectionIndex * originalFile.e_shentsize + 40;
+            ByteBuffer.wrap(data, shLinkOffset, Integer.BYTES).order(order).putInt(shLink);
+            if (clearSectionNameStringTable) {
+                // The e_shstrndx field is the last one of the 64 byte elf header:
+                ByteBuffer.wrap(data, 62, Short.BYTES).order(order).putShort((short) 0);
+            }
+
+            ElfFile patchedFile = ElfFile.from(data);
+            ElfRelocationAddendSection relaPlt = (ElfRelocationAddendSection) patchedFile.getSection(sectionIndex);
+            Assertions.assertEquals(shLink, relaPlt.header.sh_link);
+            Assertions.assertThrows(ElfException.class, relaPlt::getSymbolTableSection);
+
+            ElfRelocationAddend relocation = relaPlt.relocations[0];
+            Assertions.assertThrows(ElfException.class, relocation::getSymbolTableSection);
+            Assertions.assertThrows(ElfException.class, relocation::getSymbol);
+        }
+    }
 }

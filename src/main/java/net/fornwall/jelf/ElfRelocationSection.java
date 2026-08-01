@@ -17,6 +17,8 @@ public final class ElfRelocationSection extends ElfSection {
     /**
      * The symbol table that the {@link ElfRelocation#getSymbolIndex() symbol indexes} of the {@link #relocations}
      * refer to, as specified by the {@link ElfSectionHeader#sh_link} field of this section.
+     *
+     * @throws ElfException if this section does not link to a symbol table
      */
     public ElfSymbolTableSection getSymbolTableSection() throws ElfException {
         return ElfSymbolTableSection.linkedFrom(parser.elfFile, header);

@@ -27,15 +27,22 @@ public class ElfSymbolTableSection extends ElfSection {
     /**
      * The symbol table section referred to by the {@link ElfSectionHeader#sh_link} field of the specified
      * section header, which for relocation sections is the symbol table that relocation entries index into.
+     *
+     * @throws ElfException if sh_link is not the index of a symbol table section
      */
     static ElfSymbolTableSection linkedFrom(ElfFile elfFile, ElfSectionHeader header) throws ElfException {
-        if (header.sh_link == 0) {
-            throw new ElfException("No linked symbol table for section " + header + " (sh_link is zero)");
+        // Note that the section header name is not used when describing the sections below, since looking
+        // it up may fail for the same type of malformed files that make us end up here in the first place.
+        final int linkIndex = header.sh_link;
+        if (linkIndex <= 0 || linkIndex >= elfFile.e_shnum) {
+            throw new ElfException("No symbol table linked from section of type 0x" + Long.toHexString(header.sh_type)
+                    + " (sh_link=" + linkIndex + ", number of sections=" + elfFile.e_shnum + ")");
         }
-        ElfSection linkedSection = elfFile.getSection(header.sh_link);
+        ElfSection linkedSection = elfFile.getSection(linkIndex);
         if (!(linkedSection instanceof ElfSymbolTableSection symbolTableSection)) {
-            throw new ElfException(
-                    "The section linked from " + header + " is not a symbol table, but " + linkedSection.header);
+            throw new ElfException("The section linked from section of type 0x" + Long.toHexString(header.sh_type)
+                    + " is not a symbol table, but of type 0x" + Long.toHexString(linkedSection.header.sh_type)
+                    + " (sh_link=" + linkIndex + ")");
         }
         return symbolTableSection;
     }

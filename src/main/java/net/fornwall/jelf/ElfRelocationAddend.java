@@ -91,6 +91,8 @@ public final class ElfRelocationAddend {
     /**
      * The symbol table that {@link #getSymbolIndex()} indexes into, which is the section linked to by the
      * {@link ElfSectionHeader#sh_link} field of the containing {@link ElfRelocationAddendSection}.
+     *
+     * @throws ElfException if the containing section does not link to a symbol table
      */
     public ElfSymbolTableSection getSymbolTableSection() throws ElfException {
         return ElfSymbolTableSection.linkedFrom(elfFile, sectionHeader);
@@ -99,8 +101,10 @@ public final class ElfRelocationAddend {
     /**
      * The symbol table index, with respect to which the relocation must be made.
      * Use {@link #getSymbolIndex()}} to get the resolved {@link ElfSymbol} from this index.
+     *
+     * @throws ElfException if the containing section does not link to a symbol table
      */
-    public ElfSymbol getSymbol() {
+    public ElfSymbol getSymbol() throws ElfException {
         return getSymbolTableSection().symbols[getSymbolIndex()];
     }
 
