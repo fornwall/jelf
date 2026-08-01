@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 class BasicTest {
 
@@ -126,6 +127,29 @@ class BasicTest {
             Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
             Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
 
+            // Relocation entries index into the symbol table linked to by the sh_link field of the
+            // containing relocation section - here .dynsym, and not the .symtab section of the file.
+            List<ElfRelocationSection> relSections = file.sectionsOfType(ElfRelocationSection.class);
+            Assertions.assertEquals(2, relSections.size());
+            Assertions.assertEquals(".rel.dyn", relSections.get(0).header.getName());
+            ElfRelocationSection relPlt = relSections.get(1);
+            Assertions.assertEquals(".rel.plt", relPlt.header.getName());
+            Assertions.assertSame(dynsym, relPlt.getSymbolTableSection());
+            Assertions.assertEquals(83, relPlt.relocations.length);
+
+            // readelf -r:
+            // "Relocation section '.rel.plt' at offset 0x9934 contains 83 entries:
+            //  Offset     Info    Type            Sym.Value  Sym. Name
+            // 0003ceb4  00000216 R_ARM_JUMP_SLOT   00000000   __cxa_atexit"
+            ElfRelocation relocation = relPlt.relocations[0];
+            Assertions.assertEquals(0x0003_ceb4, relocation.r_offset);
+            Assertions.assertEquals(0x0000_0216, relocation.r_info);
+            Assertions.assertEquals(2, relocation.getSymbolIndex());
+            Assertions.assertSame(dynsym, relocation.getSymbolTableSection());
+            Assertions.assertEquals("__cxa_atexit", relocation.getSymbol().getName());
+            // The symbol at the same index in .symtab, which should not be used here:
+            Assertions.assertEquals("$a", symtab.symbols[2].getName());
+
             TestHelper.validateHashTable(file);
 
             ElfDynamicSection dynamic = file.firstSectionByType(ElfDynamicSection.class);
@@ -209,6 +233,33 @@ class BasicTest {
                         0x44
                     },
                     note2.descriptorBytes());
+
+            // This file is stripped and has no .symtab section, so relocations can only be resolved
+            // through the .dynsym section linked to by the sh_link field of the relocation sections.
+            Assertions.assertNull(file.getSymbolTableSection());
+            ElfSymbolTableSection dynsym = file.getDynamicSymbolTableSection();
+            Assertions.assertEquals(".dynsym", dynsym.header.getName());
+
+            List<ElfRelocationAddendSection> relaSections = file.sectionsOfType(ElfRelocationAddendSection.class);
+            Assertions.assertEquals(2, relaSections.size());
+            Assertions.assertEquals(".rela.dyn", relaSections.get(0).header.getName());
+            ElfRelocationAddendSection relaPlt = relaSections.get(1);
+            Assertions.assertEquals(".rela.plt", relaPlt.header.getName());
+            Assertions.assertSame(dynsym, relaPlt.getSymbolTableSection());
+            Assertions.assertEquals(97, relaPlt.relocations.length);
+
+            // readelf -r:
+            // "Relocation section '.rela.plt' at offset 0x3cd0 contains 97 entries:
+            //   Offset          Info           Type           Sym. Value    Sym. Name + Addend
+            // 00000021cc90  000200000007 R_X86_64_JUMP_SLO 0000000000000000 sigprocmask@GLIBC_2.2.5 + 0"
+            ElfRelocationAddend relocation = relaPlt.relocations[0];
+            Assertions.assertEquals(0x0021_cc90, relocation.r_offset);
+            Assertions.assertEquals(0x0002_0000_0007L, relocation.r_info);
+            Assertions.assertEquals(0, relocation.r_addend);
+            Assertions.assertEquals(ElfRelocationTypes.R_X86_64_JUMP_SLOT, relocation.getType());
+            Assertions.assertEquals(2, relocation.getSymbolIndex());
+            Assertions.assertSame(dynsym, relocation.getSymbolTableSection());
+            Assertions.assertEquals("sigprocmask", relocation.getSymbol().getName());
 
             TestHelper.validateHashTable(file);
         });
@@ -541,5 +592,69 @@ class BasicTest {
                 Assertions.assertEquals(sectionNote, segmentNote);
             }
         });
+    }
+
+    @Test
+    void testRelocationWithInvalidSymbolTableLink() throws Exception {
+        // The linux_amd64_bindash file has 27 sections, and its .rela.plt section is of type SHT_RELA (0x4).
+        String noSymbolTable = "No symbol table linked from the section of type 0x4 in a file with 27 sections";
+
+        // No linked section:
+        assertRelocationSymbolLookupFails(0, false, noSymbolTable + " (sh_link=0)");
+        // No linked section, in a file which also has no section name string table:
+        assertRelocationSymbolLookupFails(0, true, noSymbolTable + " (sh_link=0)");
+        // Section indexes past the end of the section header table, the last one having the highest bit set:
+        assertRelocationSymbolLookupFails(Short.MAX_VALUE, false, noSymbolTable + " (sh_link=32767)");
+        assertRelocationSymbolLookupFails(Integer.MIN_VALUE, false, noSymbolTable + " (sh_link=2147483648)");
+        // The .interp section, which is of type SHT_PROGBITS (0x1) and not a symbol table:
+        assertRelocationSymbolLookupFails(
+                1,
+                false,
+                "The section linked from the section of type 0x4 is not a symbol table,"
+                        + " but of type 0x1 (sh_link=1)");
+    }
+
+    /**
+     * Patch the sh_link field of the .rela.plt section of the linux_amd64_bindash file to the specified
+     * invalid value, and assert that resolving relocation symbols then fails with an {@link ElfException}
+     * having the specified message.
+     */
+    private static void assertRelocationSymbolLookupFails(
+            int shLink, boolean clearSectionNameStringTable, String expectedMessage) throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+
+            ElfFile originalFile = ElfFile.from(data);
+            Assertions.assertFalse(originalFile.is32Bits());
+            int sectionIndex = -1;
+            for (int i = 1; i < originalFile.e_shnum; i++) {
+                if (".rela.plt".equals(originalFile.getSection(i).header.getName())) {
+                    sectionIndex = i;
+                }
+            }
+            Assertions.assertNotEquals(-1, sectionIndex);
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+
+            // In a 64-bit section header the sh_link field is preceded by the 4 byte sh_name and sh_type
+            // fields and the 8 byte sh_flags, sh_addr, sh_offset and sh_size fields:
+            int shLinkOffset = (int) originalFile.e_shoff + sectionIndex * originalFile.e_shentsize + 40;
+            ByteBuffer.wrap(data, shLinkOffset, Integer.BYTES).order(order).putInt(shLink);
+            if (clearSectionNameStringTable) {
+                // The e_shstrndx field is the last one of the 64 byte elf header:
+                ByteBuffer.wrap(data, 62, Short.BYTES).order(order).putShort((short) 0);
+            }
+
+            ElfFile patchedFile = ElfFile.from(data);
+            ElfRelocationAddendSection relaPlt = (ElfRelocationAddendSection) patchedFile.getSection(sectionIndex);
+            Assertions.assertEquals(shLink, relaPlt.header.sh_link);
+            ElfRelocationAddend relocation = relaPlt.relocations[0];
+
+            for (Executable symbolLookup : List.<Executable>of(
+                    relaPlt::getSymbolTableSection, relocation::getSymbolTableSection, relocation::getSymbol)) {
+                ElfException e = Assertions.assertThrows(ElfException.class, symbolLookup);
+                Assertions.assertEquals(expectedMessage, e.getMessage());
+            }
+        }
     }
 }

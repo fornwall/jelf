@@ -40,13 +40,16 @@ public final class ElfRelocation {
     public final long r_info; // Elf32_Word or Elf64_Xword
 
     private final ElfFile elfFile;
+    /** The header of the {@link ElfRelocationSection} containing this relocation entry. */
+    private final ElfSectionHeader sectionHeader;
 
-    ElfRelocation(ElfParser parser, long offset) {
+    ElfRelocation(ElfParser parser, long offset, ElfSectionHeader sectionHeader) {
         parser.seek(offset);
 
         r_offset = parser.readIntOrLong();
         r_info = parser.readIntOrLong();
         elfFile = parser.elfFile;
+        this.sectionHeader = sectionHeader;
     }
 
     /**
@@ -69,11 +72,23 @@ public final class ElfRelocation {
     }
 
     /**
+     * The symbol table that {@link #getSymbolIndex()} indexes into, which is the section linked to
+     * by the {@link ElfSectionHeader#sh_link} field of the containing {@link ElfRelocationSection}.
+     *
+     * @throws ElfException if the containing section does not link to a symbol table
+     */
+    public ElfSymbolTableSection getSymbolTableSection() throws ElfException {
+        return ElfSymbolTableSection.linkedFrom(elfFile, sectionHeader);
+    }
+
+    /**
      * The symbol with respect to which the relocation must be made.
      * Use {@link #getSymbolIndex()}} to get the resolved {@link ElfSymbol} from this index.
+     *
+     * @throws ElfException if the containing section does not link to a symbol table
      */
-    public ElfSymbol getSymbol() {
-        return elfFile.getSymbolTableSection().symbols[getSymbolIndex()];
+    public ElfSymbol getSymbol() throws ElfException {
+        return getSymbolTableSection().symbols[getSymbolIndex()];
     }
 
     @Override

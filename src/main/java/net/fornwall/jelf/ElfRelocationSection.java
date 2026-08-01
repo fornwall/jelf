@@ -10,7 +10,17 @@ public final class ElfRelocationSection extends ElfSection {
         relocations = new ElfRelocation[num_entries];
         for (int i = 0; i < num_entries; i++) {
             final long relOffset = header.sh_offset + (i * header.sh_entsize);
-            relocations[i] = new ElfRelocation(parser, relOffset);
+            relocations[i] = new ElfRelocation(parser, relOffset, header);
         }
+    }
+
+    /**
+     * The symbol table that the {@link ElfRelocation#getSymbolIndex() symbol indexes} of the {@link #relocations}
+     * refer to, as specified by the {@link ElfSectionHeader#sh_link} field of this section.
+     *
+     * @throws ElfException if this section does not link to a symbol table
+     */
+    public ElfSymbolTableSection getSymbolTableSection() throws ElfException {
+        return ElfSymbolTableSection.linkedFrom(parser.elfFile, header);
     }
 }
