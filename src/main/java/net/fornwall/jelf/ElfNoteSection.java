@@ -11,6 +11,9 @@ public class ElfNoteSection extends ElfSection {
 
     /**
      * A possible value of the {@link #n_type} where the description should contain {@link GnuAbiDescriptor}.
+     * <p>
+     * Note types are specific to the note owner, so this value only has this meaning in a note with the
+     * "GNU" name - it is for example NT_PRSTATUS in a note owned by "CORE".
      */
     public static final int NT_GNU_ABI_TAG = 1;
     /**
@@ -133,6 +136,10 @@ public class ElfNoteSection extends ElfSection {
             return new String(descriptorBytes);
         }
 
+        /**
+         * The descriptor of this note interpreted as a {@link GnuAbiDescriptor}, or null if this is not a
+         * {@link #NT_GNU_ABI_TAG} note of the "GNU" owner, or if its descriptor is too small to contain one.
+         */
         public GnuAbiDescriptor descriptorAsGnuAbi() {
             return gnuAbiDescriptorFrom(name, type, descriptorBytes, ei_data);
         }
@@ -245,6 +252,10 @@ public class ElfNoteSection extends ElfSection {
         return new String(descriptorBytes);
     }
 
+    /**
+     * The descriptor of the first note of this section interpreted as a {@link GnuAbiDescriptor}, or null if
+     * that is not a {@link #NT_GNU_ABI_TAG} note of the "GNU" owner, or if its descriptor is too small.
+     */
     public GnuAbiDescriptor descriptorAsGnuAbi() {
         return gnuAbiDescriptor;
     }
