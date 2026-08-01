@@ -34,15 +34,19 @@ public class ElfSymbolTableSection extends ElfSection {
         // Note that the section header name is not used when describing the sections below, since looking
         // it up may fail for the same type of malformed files that make us end up here in the first place.
         final int linkIndex = header.sh_link;
+        // The sh_link field is unsigned, so print it as such - a value with the highest bit set is a
+        // section index far out of range, and not the negative number it reads as in a signed int.
+        final String linkDescription = " (sh_link=" + Integer.toUnsignedString(linkIndex) + ")";
         if (linkIndex <= 0 || linkIndex >= elfFile.e_shnum) {
-            throw new ElfException("No symbol table linked from section of type 0x" + Long.toHexString(header.sh_type)
-                    + " (sh_link=" + linkIndex + ", number of sections=" + elfFile.e_shnum + ")");
+            throw new ElfException("No symbol table linked from the section of type 0x"
+                    + Integer.toHexString(header.sh_type) + " in a file with " + elfFile.e_shnum + " sections"
+                    + linkDescription);
         }
         ElfSection linkedSection = elfFile.getSection(linkIndex);
         if (!(linkedSection instanceof ElfSymbolTableSection symbolTableSection)) {
-            throw new ElfException("The section linked from section of type 0x" + Long.toHexString(header.sh_type)
-                    + " is not a symbol table, but of type 0x" + Long.toHexString(linkedSection.header.sh_type)
-                    + " (sh_link=" + linkIndex + ")");
+            throw new ElfException("The section linked from the section of type 0x"
+                    + Integer.toHexString(header.sh_type) + " is not a symbol table, but of type 0x"
+                    + Integer.toHexString(linkedSection.header.sh_type) + linkDescription);
         }
         return symbolTableSection;
     }

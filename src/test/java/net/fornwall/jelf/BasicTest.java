@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 class BasicTest {
 
@@ -595,23 +596,31 @@ class BasicTest {
 
     @Test
     void testRelocationWithInvalidSymbolTableLink() throws Exception {
+        // The linux_amd64_bindash file has 27 sections, and its .rela.plt section is of type SHT_RELA (0x4).
+        String noSymbolTable = "No symbol table linked from the section of type 0x4 in a file with 27 sections";
+
         // No linked section:
-        assertRelocationSymbolLookupFails(0, false);
+        assertRelocationSymbolLookupFails(0, false, noSymbolTable + " (sh_link=0)");
         // No linked section, in a file which also has no section name string table:
-        assertRelocationSymbolLookupFails(0, true);
-        // The .interp section, which is not a symbol table:
-        assertRelocationSymbolLookupFails(1, false);
-        // Section indexes past the end of the section header table:
-        assertRelocationSymbolLookupFails(Short.MAX_VALUE, false);
-        assertRelocationSymbolLookupFails(Integer.MIN_VALUE, false);
+        assertRelocationSymbolLookupFails(0, true, noSymbolTable + " (sh_link=0)");
+        // Section indexes past the end of the section header table, the last one having the highest bit set:
+        assertRelocationSymbolLookupFails(Short.MAX_VALUE, false, noSymbolTable + " (sh_link=32767)");
+        assertRelocationSymbolLookupFails(Integer.MIN_VALUE, false, noSymbolTable + " (sh_link=2147483648)");
+        // The .interp section, which is of type SHT_PROGBITS (0x1) and not a symbol table:
+        assertRelocationSymbolLookupFails(
+                1,
+                false,
+                "The section linked from the section of type 0x4 is not a symbol table,"
+                        + " but of type 0x1 (sh_link=1)");
     }
 
     /**
      * Patch the sh_link field of the .rela.plt section of the linux_amd64_bindash file to the specified
-     * invalid value, and assert that resolving relocation symbols then fails with an {@link ElfException}.
+     * invalid value, and assert that resolving relocation symbols then fails with an {@link ElfException}
+     * having the specified message.
      */
-    private static void assertRelocationSymbolLookupFails(int shLink, boolean clearSectionNameStringTable)
-            throws Exception {
+    private static void assertRelocationSymbolLookupFails(
+            int shLink, boolean clearSectionNameStringTable, String expectedMessage) throws Exception {
         try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
             Assertions.assertNotNull(in);
             byte[] data = in.readAllBytes();
@@ -639,11 +648,13 @@ class BasicTest {
             ElfFile patchedFile = ElfFile.from(data);
             ElfRelocationAddendSection relaPlt = (ElfRelocationAddendSection) patchedFile.getSection(sectionIndex);
             Assertions.assertEquals(shLink, relaPlt.header.sh_link);
-            Assertions.assertThrows(ElfException.class, relaPlt::getSymbolTableSection);
-
             ElfRelocationAddend relocation = relaPlt.relocations[0];
-            Assertions.assertThrows(ElfException.class, relocation::getSymbolTableSection);
-            Assertions.assertThrows(ElfException.class, relocation::getSymbol);
+
+            for (Executable symbolLookup : List.<Executable>of(
+                    relaPlt::getSymbolTableSection, relocation::getSymbolTableSection, relocation::getSymbol)) {
+                ElfException e = Assertions.assertThrows(ElfException.class, symbolLookup);
+                Assertions.assertEquals(expectedMessage, e.getMessage());
+            }
         }
     }
 }
