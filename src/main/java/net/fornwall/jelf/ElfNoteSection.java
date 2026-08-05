@@ -11,6 +11,9 @@ public class ElfNoteSection extends ElfSection {
 
     /**
      * A possible value of the {@link #n_type} where the description should contain {@link GnuAbiDescriptor}.
+     * <p>
+     * Note types are specific to the note owner, so this value only has this meaning in a note with the
+     * "GNU" name - it is for example NT_PRSTATUS in a note owned by "CORE".
      */
     public static final int NT_GNU_ABI_TAG = 1;
     /**
@@ -133,14 +136,12 @@ public class ElfNoteSection extends ElfSection {
             return new String(descriptorBytes);
         }
 
+        /**
+         * The descriptor of this note interpreted as a {@link GnuAbiDescriptor}, or null if this is not a
+         * {@link #NT_GNU_ABI_TAG} note of the "GNU" owner, or if its descriptor is too small to contain one.
+         */
         public GnuAbiDescriptor descriptorAsGnuAbi() {
-            if (descriptorBytes.length < 16) {
-                return null;
-            }
-
-            ByteBuffer buf = ByteBuffer.wrap(descriptorBytes)
-                    .order(ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
-            return new GnuAbiDescriptor(buf.getInt(0), buf.getInt(4), buf.getInt(8), buf.getInt(12));
+            return gnuAbiDescriptorFrom(name, type, descriptorBytes, ei_data);
         }
 
         @Override
@@ -163,6 +164,27 @@ public class ElfNoteSection extends ElfSection {
     }
 
     static final int NHDR_SIZE = 3 * Integer.BYTES;
+
+    /**
+     * The size of the descriptor of a {@link #NT_GNU_ABI_TAG} note, which consists of four words.
+     */
+    static final int GNU_ABI_DESCRIPTOR_SIZE = 4 * Integer.BYTES;
+
+    /**
+     * The descriptor of the specified note interpreted as a {@link #NT_GNU_ABI_TAG} one, or null if the
+     * note is not a GNU ABI tag note or if its descriptor is too small to contain one.
+     */
+    private static GnuAbiDescriptor gnuAbiDescriptorFrom(String name, int type, byte[] descriptorBytes, byte ei_data) {
+        if (type != NT_GNU_ABI_TAG
+                || !ElfNoteTypes.ELF_NOTE_GNU.equals(name)
+                || descriptorBytes.length < GNU_ABI_DESCRIPTOR_SIZE) {
+            return null;
+        }
+
+        ByteBuffer buffer = ByteBuffer.wrap(descriptorBytes)
+                .order(ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+        return new GnuAbiDescriptor(buffer.getInt(0), buffer.getInt(4), buffer.getInt(8), buffer.getInt(12));
+    }
 
     public final /* uint32_t */ int n_namesz;
     public final /* uint32_t */ int n_descsz;
@@ -202,14 +224,6 @@ public class ElfNoteSection extends ElfSection {
         }
 
         descriptorBytes = new byte[n_descsz];
-
-        if (n_type == NT_GNU_ABI_TAG) {
-            gnuAbiDescriptor =
-                    new GnuAbiDescriptor(parser.readInt(), parser.readInt(), parser.readInt(), parser.readInt());
-        } else {
-            gnuAbiDescriptor = null;
-        }
-
         bytesRead = parser.read(descriptorBytes);
 
         if (bytesRead != n_descsz) {
@@ -223,6 +237,7 @@ public class ElfNoteSection extends ElfSection {
         }
 
         n_name = new String(nameBytes, 0, nameLen);
+        gnuAbiDescriptor = gnuAbiDescriptorFrom(n_name, n_type, descriptorBytes, parser.elfFile.ei_data);
     }
 
     public String getName() {
@@ -237,6 +252,10 @@ public class ElfNoteSection extends ElfSection {
         return new String(descriptorBytes);
     }
 
+    /**
+     * The descriptor of the first note of this section interpreted as a {@link GnuAbiDescriptor}, or null if
+     * that is not a {@link #NT_GNU_ABI_TAG} note of the "GNU" owner, or if its descriptor is too small.
+     */
     public GnuAbiDescriptor descriptorAsGnuAbi() {
         return gnuAbiDescriptor;
     }
