@@ -6,9 +6,10 @@ public final class ElfRelocationAddendSection extends ElfSection {
     ElfRelocationAddendSection(ElfParser parser, ElfSectionHeader header) {
         super(parser, header);
 
-        if (header.sh_entsize <= 0 || header.sh_size % header.sh_entsize != 0) {
+        if (header.sh_entsize <= 0) {
             throw new ElfException("Invalid relocation entry size: " + header.sh_entsize);
         }
+        // A trailing partial entry is ignored instead of rejected, since only whole entries can be read.
         int numEntries = ElfFile.arraySize(header.sh_size / header.sh_entsize, "relocation count");
         relocations = new ElfRelocationAddend[numEntries];
         for (int i = 0; i < numEntries; i++) {

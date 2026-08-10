@@ -16,9 +16,10 @@ public class ElfSymbolTableSection extends ElfSection {
     ElfSymbolTableSection(ElfParser parser, ElfSectionHeader header) {
         super(parser, header);
 
-        if (header.sh_entsize <= 0 || header.sh_size % header.sh_entsize != 0) {
+        if (header.sh_entsize <= 0) {
             throw new ElfException("Invalid symbol table entry size: " + header.sh_entsize);
         }
+        // A trailing partial entry is ignored instead of rejected, since only whole entries can be read.
         int numEntries = ElfFile.arraySize(header.sh_size / header.sh_entsize, "symbol count");
         symbols = new ElfSymbol[numEntries];
         for (int i = 0; i < numEntries; i++) {

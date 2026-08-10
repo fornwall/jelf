@@ -1047,9 +1047,17 @@ public final class ElfFile {
      * Returns the section header string table associated with this ELF file.
      *
      * @return the section header string table for this file
+     * @throws ElfException if the section at {@link #e_shstrndx} is not a string table
      */
     public ElfStringTable getSectionNameStringTable() throws ElfException {
-        return (ElfStringTable) getSection(e_shstrndx);
+        // Note that e_shstrndx being SHN_UNDEF, which means that there is no section name string table, ends
+        // up here as well, since section 0 is not a string table.
+        ElfSection section = getSection(e_shstrndx);
+        if (!(section instanceof ElfStringTable stringTable)) {
+            throw new ElfException("The section name string table section at index " + e_shstrndx
+                    + " is not a string table, but of type 0x" + Long.toHexString(section.header.sh_type));
+        }
+        return stringTable;
     }
 
     /**
@@ -1376,6 +1384,11 @@ public final class ElfFile {
 
         boolean extendedSectionCount = e_shnum == 0 && e_shoff != 0;
         if (extendedSectionCount || e_phnum == 0xffff || e_shstrndx == 0xffff) {
+            // The extended values are read from the initial section header entry, so there needs to be one -
+            // without this check the ELF header itself would be parsed as a section header.
+            if (e_shoff == 0) {
+                throw new ElfException("Extended header counts used in a file without a section header table");
+            }
             ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, e_shoff);
             if (extendedSectionCount) e_shnum = arraySize(elfSectionHeader.sh_size, "section count");
             if (e_phnum == 0xffff) e_phnum = arraySize(elfSectionHeader.sh_info, "program header count");

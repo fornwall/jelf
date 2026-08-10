@@ -827,6 +827,138 @@ class BasicTest {
     }
 
     @Test
+    void testMissingSectionNameStringTable() throws Exception {
+        byte[] data = bindashData();
+        ElfFile originalFile = ElfFile.from(data);
+        Assertions.assertNotEquals(0, originalFile.e_shstrndx);
+        ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+
+        // Clear e_shstrndx to SHN_UNDEF, which section header strippers do, so that section 0 - which is of
+        // the SHT_NULL type and not a string table - is pointed out as the section name string table:
+        ByteBuffer.wrap(data).order(order).putShort(62, (short) 0);
+        ElfFile patchedFile = ElfFile.from(data);
+        Assertions.assertEquals(0, patchedFile.e_shstrndx);
+
+        String expectedMessage =
+                "The section name string table section at index 0 is not a string table, but of type 0x0";
+        for (Executable sectionNameLookup : List.<Executable>of(
+                patchedFile::getSectionNameStringTable,
+                () -> patchedFile.firstSectionByName(ElfSectionHeader.NAME_RODATA),
+                () -> patchedFile.getSection(1).header.getName(),
+                () -> patchedFile.getSection(1).header.toString())) {
+            ElfException e = Assertions.assertThrows(ElfException.class, sectionNameLookup);
+            Assertions.assertEquals(expectedMessage, e.getMessage());
+        }
+    }
+
+    @Test
+    void testExtendedElfHeaderCountsWithoutSectionHeaderTable() throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/android_arm_tset")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            Assertions.assertTrue(originalFile.is32Bits());
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+
+            // The extended program header count (e_phnum) and section name string table index (e_shstrndx)
+            // are both read from the initial section header, so neither can be used without one:
+            for (int extendedFieldOffset : new int[] {44, 50}) {
+                byte[] patchedData = data.clone();
+                ByteBuffer buffer = ByteBuffer.wrap(patchedData).order(order);
+                // Strip the section header table, the way section header strippers and packers do:
+                buffer.putInt(32, 0); // e_shoff
+                buffer.putShort(48, (short) 0); // e_shnum
+                buffer.putShort(50, (short) 0); // e_shstrndx
+                buffer.putShort(extendedFieldOffset, (short) 0xffff);
+
+                ElfException e = Assertions.assertThrows(ElfException.class, () -> ElfFile.from(patchedData));
+                Assertions.assertEquals(
+                        "Extended header counts used in a file without a section header table", e.getMessage());
+            }
+        }
+    }
+
+    /** The offset of the sh_size field inside a 64-bit section header. */
+    private static final int SH_SIZE_OFFSET = 32;
+
+    /** The offset of the sh_entsize field inside a 64-bit section header. */
+    private static final int SH_ENTSIZE_OFFSET = 56;
+
+    /** The table sections of the linux_amd64_bindash file, with the entry kind named in their error messages. */
+    private static final List<String[]> TABLE_SECTIONS =
+            List.of(new String[] {".dynsym", "symbol table"}, new String[] {".rela.plt", "relocation"}, new String[] {
+                ".dynamic", "dynamic"
+            });
+
+    @Test
+    void testTrailingPartialTableEntryIsIgnored() throws Exception {
+        // Growing a table section by half an entry - as a truncated or padded table is - leaves all of the
+        // whole entries readable, so the section should still be parsed and expose them.
+        for (String[] tableSection : TABLE_SECTIONS) {
+            String sectionName = tableSection[0];
+            ElfSection original = tableSectionOf(ElfFile.from(bindashData()), sectionName);
+            long partialEntrySize = original.header.sh_size + original.header.sh_entsize / 2;
+            ElfSection patched = patchedTableSection(sectionName, SH_SIZE_OFFSET, partialEntrySize);
+
+            switch (sectionName) {
+                case ".dynsym" ->
+                    Assertions.assertEquals(
+                            ((ElfSymbolTableSection) original).symbols.length,
+                            ((ElfSymbolTableSection) patched).symbols.length);
+                case ".rela.plt" ->
+                    Assertions.assertEquals(
+                            ((ElfRelocationAddendSection) original).relocations.length,
+                            ((ElfRelocationAddendSection) patched).relocations.length);
+                default ->
+                    Assertions.assertEquals(List.of("libc.so.6"), ((ElfDynamicSection) patched).getNeededLibraries());
+            }
+        }
+    }
+
+    @Test
+    void testZeroTableEntrySize() throws Exception {
+        for (String[] tableSection : TABLE_SECTIONS) {
+            String sectionName = tableSection[0];
+            ElfException e = Assertions.assertThrows(
+                    ElfException.class, () -> patchedTableSection(sectionName, SH_ENTSIZE_OFFSET, 0));
+            Assertions.assertEquals("Invalid " + tableSection[1] + " entry size: 0", e.getMessage());
+        }
+    }
+
+    private static byte[] bindashData() throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            return in.readAllBytes();
+        }
+    }
+
+    private static ElfSection tableSectionOf(ElfFile file, String sectionName) {
+        Assertions.assertFalse(file.is32Bits());
+        for (int i = 1; i < file.e_shnum; i++) {
+            ElfSection section = file.getSection(i);
+            if (sectionName.equals(section.header.getName())) return section;
+        }
+        return Assertions.fail("No " + sectionName + " section");
+    }
+
+    /** The specified section of the linux_amd64_bindash file, with the specified section header field patched. */
+    private static ElfSection patchedTableSection(String sectionName, int fieldOffset, long fieldValue)
+            throws Exception {
+        byte[] data = bindashData();
+        ElfFile originalFile = ElfFile.from(data);
+        int sectionIndex = -1;
+        for (int i = 1; i < originalFile.e_shnum; i++) {
+            if (sectionName.equals(originalFile.getSection(i).header.getName())) sectionIndex = i;
+        }
+        Assertions.assertNotEquals(-1, sectionIndex, sectionName);
+
+        ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+        int fieldFileOffset = (int) originalFile.e_shoff + sectionIndex * originalFile.e_shentsize + fieldOffset;
+        ByteBuffer.wrap(data).order(order).putLong(fieldFileOffset, fieldValue);
+        return ElfFile.from(data).getSection(sectionIndex);
+    }
+
+    @Test
     void testHeaderTablesMustFitFile() throws Exception {
         try (InputStream in = BasicTest.class.getResourceAsStream("/android_arm_tset")) {
             Assertions.assertNotNull(in);

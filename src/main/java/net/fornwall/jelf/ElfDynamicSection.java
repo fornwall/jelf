@@ -258,9 +258,10 @@ public class ElfDynamicSection extends ElfSection {
         super(parser, header);
 
         parser.seek(header.sh_offset);
-        if (header.sh_entsize <= 0 || header.sh_size % header.sh_entsize != 0) {
+        if (header.sh_entsize <= 0) {
             throw new ElfException("Invalid dynamic entry size: " + header.sh_entsize);
         }
+        // A trailing partial entry is ignored instead of rejected, since only whole entries can be read.
         int numEntries = ElfFile.arraySize(header.sh_size / header.sh_entsize, "dynamic entry count");
 
         // Except for the DT_NULL element at the end of the array, and the relative order of DT_NEEDED elements, entries

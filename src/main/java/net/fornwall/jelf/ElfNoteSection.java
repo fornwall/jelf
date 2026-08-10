@@ -205,49 +205,13 @@ public class ElfNoteSection extends ElfSection {
         super(parser, header);
 
         parser.seek(header.sh_offset);
-        n_namesz = parser.readUnsignedInt();
-        n_descsz = parser.readUnsignedInt();
-        n_type = parser.readUnsignedInt();
-        long pos = NHDR_SIZE;
-
-        if (n_namesz > Integer.MAX_VALUE || n_namesz > header.sh_size - pos) {
-            throw new ElfException("Invalid note namesz: " + n_namesz);
-        }
-
-        int nameSize = (int) n_namesz;
-        byte[] nameBytes = new byte[nameSize];
-        int bytesRead = parser.read(nameBytes);
-
-        if (bytesRead != nameSize) {
-            throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + n_namesz + ")");
-        }
-
-        long namePos = header.sh_offset + NHDR_SIZE;
-        long align = header.sh_addralign;
-        long alignedNameEnd = align == Long.BYTES ? noteAlign8(namePos + n_namesz) : noteAlign4(namePos + n_namesz);
-        parser.skip((int) (alignedNameEnd - namePos - n_namesz));
-        pos = alignedNameEnd - header.sh_offset;
-
-        if (n_descsz > Integer.MAX_VALUE || n_descsz > header.sh_size - pos) {
-            throw new ElfException("Invalid note descsz: " + n_descsz);
-        }
-
-        int descriptorSize = (int) n_descsz;
-        descriptorBytes = new byte[descriptorSize];
-        bytesRead = parser.read(descriptorBytes);
-
-        if (bytesRead != descriptorSize) {
-            throw new ElfException("Error reading note descriptor (read=" + bytesRead + ", expected=" + n_descsz + ")");
-        }
-
-        int nameLen = 0;
-
-        while (nameLen < nameSize && nameBytes[nameLen] != 0) {
-            nameLen++;
-        }
-
-        n_name = new String(nameBytes, 0, nameLen);
-        gnuAbiDescriptor = gnuAbiDescriptorFrom(n_name, n_type, descriptorBytes, parser.elfFile.ei_data);
+        ElfNote note = readNote(parser, header.sh_offset, header.sh_offset + header.sh_size, header.sh_addralign);
+        n_namesz = note.namesz;
+        n_descsz = note.descriptorBytes.length;
+        n_type = note.type;
+        n_name = note.name;
+        descriptorBytes = note.descriptorBytes;
+        gnuAbiDescriptor = note.descriptorAsGnuAbi();
     }
 
     public String getName() {
@@ -278,6 +242,11 @@ public class ElfNoteSection extends ElfSection {
         return (n + 7) & -8L;
     }
 
+    /** Aligns the specified position the way notes with the specified {@code sh_addralign} are aligned. */
+    private static long noteAlign(long n, long align) {
+        return align == Long.BYTES ? noteAlign8(n) : noteAlign4(n);
+    }
+
     public List<ElfNote> notes() {
         return readNotes(parser, header.sh_offset, header.sh_size, header.sh_addralign);
     }
@@ -288,67 +257,77 @@ public class ElfNoteSection extends ElfSection {
         long end = offset + size;
         List<ElfNote> result = new ArrayList<>();
 
-        while (pos + NHDR_SIZE <= end) {
-            long namesz = parser.readUnsignedInt();
-            long descsz = parser.readUnsignedInt();
-            long type = parser.readUnsignedInt();
-            pos += NHDR_SIZE;
-
-            if (namesz > Integer.MAX_VALUE) {
-                throw new ElfException("Invalid note namesz: " + namesz);
-            }
-
-            if (descsz > Integer.MAX_VALUE) {
-                throw new ElfException("Invalid note descsz: " + descsz);
-            }
-
-            long nameEnd = align == Long.BYTES ? noteAlign8(pos + namesz) : noteAlign4(pos + namesz);
-            long descEnd = align == Long.BYTES ? noteAlign8(nameEnd + descsz) : noteAlign4(nameEnd + descsz);
-
-            if (nameEnd < pos || descEnd < nameEnd || descEnd > end) {
-                throw new ElfException("Note out of bounds (pos=" + pos + ", nameEnd=" + nameEnd + ", descEnd="
-                        + descEnd + ", end=" + end + ")");
-            }
-
-            int nameSize = (int) namesz;
-            byte[] nameBytes = new byte[nameSize];
-            int bytesRead = parser.read(nameBytes);
-
-            if (bytesRead != nameSize) {
-                throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + namesz + ")");
-            }
-
-            if (nameEnd > pos + namesz) {
-                parser.skip((int) (nameEnd - pos - namesz));
-            }
-
-            pos = nameEnd;
-
-            int descriptorSize = (int) descsz;
-            byte[] desc = new byte[descriptorSize];
-            bytesRead = parser.read(desc);
-
-            if (bytesRead != descriptorSize) {
-                throw new ElfException(
-                        "Error reading note descriptor (read=" + bytesRead + ", expected=" + descsz + ")");
-            }
-
-            if (descEnd > pos + descsz) {
-                parser.skip((int) (descEnd - pos - descsz));
-            }
-
-            pos = descEnd;
-            int nameLen = 0;
-
-            while (nameLen < nameSize && nameBytes[nameLen] != 0) {
-                nameLen++;
-            }
-
-            String name = new String(nameBytes, 0, nameLen);
-            result.add(new ElfNote(name, namesz, type, desc, parser.elfFile.ei_data));
+        while (end - pos >= NHDR_SIZE) {
+            ElfNote note = readNote(parser, pos, end, align);
+            result.add(note);
+            long nameEnd = noteAlign(pos + NHDR_SIZE + note.namesz, align);
+            pos = noteAlign(nameEnd + note.descriptorBytes.length, align);
         }
 
         return result;
+    }
+
+    /**
+     * Reads the single note starting at the current position of the specified parser, which must be at the
+     * offset {@code pos} in a notes area ending at the offset {@code end}.
+     * <p>
+     * On return the parser is positioned at the start of the following note.
+     */
+    private static ElfNote readNote(ElfParser parser, long pos, long end, long align) {
+        if (end - pos < NHDR_SIZE) {
+            throw new ElfException("Note header out of bounds (pos=" + pos + ", end=" + end + ")");
+        }
+
+        long namesz = parser.readUnsignedInt();
+        long descsz = parser.readUnsignedInt();
+        long type = parser.readUnsignedInt();
+        pos += NHDR_SIZE;
+
+        if (namesz > Integer.MAX_VALUE || namesz > end - pos) {
+            throw new ElfException("Invalid note namesz: " + namesz);
+        }
+
+        long nameEnd = noteAlign(pos + namesz, align);
+
+        if (descsz > Integer.MAX_VALUE || nameEnd > end || descsz > end - nameEnd) {
+            throw new ElfException("Invalid note descsz: " + descsz);
+        }
+
+        long descEnd = noteAlign(nameEnd + descsz, align);
+
+        if (descEnd > end) {
+            throw new ElfException("Note out of bounds (pos=" + pos + ", nameEnd=" + nameEnd + ", descEnd=" + descEnd
+                    + ", end=" + end + ")");
+        }
+
+        int nameSize = (int) namesz;
+        byte[] nameBytes = new byte[nameSize];
+        int bytesRead = parser.read(nameBytes);
+
+        if (bytesRead != nameSize) {
+            throw new ElfException("Error reading note name (read=" + bytesRead + ", expected=" + namesz + ")");
+        }
+
+        parser.skip((int) (nameEnd - pos - namesz));
+
+        int descriptorSize = (int) descsz;
+        byte[] descriptorBytes = new byte[descriptorSize];
+        bytesRead = parser.read(descriptorBytes);
+
+        if (bytesRead != descriptorSize) {
+            throw new ElfException("Error reading note descriptor (read=" + bytesRead + ", expected=" + descsz + ")");
+        }
+
+        parser.skip((int) (descEnd - nameEnd - descsz));
+
+        int nameLen = 0;
+
+        while (nameLen < nameSize && nameBytes[nameLen] != 0) {
+            nameLen++;
+        }
+
+        String name = new String(nameBytes, 0, nameLen);
+        return new ElfNote(name, namesz, type, descriptorBytes, parser.elfFile.ei_data);
     }
 
     @Override
