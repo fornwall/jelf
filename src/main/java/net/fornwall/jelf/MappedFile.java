@@ -12,9 +12,17 @@ public class MappedFile implements BackingFile {
         this.mappedByteBuffer.position(0);
     }
 
+    @Override
+    public long size() {
+        return mappedByteBuffer.limit();
+    }
+
     public void seek(long offset) {
+        if (offset < 0 || offset > mappedByteBuffer.limit()) {
+            throw new ElfException("Seek out of range (offset=" + offset + ", limit=" + mappedByteBuffer.limit() + ")");
+        }
         try {
-            this.mappedByteBuffer.position((int) (offset)); // we may be limited to sub-4GB mapped files
+            this.mappedByteBuffer.position((int) offset);
         } catch (IllegalArgumentException e) {
             throw new ElfException("Seek out of range (offset=" + offset + ", limit=" + mappedByteBuffer.limit() + ")");
         }

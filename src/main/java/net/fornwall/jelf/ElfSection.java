@@ -20,7 +20,7 @@ public class ElfSection {
                 || header.sh_type == ElfSectionHeader.SHT_NOBITS
                 || header.sh_type == ElfSectionHeader.SHT_NULL) {
             return new byte[0];
-        } else if (header.sh_size > (long) Integer.MAX_VALUE) {
+        } else if (header.sh_size < 0 || header.sh_size > Integer.MAX_VALUE) {
             throw new ElfException("Too big section: " + header.sh_size);
         }
 

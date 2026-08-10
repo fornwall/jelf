@@ -9,30 +9,36 @@ package net.fornwall.jelf;
  */
 public class ElfHashTable extends ElfSection {
 
-    private final int[] buckets;
-    private final int[] chain;
+    private final long[] buckets;
+    private final long[] chain;
 
     ElfHashTable(ElfParser parser, ElfSectionHeader header) {
         super(parser, header);
 
         parser.seek(header.sh_offset);
 
-        int num_buckets = parser.readInt();
-        int num_chains = parser.readInt();
+        long numBucketsValue = parser.readUnsignedInt();
+        long numChainsValue = parser.readUnsignedInt();
+        if (header.sh_size < 8 || numBucketsValue + numChainsValue > (header.sh_size - 8) / 4) {
+            throw new ElfException("Hash table entries exceed section size");
+        }
+        int numBuckets = ElfFile.arraySize(numBucketsValue, "hash bucket count");
+        int numChains = ElfFile.arraySize(numChainsValue, "hash chain count");
+        if (numBuckets == 0) throw new ElfException("Invalid hash bucket count: 0");
 
-        buckets = new int[num_buckets];
-        for (int i = 0; i < num_buckets; i++) {
-            buckets[i] = parser.readInt();
+        buckets = new long[numBuckets];
+        for (int i = 0; i < numBuckets; i++) {
+            buckets[i] = parser.readUnsignedInt();
         }
 
-        chain = new int[num_chains];
-        for (int i = 0; i < num_chains; i++) {
-            chain[i] = parser.readInt();
+        chain = new long[numChains];
+        for (int i = 0; i < numChains; i++) {
+            chain[i] = parser.readUnsignedInt();
         }
 
         // Make sure that the amount of bytes we were supposed to read
         // was what we actually read.
-        int actual = num_buckets * 4 + num_chains * 4 + 8;
+        long actual = (long) numBuckets * 4 + (long) numChains * 4 + 8;
         if (header.sh_size != actual) {
             throw new ElfException("Error reading string table (read " + actual + "bytes, expected to read "
                     + header.sh_size + "bytes).");
@@ -41,12 +47,15 @@ public class ElfHashTable extends ElfSection {
 
     public ElfSymbol lookupSymbol(String name, ElfSymbolTableSection symbolTable) {
         long hashValue = elfHash(name);
-        int index = buckets[(int) (hashValue % buckets.length)];
+        long index = buckets[(int) (hashValue % buckets.length)];
         while (true) {
             if (index == 0) return null;
-            ElfSymbol symbol = symbolTable.symbols[index];
+            if (index >= symbolTable.symbols.length || index >= chain.length) {
+                throw new ElfException("Hash symbol index out of range: " + index);
+            }
+            ElfSymbol symbol = symbolTable.symbols[(int) index];
             if (name.equals(symbol.getName())) return symbol;
-            index = chain[index];
+            index = chain[(int) index];
         }
     }
 

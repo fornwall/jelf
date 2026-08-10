@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 class BasicTest {
 
@@ -86,6 +87,7 @@ class BasicTest {
             Assertions.assertNotNull(dynsym);
             Assertions.assertEquals(".dynsym", dynsym.header.getName());
             Assertions.assertEquals(768, dynsym.symbols.length);
+            Assertions.assertSame(file.getDynamicStringTable(), dynsym.getStringTableSection());
 
             ElfSymbol symbol = dynsym.symbols[0];
             Assertions.assertNull(symbol.getName());
@@ -95,6 +97,7 @@ class BasicTest {
             Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
             symbol = dynsym.symbols[1];
             Assertions.assertEquals("__cxa_finalize", symbol.getName());
+            Assertions.assertSame(dynsym.getStringTableSection(), symbol.getStringTableSection());
             Assertions.assertEquals(ElfSymbol.STT_FUNC, symbol.getType());
             Assertions.assertEquals(0, symbol.st_size);
             Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
@@ -110,6 +113,7 @@ class BasicTest {
             Assertions.assertNotNull(symtab);
             Assertions.assertEquals(".symtab", symtab.header.getName());
             Assertions.assertEquals(2149, symtab.symbols.length);
+            Assertions.assertSame(file.getStringTable(), symtab.getStringTableSection());
             symbol = symtab.symbols[0];
             Assertions.assertNull(symbol.getName());
             Assertions.assertEquals(ElfSymbol.STT_NOTYPE, symbol.getType());
@@ -125,6 +129,29 @@ class BasicTest {
             Assertions.assertEquals(ElfSymbol.STT_FUNC, symbol.getType());
             Assertions.assertEquals(ElfSymbol.BINDING_GLOBAL, symbol.getBinding());
             Assertions.assertEquals(ElfSymbol.Visibility.STV_DEFAULT, symbol.getVisibility());
+
+            // Relocation entries index into the symbol table linked to by the sh_link field of the
+            // containing relocation section - here .dynsym, and not the .symtab section of the file.
+            List<ElfRelocationSection> relSections = file.sectionsOfType(ElfRelocationSection.class);
+            Assertions.assertEquals(2, relSections.size());
+            Assertions.assertEquals(".rel.dyn", relSections.get(0).header.getName());
+            ElfRelocationSection relPlt = relSections.get(1);
+            Assertions.assertEquals(".rel.plt", relPlt.header.getName());
+            Assertions.assertSame(dynsym, relPlt.getSymbolTableSection());
+            Assertions.assertEquals(83, relPlt.relocations.length);
+
+            // readelf -r:
+            // "Relocation section '.rel.plt' at offset 0x9934 contains 83 entries:
+            //  Offset     Info    Type            Sym.Value  Sym. Name
+            // 0003ceb4  00000216 R_ARM_JUMP_SLOT   00000000   __cxa_atexit"
+            ElfRelocation relocation = relPlt.relocations[0];
+            Assertions.assertEquals(0x0003_ceb4, relocation.r_offset);
+            Assertions.assertEquals(0x0000_0216, relocation.r_info);
+            Assertions.assertEquals(2, relocation.getSymbolIndex());
+            Assertions.assertSame(dynsym, relocation.getSymbolTableSection());
+            Assertions.assertEquals("__cxa_atexit", relocation.getSymbol().getName());
+            // The symbol at the same index in .symtab, which should not be used here:
+            Assertions.assertEquals("$a", symtab.symbols[2].getName());
 
             TestHelper.validateHashTable(file);
 
@@ -212,6 +239,33 @@ class BasicTest {
                         0x44
                     },
                     note2.descriptorBytes());
+
+            // This file is stripped and has no .symtab section, so relocations can only be resolved
+            // through the .dynsym section linked to by the sh_link field of the relocation sections.
+            Assertions.assertNull(file.getSymbolTableSection());
+            ElfSymbolTableSection dynsym = file.getDynamicSymbolTableSection();
+            Assertions.assertEquals(".dynsym", dynsym.header.getName());
+
+            List<ElfRelocationAddendSection> relaSections = file.sectionsOfType(ElfRelocationAddendSection.class);
+            Assertions.assertEquals(2, relaSections.size());
+            Assertions.assertEquals(".rela.dyn", relaSections.get(0).header.getName());
+            ElfRelocationAddendSection relaPlt = relaSections.get(1);
+            Assertions.assertEquals(".rela.plt", relaPlt.header.getName());
+            Assertions.assertSame(dynsym, relaPlt.getSymbolTableSection());
+            Assertions.assertEquals(97, relaPlt.relocations.length);
+
+            // readelf -r:
+            // "Relocation section '.rela.plt' at offset 0x3cd0 contains 97 entries:
+            //   Offset          Info           Type           Sym. Value    Sym. Name + Addend
+            // 00000021cc90  000200000007 R_X86_64_JUMP_SLO 0000000000000000 sigprocmask@GLIBC_2.2.5 + 0"
+            ElfRelocationAddend relocation = relaPlt.relocations[0];
+            Assertions.assertEquals(0x0021_cc90, relocation.r_offset);
+            Assertions.assertEquals(0x0002_0000_0007L, relocation.r_info);
+            Assertions.assertEquals(0, relocation.r_addend);
+            Assertions.assertEquals(ElfRelocationTypes.R_X86_64_JUMP_SLOT, relocation.getType());
+            Assertions.assertEquals(2, relocation.getSymbolIndex());
+            Assertions.assertSame(dynsym, relocation.getSymbolTableSection());
+            Assertions.assertEquals("sigprocmask", relocation.getSymbol().getName());
 
             TestHelper.validateHashTable(file);
         });
@@ -654,6 +708,323 @@ class BasicTest {
             int patchOffset = (int) abiTagSection.header.sh_offset + offsetInNote;
             System.arraycopy(patchedBytes, 0, data, patchOffset, patchedBytes.length);
             return (ElfNoteSection) ElfFile.from(data).getSection(abiTagSectionIndex);
+        }
+    }
+
+    @Test
+    void testRelocationWithInvalidSymbolTableLink() throws Exception {
+        // The linux_amd64_bindash file has 27 sections, and its .rela.plt section is of type SHT_RELA (0x4).
+        String noSymbolTable = "No symbol table linked from the section of type 0x4 in a file with 27 sections";
+
+        // No linked section:
+        assertRelocationSymbolLookupFails(0, false, noSymbolTable + " (sh_link=0)");
+        // No linked section, in a file which also has no section name string table:
+        assertRelocationSymbolLookupFails(0, true, noSymbolTable + " (sh_link=0)");
+        // Section indexes past the end of the section header table, the last one having the highest bit set:
+        assertRelocationSymbolLookupFails(Short.MAX_VALUE, false, noSymbolTable + " (sh_link=32767)");
+        assertRelocationSymbolLookupFails(Integer.MIN_VALUE, false, noSymbolTable + " (sh_link=2147483648)");
+        // The .interp section, which is of type SHT_PROGBITS (0x1) and not a symbol table:
+        assertRelocationSymbolLookupFails(
+                1,
+                false,
+                "The section linked from the section of type 0x4 is not a symbol table,"
+                        + " but of type 0x1 (sh_link=1)");
+    }
+
+    @Test
+    void testRelocationWithInvalidSymbolIndex() throws Exception {
+        assertRelocationSymbolIndexFails("android_arm_libncurses", ".rel.plt", 768L << 8, 768);
+        assertRelocationSymbolIndexFails("linux_amd64_bindash", ".rela.plt", 0x8000_0000_0000_0007L, 0x8000_0000L);
+    }
+
+    @Test
+    void testUnsignedElf32Fields() throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/android_arm_tset")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+            ByteBuffer buffer = ByteBuffer.wrap(data).order(order);
+
+            buffer.putShort(18, (short) 0x8000);
+            buffer.putInt(36, 0x8000_0000);
+
+            int segmentIndex = originalFile.e_phnum - 1;
+            int segmentOffset = (int) originalFile.e_phoff + segmentIndex * originalFile.e_phentsize;
+            buffer.putInt(segmentOffset, 0x8000_0000);
+            buffer.putInt(segmentOffset + 4, 0x8000_0000);
+            buffer.putInt(segmentOffset + 8, 0x8000_0000);
+
+            int sectionIndex = -1;
+            int symbolTableIndex = -1;
+            for (int i = 1; i < originalFile.e_shnum; i++) {
+                ElfSection section = originalFile.getSection(i);
+                if (".comment".equals(section.header.getName())) sectionIndex = i;
+                if (section.header.sh_type == ElfSectionHeader.SHT_SYMTAB) symbolTableIndex = i;
+            }
+            Assertions.assertNotEquals(-1, sectionIndex);
+            Assertions.assertNotEquals(-1, symbolTableIndex);
+
+            int sectionHeaderOffset = (int) originalFile.e_shoff + sectionIndex * originalFile.e_shentsize;
+            buffer.putInt(sectionHeaderOffset + 4, 0x8000_0000);
+            buffer.putInt(sectionHeaderOffset + 12, 0x8000_0000);
+            buffer.putInt(sectionHeaderOffset + 16, 0x8000_0000);
+
+            ElfSymbolTableSection originalSymbolTable =
+                    (ElfSymbolTableSection) originalFile.getSection(symbolTableIndex);
+            int symbolOffset = (int) originalSymbolTable.header.sh_offset;
+            buffer.putInt(symbolOffset, 0x8000_0000);
+            buffer.putInt(symbolOffset + 4, 0x8000_0000);
+            buffer.putInt(symbolOffset + 8, 0x8000_0000);
+            buffer.putShort(symbolOffset + 14, (short) 0x8000);
+
+            ElfFile file = ElfFile.from(data);
+            Assertions.assertEquals(0x8000, file.e_machine);
+            Assertions.assertEquals(0x8000_0000L, file.e_flags);
+
+            ElfSegment segment = file.getProgramHeader(segmentIndex);
+            Assertions.assertEquals(0x8000_0000L, segment.p_type);
+            Assertions.assertEquals(0x8000_0000L, segment.p_offset);
+            Assertions.assertEquals(0x8000_0000L, segment.p_vaddr);
+
+            ElfSectionHeader sectionHeader = file.getSection(sectionIndex).header;
+            Assertions.assertEquals(0x8000_0000L, sectionHeader.sh_type);
+            Assertions.assertEquals(0x8000_0000L, sectionHeader.sh_addr);
+            Assertions.assertEquals(0x8000_0000L, sectionHeader.sh_offset);
+
+            ElfSymbol symbol = ((ElfSymbolTableSection) file.getSection(symbolTableIndex)).symbols[0];
+            Assertions.assertEquals(0x8000_0000L, symbol.st_name);
+            Assertions.assertEquals(0x8000_0000L, symbol.st_value);
+            Assertions.assertEquals(0x8000_0000L, symbol.st_size);
+            Assertions.assertEquals(0x8000, symbol.st_shndx);
+        }
+    }
+
+    @Test
+    void testExtendedElfHeaderCounts() throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/android_arm_tset")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+            ByteBuffer buffer = ByteBuffer.wrap(data).order(order);
+
+            buffer.putShort(44, (short) 0xffff);
+            buffer.putShort(48, (short) 0);
+            buffer.putShort(50, (short) 0xffff);
+            int sectionHeaderOffset = (int) originalFile.e_shoff;
+            buffer.putInt(sectionHeaderOffset + 20, originalFile.e_shnum);
+            buffer.putInt(sectionHeaderOffset + 24, originalFile.e_shstrndx);
+            buffer.putInt(sectionHeaderOffset + 28, originalFile.e_phnum);
+
+            ElfFile file = ElfFile.from(data);
+            Assertions.assertEquals(originalFile.e_phnum, file.e_phnum);
+            Assertions.assertEquals(originalFile.e_shnum, file.e_shnum);
+            Assertions.assertEquals(originalFile.e_shstrndx, file.e_shstrndx);
+            Assertions.assertEquals("/system/bin/linker", file.getInterpreter());
+            TestHelper.assertSectionNames(file, null, ".interp", ".dynsym", ".dynstr", ".hash");
+        }
+    }
+
+    @Test
+    void testHeaderTablesMustFitFile() throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/android_arm_tset")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+            int sectionHeaderOffset = (int) originalFile.e_shoff;
+
+            byte[] sectionCountData = data.clone();
+            ByteBuffer sectionCountBuffer = ByteBuffer.wrap(sectionCountData).order(order);
+            int excessiveSectionCount = (int) ((data.length - originalFile.e_shoff) / originalFile.e_shentsize) + 1;
+            sectionCountBuffer.putShort(48, (short) 0);
+            sectionCountBuffer.putInt(sectionHeaderOffset + 20, excessiveSectionCount);
+            ElfException sectionCountException =
+                    Assertions.assertThrows(ElfException.class, () -> ElfFile.from(sectionCountData));
+            Assertions.assertEquals(
+                    "section header table exceeds file size (offset=" + originalFile.e_shoff + ", entrySize="
+                            + originalFile.e_shentsize + ", entryCount=" + excessiveSectionCount + ", fileSize="
+                            + data.length + ")",
+                    sectionCountException.getMessage());
+
+            byte[] programCountData = data.clone();
+            ByteBuffer programCountBuffer = ByteBuffer.wrap(programCountData).order(order);
+            int excessiveProgramCount = (int) ((data.length - originalFile.e_phoff) / originalFile.e_phentsize) + 1;
+            programCountBuffer.putShort(44, (short) 0xffff);
+            programCountBuffer.putInt(sectionHeaderOffset + 28, excessiveProgramCount);
+            ElfException programCountException =
+                    Assertions.assertThrows(ElfException.class, () -> ElfFile.from(programCountData));
+            Assertions.assertEquals(
+                    "program header table exceeds file size (offset=" + originalFile.e_phoff + ", entrySize="
+                            + originalFile.e_phentsize + ", entryCount=" + excessiveProgramCount + ", fileSize="
+                            + data.length + ")",
+                    programCountException.getMessage());
+
+            byte[] entrySizeData = data.clone();
+            ByteBuffer.wrap(entrySizeData).order(order).putShort(46, (short) 0);
+            ElfException entrySizeException =
+                    Assertions.assertThrows(ElfException.class, () -> ElfFile.from(entrySizeData));
+            Assertions.assertEquals("Invalid section header entry size: 0", entrySizeException.getMessage());
+
+            byte[] unknownSizeData = data.clone();
+            ByteBuffer unknownSizeBuffer = ByteBuffer.wrap(unknownSizeData).order(order);
+            unknownSizeBuffer.putShort(48, (short) 0);
+            unknownSizeBuffer.putInt(sectionHeaderOffset + 20, 0x1_0000);
+            BackingFile delegate = new ByteArrayAsFile(unknownSizeData);
+            BackingFile unknownSizeBackingFile = new BackingFile() {
+                @Override
+                public void seek(long offset) {
+                    delegate.seek(offset);
+                }
+
+                @Override
+                public void skip(int bytesToSkip) {
+                    delegate.skip(bytesToSkip);
+                }
+
+                @Override
+                public short readUnsignedByte() {
+                    return delegate.readUnsignedByte();
+                }
+
+                @Override
+                public int read(byte[] target) {
+                    return delegate.read(target);
+                }
+            };
+            ElfException unknownSizeException =
+                    Assertions.assertThrows(ElfException.class, () -> ElfFile.from(unknownSizeBackingFile));
+            Assertions.assertEquals(
+                    "Cannot validate section header table with 65536 entries because the backing file size is unknown",
+                    unknownSizeException.getMessage());
+        }
+    }
+
+    @Test
+    void testUnsignedElf64AddressLookup() throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            ElfSymbolTableSection symbolTable = originalFile.getDynamicSymbolTableSection();
+            int symbolIndex = -1;
+            for (int i = 0; i < symbolTable.symbols.length; i++) {
+                if (symbolTable.symbols[i].st_size > 0) {
+                    symbolIndex = i;
+                    break;
+                }
+            }
+            Assertions.assertNotEquals(-1, symbolIndex);
+
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+            int symbolOffset = (int) symbolTable.header.sh_offset + symbolIndex * (int) symbolTable.header.sh_entsize;
+            ByteBuffer.wrap(data).order(order).putLong(symbolOffset + 8, Long.MIN_VALUE);
+
+            ElfSymbol symbol = ElfFile.from(data).getELFSymbol(Long.MIN_VALUE);
+            Assertions.assertNotNull(symbol);
+            Assertions.assertEquals(Long.MIN_VALUE, symbol.st_value);
+        }
+    }
+
+    @Test
+    void testSymbolWithInvalidStringTableLink() throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            int symbolTableIndex = -1;
+            for (int i = 1; i < originalFile.e_shnum; i++) {
+                if (originalFile.getSection(i).header.sh_type == ElfSectionHeader.SHT_DYNSYM) {
+                    symbolTableIndex = i;
+                    break;
+                }
+            }
+            Assertions.assertNotEquals(-1, symbolTableIndex);
+
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+            int shLinkOffset = (int) originalFile.e_shoff + symbolTableIndex * originalFile.e_shentsize + 40;
+            ByteBuffer.wrap(data).order(order).putInt(shLinkOffset, 0x8000_0000);
+
+            ElfSymbolTableSection symbolTable =
+                    (ElfSymbolTableSection) ElfFile.from(data).getSection(symbolTableIndex);
+            String expected = "No string table linked from the section of type 0xb in a file with 27 sections"
+                    + " (sh_link=2147483648)";
+            for (Executable lookup : List.<Executable>of(
+                    symbolTable::getStringTableSection,
+                    symbolTable.symbols[2]::getStringTableSection,
+                    symbolTable.symbols[2]::getName)) {
+                ElfException exception = Assertions.assertThrows(ElfException.class, lookup);
+                Assertions.assertEquals(expected, exception.getMessage());
+            }
+        }
+    }
+
+    private static void assertRelocationSymbolIndexFails(
+            String resourceName, String sectionName, long rInfo, long expectedSymbolIndex) throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/" + resourceName)) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+            ElfFile originalFile = ElfFile.from(data);
+            ElfSection originalSection = originalFile.firstSectionByName(sectionName);
+            Assertions.assertNotNull(originalSection);
+
+            int rInfoOffset = (int) originalSection.header.sh_offset + (originalFile.is32Bits() ? 4 : 8);
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+            ByteBuffer buffer = ByteBuffer.wrap(data).order(order);
+            if (originalFile.is32Bits()) {
+                buffer.putInt(rInfoOffset, (int) rInfo);
+            } else {
+                buffer.putLong(rInfoOffset, rInfo);
+            }
+
+            ElfSection patchedSection = ElfFile.from(data).firstSectionByName(sectionName);
+            ElfRelocation relocation =
+                    patchedSection instanceof ElfRelocationSection section ? section.relocations[0] : null;
+            ElfRelocationAddend relocationAddend =
+                    patchedSection instanceof ElfRelocationAddendSection section ? section.relocations[0] : null;
+            Assertions.assertTrue(relocation != null || relocationAddend != null);
+            long symbolIndex = relocation != null ? relocation.getSymbolIndex() : relocationAddend.getSymbolIndex();
+            Assertions.assertEquals(expectedSymbolIndex, symbolIndex);
+            Executable lookup = relocation != null ? relocation::getSymbol : relocationAddend::getSymbol;
+            ElfException exception = Assertions.assertThrows(ElfException.class, lookup);
+            Assertions.assertEquals("Relocation symbol index out of range: " + symbolIndex, exception.getMessage());
+        }
+    }
+
+    private static void assertRelocationSymbolLookupFails(
+            int shLink, boolean clearSectionNameStringTable, String expectedMessage) throws Exception {
+        try (InputStream in = BasicTest.class.getResourceAsStream("/linux_amd64_bindash")) {
+            Assertions.assertNotNull(in);
+            byte[] data = in.readAllBytes();
+
+            ElfFile originalFile = ElfFile.from(data);
+            Assertions.assertFalse(originalFile.is32Bits());
+            int sectionIndex = -1;
+            for (int i = 1; i < originalFile.e_shnum; i++) {
+                if (".rela.plt".equals(originalFile.getSection(i).header.getName())) {
+                    sectionIndex = i;
+                }
+            }
+            Assertions.assertNotEquals(-1, sectionIndex);
+            ByteOrder order = originalFile.ei_data == ElfFile.DATA_LSB ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+
+            int shLinkOffset = (int) originalFile.e_shoff + sectionIndex * originalFile.e_shentsize + 40;
+            ByteBuffer.wrap(data, shLinkOffset, Integer.BYTES).order(order).putInt(shLink);
+            if (clearSectionNameStringTable) {
+                ByteBuffer.wrap(data, 62, Short.BYTES).order(order).putShort((short) 0);
+            }
+
+            ElfFile patchedFile = ElfFile.from(data);
+            ElfRelocationAddendSection relaPlt = (ElfRelocationAddendSection) patchedFile.getSection(sectionIndex);
+            Assertions.assertEquals(Integer.toUnsignedLong(shLink), relaPlt.header.sh_link);
+            ElfRelocationAddend relocation = relaPlt.relocations[0];
+
+            for (Executable symbolLookup : List.<Executable>of(
+                    relaPlt::getSymbolTableSection, relocation::getSymbolTableSection, relocation::getSymbol)) {
+                ElfException e = Assertions.assertThrows(ElfException.class, symbolLookup);
+                Assertions.assertEquals(expectedMessage, e.getMessage());
+            }
         }
     }
 }
