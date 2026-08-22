@@ -2,7 +2,7 @@ plugins {
   id("java-library")
   id("com.vanniktech.maven.publish") version "0.37.0"
   id("com.adarshr.test-logger") version "4.0.0"
-  id("com.diffplug.spotless") version "8.9.0"
+  id("com.diffplug.spotless") version "8.10.0"
 }
 
 repositories {
@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-  testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+  testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
