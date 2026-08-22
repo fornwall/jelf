@@ -73,11 +73,11 @@ public class ElfSegment {
     /**
      * Elf{32,64}_Phdr#p_type. Kind of segment this element describes.
      */
-    public final int p_type; // Elf32_Word/Elf64_Word - 4 bytes in both.
+    public final long p_type; // Elf32_Word/Elf64_Word - 4 bytes in both.
     /**
      * Flags relevant to this segment. Values for flags are defined in ELFSectionHeader.
      */
-    public final int p_flags; // Elf32_Word
+    public final long p_flags;
     /**
      * Elf{32,64}_Phdr#p_offset. File offset at which the first byte of the segment resides.
      */
@@ -93,15 +93,15 @@ public class ElfSegment {
     /**
      * Elf{32,64}_Phdr#p_filesz. File image size of segment in bytes, may be 0.
      */
-    public final long p_filesz; // Elf32_Word/Elf64_Xword -
+    public final long p_filesz;
     /**
      * Elf{32,64}_Phdr#p_memsz. Memory image size of segment in bytes, may be 0.
      */
-    public final long p_memsz; // Elf32_Word
+    public final long p_memsz;
     /**
      * Elf{32,64}_Phdr#p_align. The value to which the segments are aligned in memory and in the file.
      */
-    public final long p_align; // Elf32_Word
+    public final long p_align;
 
     private final ElfParser parser;
     private MemoizedObject<String> ptInterpreter;
@@ -120,14 +120,14 @@ public class ElfSegment {
             // Elf32_Word p_flags;
             // Elf32_Word p_align;
             // } Elf32_Phdr;
-            p_type = parser.readInt();
-            this.p_offset = parser.readInt();
-            p_vaddr = parser.readInt();
-            p_paddr = parser.readInt();
-            p_filesz = parser.readInt();
-            p_memsz = parser.readInt();
-            p_flags = parser.readInt();
-            p_align = parser.readInt();
+            p_type = parser.readUnsignedInt();
+            this.p_offset = parser.readUnsignedInt();
+            p_vaddr = parser.readUnsignedInt();
+            p_paddr = parser.readUnsignedInt();
+            p_filesz = parser.readUnsignedInt();
+            p_memsz = parser.readUnsignedInt();
+            p_flags = parser.readUnsignedInt();
+            p_align = parser.readUnsignedInt();
         } else {
             // typedef struct {
             // Elf64_Word p_type;
@@ -139,8 +139,8 @@ public class ElfSegment {
             // Elf64_Xword p_memsz;
             // Elf64_Xword p_align;
             // } Elf64_Phdr;
-            p_type = parser.readInt();
-            p_flags = parser.readInt();
+            p_type = parser.readUnsignedInt();
+            p_flags = parser.readUnsignedInt();
             this.p_offset = parser.readLong();
             p_vaddr = parser.readLong();
             p_paddr = parser.readLong();
@@ -174,7 +174,7 @@ public class ElfSegment {
             return new byte[0];
         }
 
-        if (p_filesz > (long) Integer.MAX_VALUE) {
+        if (p_filesz < 0 || p_filesz > Integer.MAX_VALUE) {
             throw new ElfException("Too big segment: " + p_filesz);
         }
 
@@ -217,7 +217,7 @@ public class ElfSegment {
     @Override
     public String toString() {
         String typeString;
-        switch (p_type) {
+        switch ((int) p_type) {
             case PT_NULL:
                 typeString = "PT_NULL";
                 break;

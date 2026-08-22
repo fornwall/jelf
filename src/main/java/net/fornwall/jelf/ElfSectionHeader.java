@@ -120,11 +120,11 @@ public class ElfSectionHeader {
     /**
      * Lower bound of the range of indexes reserved for application programs.
      */
-    public static final int SHT_LOUSER = 0x80000000;
+    public static final long SHT_LOUSER = 0x80000000L;
     /**
      * Upper bound of the range of indexes reserved for application programs.
      */
-    public static final int SHT_HIUSER = 0xffffffff;
+    public static final long SHT_HIUSER = 0xffffffffL;
 
     /**
      * Flag informing that this section contains data that should be writable during process execution.
@@ -162,11 +162,11 @@ public class ElfSectionHeader {
     /**
      * Index into the section header string table which gives the name of the section.
      */
-    public final int sh_name; // Elf32_Word or Elf64_Word - 4 bytes in both.
+    public final long sh_name; // Elf32_Word or Elf64_Word - 4 bytes in both.
     /**
      * Section content and semantics.
      */
-    public final int sh_type; // Elf32_Word or Elf64_Word - 4 bytes in both.
+    public final long sh_type; // Elf32_Word or Elf64_Word - 4 bytes in both.
     /**
      * Flags.
      */
@@ -175,31 +175,31 @@ public class ElfSectionHeader {
      * sh_addr. If the section will be in the memory image of a process this will be the address at which the first byte
      * of section will be loaded. Otherwise, this value is 0.
      */
-    public final long sh_addr; // Elf32_Addr
+    public final long sh_addr;
     /**
      * Offset from beginning of file to first byte of the section.
      */
-    public final long sh_offset; // Elf32_Off
+    public final long sh_offset;
     /**
      * Size in bytes of the section. TYPE_NOBITS is a special case.
      */
-    public final /* uint32_t */ long sh_size;
+    public final long sh_size;
     /**
      * Section header table index link.
      */
-    public final /* uint32_t */ int sh_link;
+    public final /* uint32_t */ long sh_link;
     /**
      * Extra information determined by the section type.
      */
-    public final /* uint32_t */ int sh_info;
+    public final /* uint32_t */ long sh_info;
     /**
      * Address alignment constraints for the section.
      */
-    public final /* uint32_t */ long sh_addralign;
+    public final long sh_addralign;
     /**
      * Size of a fixed-size entry, 0 if none.
      */
-    public final long sh_entsize; // Elf32_Word
+    public final long sh_entsize;
 
     private final ElfFile elfHeader;
 
@@ -210,16 +210,16 @@ public class ElfSectionHeader {
         this.elfHeader = parser.elfFile;
         parser.seek(offset);
 
-        sh_name = parser.readInt();
-        sh_type = parser.readInt();
-        sh_flags = parser.readIntOrLong();
-        sh_addr = parser.readIntOrLong();
-        sh_offset = parser.readIntOrLong();
-        sh_size = parser.readIntOrLong();
-        sh_link = parser.readInt();
-        sh_info = parser.readInt();
-        sh_addralign = parser.readIntOrLong();
-        sh_entsize = parser.readIntOrLong();
+        sh_name = parser.readUnsignedInt();
+        sh_type = parser.readUnsignedInt();
+        sh_flags = parser.readUnsignedIntOrLong();
+        sh_addr = parser.readUnsignedIntOrLong();
+        sh_offset = parser.readUnsignedIntOrLong();
+        sh_size = parser.readUnsignedIntOrLong();
+        sh_link = parser.readUnsignedInt();
+        sh_info = parser.readUnsignedInt();
+        sh_addralign = parser.readUnsignedIntOrLong();
+        sh_entsize = parser.readUnsignedIntOrLong();
     }
 
     /**

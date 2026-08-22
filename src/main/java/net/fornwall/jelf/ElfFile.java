@@ -919,59 +919,59 @@ public final class ElfFile {
     /**
      * Identifies the object file type. One of the ET_* constants in the class.
      */
-    public final short e_type; // Elf32_Half
+    public final int e_type;
 
     /**
      * The required architecture. One of the ARCH_* constants in the class.
      */
-    public final short e_machine; // Elf32_Half
+    public final int e_machine;
     /**
      * Version
      */
-    public final int e_version; // Elf32_Word
+    public final long e_version;
     /**
      * Virtual address to which the system first transfers control. If there is no entry point for the file the value is
      * 0.
      */
-    public final long e_entry; // Elf32_Addr
+    public final long e_entry;
     /**
      * e_phoff. Program header table offset in bytes. If there is no program header table the value is 0.
      */
-    public final long e_phoff; // Elf32_Off
+    public final long e_phoff;
     /**
      * e_shoff. Section header table offset in bytes. If there is no section header table the value is 0.
      */
-    public final long e_shoff; // Elf32_Off
+    public final long e_shoff;
     /**
      * e_flags. Processor specific flags.
      */
-    public final int e_flags; // Elf32_Word
+    public final long e_flags;
     /**
      * e_ehsize. ELF header size in bytes.
      */
-    public final short e_ehsize; // Elf32_Half
+    public final int e_ehsize;
     /**
      * e_phentsize. Size of one entry in the file's program header table in bytes. All entries are the same size.
      */
-    public final short e_phentsize; // Elf32_Half
+    public final int e_phentsize;
     /**
      * e_phnum. Number of {@link ElfSegment} entries in the program header table, 0 if no entries.
      */
-    public short e_phnum; // Elf32_Half
+    public int e_phnum;
     /**
      * e_shentsize. Section header entry size in bytes - all entries are the same size.
      */
-    public final short e_shentsize; // Elf32_Half
+    public final int e_shentsize;
     /**
      * e_shnum. Number of entries in the section header table, 0 if no entries.
      */
-    public short e_shnum; // Elf32_Half
+    public int e_shnum;
 
     /**
      * Elf{32,64}_Ehdr#e_shstrndx. Index into the section header table associated with the section name string table.
      * SH_UNDEF if there is no section name string table.
      */
-    public short e_shstrndx; // Elf32_Half
+    public int e_shstrndx;
 
     /**
      * MemoizedObject array of section headers associated with this ELF file.
@@ -1005,10 +1005,13 @@ public final class ElfFile {
      * @return the ELF section at the specified index
      */
     public ElfSection getSection(int index) throws ElfException {
+        if (index < 0 || index >= sections.length) {
+            throw new ElfException("Section index out of range: " + index);
+        }
         return sections[index].getValue();
     }
 
-    public List<ElfSection> sectionsOfType(int sectionType) throws ElfException {
+    public List<ElfSection> sectionsOfType(long sectionType) throws ElfException {
         if (e_shnum < 2) {
             return Collections.emptyList();
         }
@@ -1020,6 +1023,10 @@ public final class ElfFile {
             }
         }
         return result;
+    }
+
+    public List<ElfSection> sectionsOfType(int sectionType) throws ElfException {
+        return sectionsOfType(Integer.toUnsignedLong(sectionType));
     }
 
     public <T extends ElfSection> List<T> sectionsOfType(Class<T> type) throws ElfException {
@@ -1040,9 +1047,17 @@ public final class ElfFile {
      * Returns the section header string table associated with this ELF file.
      *
      * @return the section header string table for this file
+     * @throws ElfException if the section at {@link #e_shstrndx} is not a string table
      */
     public ElfStringTable getSectionNameStringTable() throws ElfException {
-        return (ElfStringTable) getSection(e_shstrndx);
+        // Note that e_shstrndx being SHN_UNDEF, which means that there is no section name string table, ends
+        // up here as well, since section 0 is not a string table.
+        ElfSection section = getSection(e_shstrndx);
+        if (!(section instanceof ElfStringTable stringTable)) {
+            throw new ElfException("The section name string table section at index " + e_shstrndx
+                    + " is not a string table, but of type 0x" + Long.toHexString(section.header.sh_type));
+        }
+        return stringTable;
     }
 
     /**
@@ -1103,12 +1118,16 @@ public final class ElfFile {
                 : (dynamicSection = (ElfDynamicSection) firstSectionByType(ElfSectionHeader.SHT_DYNAMIC));
     }
 
-    public ElfSection firstSectionByType(int type) throws ElfException {
+    public ElfSection firstSectionByType(long type) throws ElfException {
         for (int i = 1; i < e_shnum; i++) {
             ElfSection sh = getSection(i);
             if (sh.header.sh_type == type) return sh;
         }
         return null;
+    }
+
+    public ElfSection firstSectionByType(int type) throws ElfException {
+        return firstSectionByType(Integer.toUnsignedLong(type));
     }
 
     public <T extends ElfSection> T firstSectionByType(Class<T> type) throws ElfException {
@@ -1180,7 +1199,8 @@ public final class ElfFile {
             for (int i = 0; i < numSymbols; i++) {
                 symbol = sh.symbols[i];
                 value = symbol.st_value;
-                if (address >= value && address < value + symbol.st_size) return symbol;
+                if (Long.compareUnsigned(address, value) >= 0
+                        && Long.compareUnsigned(address - value, symbol.st_size) < 0) return symbol;
             }
         }
 
@@ -1191,17 +1211,21 @@ public final class ElfFile {
             for (int i = 0; i < numSymbols; i++) {
                 symbol = sh.symbols[i];
                 value = symbol.st_value;
-                if (address >= value && address < value + symbol.st_size) return symbol;
+                if (Long.compareUnsigned(address, value) >= 0
+                        && Long.compareUnsigned(address - value, symbol.st_size) < 0) return symbol;
             }
         }
         return null;
     }
 
     public ElfSegment getProgramHeader(int index) {
+        if (index < 0 || index >= programHeaders.length) {
+            throw new ElfException("Program header index out of range: " + index);
+        }
         return programHeaders[index].getValue();
     }
 
-    public ElfSegment firstSegmentByType(int type) {
+    public ElfSegment firstSegmentByType(long type) {
         for (int i = 0; i < e_phnum; i++) {
             ElfSegment seg = getProgramHeader(i);
             if (seg.p_type == type) {
@@ -1211,7 +1235,11 @@ public final class ElfFile {
         return null;
     }
 
-    public List<ElfSegment> segmentsOfType(int type) {
+    public ElfSegment firstSegmentByType(int type) {
+        return firstSegmentByType(Integer.toUnsignedLong(type));
+    }
+
+    public List<ElfSegment> segmentsOfType(long type) {
         if (e_phnum == 0) {
             return Collections.emptyList();
         }
@@ -1223,6 +1251,10 @@ public final class ElfFile {
             }
         }
         return result;
+    }
+
+    public List<ElfSegment> segmentsOfType(int type) {
+        return segmentsOfType(Integer.toUnsignedLong(type));
     }
 
     public static ElfFile from(InputStream in) throws IOException {
@@ -1251,7 +1283,9 @@ public final class ElfFile {
     }
 
     public static ElfFile from(File file) throws ElfException, IOException {
-        byte[] buffer = new byte[(int) file.length()];
+        long fileSize = file.length();
+        if (fileSize > Integer.MAX_VALUE) throw new ElfException("File too large: " + fileSize);
+        byte[] buffer = new byte[(int) fileSize];
         try (FileInputStream in = new FileInputStream(file)) {
             int totalRead = 0;
             while (totalRead < buffer.length) {
@@ -1268,7 +1302,9 @@ public final class ElfFile {
 
     public static ElfFile from(Path path) throws ElfException, IOException {
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-            MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+            long fileSize = channel.size();
+            if (fileSize > Integer.MAX_VALUE) throw new ElfException("File too large: " + fileSize);
+            MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, fileSize);
             return from(buffer);
         }
     }
@@ -1332,35 +1368,52 @@ public final class ElfFile {
                 ident[8]; // EI_ABIVERSION, ABI version. Linux kernel (after at least 2.6) has no definition of it.
         // ident[9-15] // EI_PAD, currently unused.
 
-        e_type = parser.readShort();
-        e_machine = parser.readShort();
-        e_version = parser.readInt();
-        e_entry = parser.readIntOrLong();
-        e_phoff = parser.readIntOrLong();
-        e_shoff = parser.readIntOrLong();
-        e_flags = parser.readInt();
-        e_ehsize = parser.readShort();
-        e_phentsize = parser.readShort();
-        e_phnum = parser.readShort();
-        e_shentsize = parser.readShort();
-        e_shnum = parser.readShort();
-        e_shstrndx = parser.readShort();
+        e_type = parser.readUnsignedShort();
+        e_machine = parser.readUnsignedShort();
+        e_version = parser.readUnsignedInt();
+        e_entry = parser.readUnsignedIntOrLong();
+        e_phoff = parser.readUnsignedIntOrLong();
+        e_shoff = parser.readUnsignedIntOrLong();
+        e_flags = parser.readUnsignedInt();
+        e_ehsize = parser.readUnsignedShort();
+        e_phentsize = parser.readUnsignedShort();
+        e_phnum = parser.readUnsignedShort();
+        e_shentsize = parser.readUnsignedShort();
+        e_shnum = parser.readUnsignedShort();
+        e_shstrndx = parser.readUnsignedShort();
 
-        if (e_shnum == 0 && e_shstrndx == (short) 0xffff) {
+        boolean extendedSectionCount = e_shnum == 0 && e_shoff != 0;
+        if (extendedSectionCount || e_phnum == 0xffff || e_shstrndx == 0xffff) {
+            // The extended values are read from the initial section header entry, so there needs to be one -
+            // without this check the ELF header itself would be parsed as a section header.
+            if (e_shoff == 0) {
+                throw new ElfException("Extended header counts used in a file without a section header table");
+            }
             ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, e_shoff);
-            e_shnum = (short) elfSectionHeader.sh_size;
-            e_shstrndx = (short) elfSectionHeader.sh_link;
-            e_phnum = (short) elfSectionHeader.sh_info;
+            if (extendedSectionCount) e_shnum = arraySize(elfSectionHeader.sh_size, "section count");
+            if (e_phnum == 0xffff) e_phnum = arraySize(elfSectionHeader.sh_info, "program header count");
+            if (e_shstrndx == 0xffff) {
+                e_shstrndx = arraySize(elfSectionHeader.sh_link, "section name string table index");
+            }
         }
+        if (e_shstrndx != 0 && e_shstrndx >= e_shnum) {
+            throw new ElfException("Section name string table index out of range: " + e_shstrndx);
+        }
+
+        int sectionHeaderSize = is32Bits() ? 40 : 64;
+        int programHeaderSize = is32Bits() ? 32 : 56;
+        long backingFileSize = backingFile.size();
+        validateTable("section header", e_shoff, e_shentsize, e_shnum, sectionHeaderSize, backingFileSize);
+        validateTable("program header", e_phoff, e_phentsize, e_phnum, programHeaderSize, backingFileSize);
 
         sections = MemoizedObject.uncheckedArray(e_shnum);
         for (int i = 0; i < e_shnum; i++) {
-            final long sectionHeaderOffset = e_shoff + (i * e_shentsize);
+            final long sectionHeaderOffset = e_shoff + (long) i * e_shentsize;
             sections[i] = new MemoizedObject<ElfSection>() {
                 @Override
                 public ElfSection computeValue() throws ElfException {
                     ElfSectionHeader elfSectionHeader = new ElfSectionHeader(parser, sectionHeaderOffset);
-                    switch (elfSectionHeader.sh_type) {
+                    switch ((int) elfSectionHeader.sh_type) {
                         case ElfSectionHeader.SHT_DYNAMIC:
                             return new ElfDynamicSection(parser, elfSectionHeader);
                         case ElfSectionHeader.SHT_SYMTAB:
@@ -1370,7 +1423,7 @@ public final class ElfFile {
                             return new ElfStringTable(
                                     parser,
                                     elfSectionHeader.sh_offset,
-                                    (int) elfSectionHeader.sh_size,
+                                    arraySize(elfSectionHeader.sh_size, "string table size"),
                                     elfSectionHeader);
                         case ElfSectionHeader.SHT_HASH:
                             return new ElfHashTable(parser, elfSectionHeader);
@@ -1391,13 +1444,44 @@ public final class ElfFile {
 
         programHeaders = MemoizedObject.uncheckedArray(e_phnum);
         for (int i = 0; i < e_phnum; i++) {
-            final long programHeaderOffset = e_phoff + (i * e_phentsize);
+            final long programHeaderOffset = e_phoff + (long) i * e_phentsize;
             programHeaders[i] = new MemoizedObject<ElfSegment>() {
                 @Override
                 public ElfSegment computeValue() {
                     return new ElfSegment(parser, programHeaderOffset);
                 }
             };
+        }
+    }
+
+    static int arraySize(long value, String description) {
+        if (value < 0 || value > Integer.MAX_VALUE) {
+            throw new ElfException("Invalid " + description + ": " + Long.toUnsignedString(value));
+        }
+        return (int) value;
+    }
+
+    private static void validateTable(
+            String description,
+            long offset,
+            int entrySize,
+            int entryCount,
+            int minimumEntrySize,
+            long backingFileSize) {
+        if (entryCount == 0) return;
+        if (entrySize < minimumEntrySize) {
+            throw new ElfException("Invalid " + description + " entry size: " + entrySize);
+        }
+        if (offset < 0) {
+            throw new ElfException("Invalid " + description + " table offset: " + Long.toUnsignedString(offset));
+        }
+        if (backingFileSize < 0 && entryCount > 0xffff) {
+            throw new ElfException("Cannot validate " + description + " table with " + entryCount
+                    + " entries because the backing file size is unknown");
+        }
+        if (backingFileSize >= 0 && (offset > backingFileSize || entryCount > (backingFileSize - offset) / entrySize)) {
+            throw new ElfException(description + " table exceeds file size (offset=" + offset + ", entrySize="
+                    + entrySize + ", entryCount=" + entryCount + ", fileSize=" + backingFileSize + ")");
         }
     }
 

@@ -130,30 +130,30 @@ public final class ElfSymbol {
      * Index into the symbol string table that holds the character representation of the symbols. 0 means the symbol has
      * no character name.
      */
-    public final int st_name; // Elf32_Word
+    public final long st_name;
     /**
      * Value of the associated symbol. This may be a relative address for .so or absolute address for other ELFs.
      */
-    public final long st_value; // Elf32_Addr
+    public final long st_value;
     /**
      * Size of the symbol. 0 if the symbol has no size or the size is unknown.
      */
-    public final long st_size; // Elf32_Word
+    public final long st_size;
     /**
      * Specifies the symbol type and binding attributes.
      */
-    public final short st_info; // unsigned char
+    public final int st_info; // unsigned char
     /**
      * Currently holds the value of 0 and has no meaning.
      */
-    public final short st_other; // unsigned char
+    public final int st_other; // unsigned char
     /**
      * Index to the associated section header. This value will need to be read as an unsigned short if we compare it to
      * ELFSectionHeader.NDX_LORESERVE and ELFSectionHeader.NDX_HIRESERVE.
      */
-    public final /* Elf32_Half */ short st_shndx;
+    public final int st_shndx;
 
-    public final int section_type;
+    public final long section_type;
 
     /**
      * Offset from the beginning of the file to this symbol.
@@ -161,28 +161,30 @@ public final class ElfSymbol {
     public final long offset;
 
     private final ElfFile elfHeader;
+    private final ElfSectionHeader sectionHeader;
 
-    ElfSymbol(ElfParser parser, long offset, int section_type) {
+    ElfSymbol(ElfParser parser, long offset, ElfSectionHeader sectionHeader) {
         this.elfHeader = parser.elfFile;
+        this.sectionHeader = sectionHeader;
         parser.seek(offset);
         this.offset = offset;
         if (parser.elfFile.ei_class == ElfFile.CLASS_32) {
-            st_name = parser.readInt();
-            st_value = parser.readInt();
-            st_size = parser.readInt();
+            st_name = parser.readUnsignedInt();
+            st_value = parser.readUnsignedInt();
+            st_size = parser.readUnsignedInt();
             st_info = parser.readUnsignedByte();
             st_other = parser.readUnsignedByte();
-            st_shndx = parser.readShort();
+            st_shndx = parser.readUnsignedShort();
         } else {
-            st_name = parser.readInt();
+            st_name = parser.readUnsignedInt();
             st_info = parser.readUnsignedByte();
             st_other = parser.readUnsignedByte();
-            st_shndx = parser.readShort();
+            st_shndx = parser.readUnsignedShort();
             st_value = parser.readLong();
             st_size = parser.readLong();
         }
 
-        this.section_type = section_type;
+        this.section_type = sectionHeader.sh_type;
 
         switch (getType()) {
             case STT_NOTYPE:
@@ -228,17 +230,17 @@ public final class ElfSymbol {
      * @return the name of this symbol, if any
      */
     public String getName() throws ElfException {
-        // Check to make sure this symbol has a name.
         if (st_name == 0) return null;
+        return getStringTableSection().get(st_name);
+    }
 
-        // Retrieve the name of the symbol from the correct string table.
-        String symbol_name = null;
-        if (section_type == ElfSectionHeader.SHT_SYMTAB) {
-            symbol_name = elfHeader.getStringTable().get(st_name);
-        } else if (section_type == ElfSectionHeader.SHT_DYNSYM) {
-            symbol_name = elfHeader.getDynamicStringTable().get(st_name);
-        }
-        return symbol_name;
+    /**
+     * The string table containing this symbol's name.
+     *
+     * @throws ElfException if the containing symbol table does not link to a string table
+     */
+    public ElfStringTable getStringTableSection() throws ElfException {
+        return ElfStringTable.linkedFrom(elfHeader, sectionHeader);
     }
 
     public Visibility getVisibility() {

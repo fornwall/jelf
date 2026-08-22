@@ -5,16 +5,20 @@ import java.io.IOException;
 
 class ByteArrayAsFile implements BackingFile {
     private final ByteArrayInputStream byteArray;
+    private final int size;
 
     public ByteArrayAsFile(byte[] buffer) {
-        this(new ByteArrayInputStream(buffer));
+        byteArray = new ByteArrayInputStream(buffer);
+        size = buffer.length;
     }
 
-    public ByteArrayAsFile(ByteArrayInputStream byteArray) {
-        this.byteArray = byteArray;
+    @Override
+    public long size() {
+        return size;
     }
 
     public void seek(long offset) {
+        if (offset < 0) throw new ElfException("seeking outside file");
         byteArray.reset();
         if (byteArray.skip(offset) != offset) throw new ElfException("seeking outside file");
     }

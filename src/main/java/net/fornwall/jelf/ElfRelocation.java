@@ -40,13 +40,16 @@ public final class ElfRelocation {
     public final long r_info; // Elf32_Word or Elf64_Xword
 
     private final ElfFile elfFile;
+    /** The header of the {@link ElfRelocationSection} containing this relocation entry. */
+    private final ElfSectionHeader sectionHeader;
 
-    ElfRelocation(ElfParser parser, long offset) {
+    ElfRelocation(ElfParser parser, long offset, ElfSectionHeader sectionHeader) {
         parser.seek(offset);
 
-        r_offset = parser.readIntOrLong();
-        r_info = parser.readIntOrLong();
+        r_offset = parser.readUnsignedIntOrLong();
+        r_info = parser.readUnsignedIntOrLong();
         elfFile = parser.elfFile;
+        this.sectionHeader = sectionHeader;
     }
 
     /**
@@ -55,7 +58,7 @@ public final class ElfRelocation {
      * @see ElfRelocationTypes
      */
     public long getType() {
-        return elfFile.is32Bits() ? (r_info & 0xFF) : ((int) r_info);
+        return elfFile.is32Bits() ? (r_info & 0xFF) : Integer.toUnsignedLong((int) r_info);
     }
 
     /**
@@ -64,16 +67,33 @@ public final class ElfRelocation {
      * <p>
      * Corresponds to the ELF32_R_SYM / ELF64_R_SYM macros.
      */
-    public int getSymbolIndex() {
-        return (int) (r_info >> (elfFile.is32Bits() ? 8 : 32));
+    public long getSymbolIndex() {
+        return r_info >>> (elfFile.is32Bits() ? 8 : 32);
+    }
+
+    /**
+     * The symbol table that {@link #getSymbolIndex()} indexes into, which is the section linked to
+     * by the {@link ElfSectionHeader#sh_link} field of the containing {@link ElfRelocationSection}.
+     *
+     * @throws ElfException if the containing section does not link to a symbol table
+     */
+    public ElfSymbolTableSection getSymbolTableSection() throws ElfException {
+        return ElfSymbolTableSection.linkedFrom(elfFile, sectionHeader);
     }
 
     /**
      * The symbol with respect to which the relocation must be made.
      * Use {@link #getSymbolIndex()}} to get the resolved {@link ElfSymbol} from this index.
+     *
+     * @throws ElfException if the containing section does not link to a symbol table or the symbol index is out of range
      */
-    public ElfSymbol getSymbol() {
-        return elfFile.getSymbolTableSection().symbols[getSymbolIndex()];
+    public ElfSymbol getSymbol() throws ElfException {
+        ElfSymbolTableSection symbolTable = getSymbolTableSection();
+        long symbolIndex = getSymbolIndex();
+        if (symbolIndex >= symbolTable.symbols.length) {
+            throw new ElfException("Relocation symbol index out of range: " + symbolIndex);
+        }
+        return symbolTable.symbols[(int) symbolIndex];
     }
 
     @Override

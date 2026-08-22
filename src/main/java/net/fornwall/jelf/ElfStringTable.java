@@ -30,9 +30,33 @@ public final class ElfStringTable extends ElfSection {
         numStrings = stringsCount;
     }
 
+    static ElfStringTable linkedFrom(ElfFile elfFile, ElfSectionHeader header) throws ElfException {
+        long linkIndex = header.sh_link;
+        String linkDescription = " (sh_link=" + linkIndex + ")";
+        if (linkIndex <= 0 || linkIndex >= elfFile.e_shnum) {
+            throw new ElfException("No string table linked from the section of type 0x"
+                    + Long.toHexString(header.sh_type) + " in a file with " + elfFile.e_shnum + " sections"
+                    + linkDescription);
+        }
+        ElfSection linkedSection = elfFile.getSection((int) linkIndex);
+        if (!(linkedSection instanceof ElfStringTable stringTable)) {
+            throw new ElfException("The section linked from the section of type 0x"
+                    + Long.toHexString(header.sh_type) + " is not a string table, but of type 0x"
+                    + Long.toHexString(linkedSection.header.sh_type) + linkDescription);
+        }
+        return stringTable;
+    }
+
+    public String get(long index) {
+        if (index < 0 || index >= data.length) throw new ElfException("String table index out of range: " + index);
+        int start = (int) index;
+        int end = start;
+        while (end < data.length && data[end] != '\0') end++;
+        if (end == data.length) throw new ElfException("Unterminated string at index " + index);
+        return new String(data, start, end - start);
+    }
+
     public String get(int index) {
-        int endPtr = index;
-        while (data[endPtr] != '\0') endPtr++;
-        return new String(data, index, endPtr - index);
+        return get((long) index);
     }
 }

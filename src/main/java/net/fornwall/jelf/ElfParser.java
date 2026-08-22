@@ -23,13 +23,13 @@ class ElfParser {
         return backingFile.readUnsignedByte();
     }
 
-    short readShort() throws ElfException {
+    int readUnsignedShort() throws ElfException {
         int ch1 = readUnsignedByte();
         int ch2 = readUnsignedByte();
         if (elfFile.ei_data == ElfFile.DATA_LSB) {
-            return (short) (((short) ch2 & 0xff) << 8 | ((short) ch1 & 0xff));
+            return (ch2 & 0xff) << 8 | (ch1 & 0xff);
         } else {
-            return (short) (((short) ch1 & 0xff) << 8 | ((short) ch2 & 0xff));
+            return (ch1 & 0xff) << 8 | (ch2 & 0xff);
         }
     }
 
@@ -43,6 +43,10 @@ class ElfParser {
         } else {
             return (ch1 & 0xff) << 24 | (ch2 & 0xff) << 16 | (ch3 & 0xff) << 8 | (ch4 & 0xff);
         }
+    }
+
+    long readUnsignedInt() throws ElfException {
+        return Integer.toUnsignedLong(readInt());
     }
 
     long readLong() {
@@ -76,20 +80,12 @@ class ElfParser {
         }
     }
 
-    /** Read four-byte int or eight-byte long depending on if {@link ElfFile#ei_class}. */
-    long readIntOrLong() {
-        return elfFile.ei_class == ElfFile.CLASS_32 ? readInt() : readLong();
+    long readUnsignedIntOrLong() {
+        return elfFile.ei_class == ElfFile.CLASS_32 ? readUnsignedInt() : readLong();
     }
 
-    /** Returns a big-endian unsigned representation of the int. */
-    long unsignedByte(int arg) {
-        long val;
-        if (arg >= 0) {
-            val = arg;
-        } else {
-            val = (unsignedByte((short) (arg >>> 16)) << 16) | ((short) arg);
-        }
-        return val;
+    long readSignedIntOrLong() {
+        return elfFile.ei_class == ElfFile.CLASS_32 ? readInt() : readLong();
     }
 
     /**
@@ -99,9 +95,10 @@ class ElfParser {
     long virtualMemoryAddrToFileOffset(long address) {
         for (int i = 0; i < elfFile.e_phnum; i++) {
             ElfSegment ph = elfFile.getProgramHeader(i);
-            if (address >= ph.p_vaddr && address < (ph.p_vaddr + ph.p_memsz)) {
-                long relativeOffset = address - ph.p_vaddr;
-                if (relativeOffset >= ph.p_filesz)
+            long relativeOffset = address - ph.p_vaddr;
+            if (Long.compareUnsigned(address, ph.p_vaddr) >= 0
+                    && Long.compareUnsigned(relativeOffset, ph.p_memsz) < 0) {
+                if (Long.compareUnsigned(relativeOffset, ph.p_filesz) >= 0)
                     throw new ElfException(
                             "Can not convert virtual memory address " + Long.toHexString(address) + " to file offset -"
                                     + " found segment " + ph + " but address maps to memory outside file range");

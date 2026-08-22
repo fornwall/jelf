@@ -204,7 +204,7 @@ public class ElfDynamicSection extends ElfSection {
      * } Elf32_Dyn;
      *
      * typedef struct {
-     *     Elf64_Xword d_tag;
+     *     Elf64_Sxword d_tag;
      *     union {
      *         Elf64_Xword d_val;
      *         Elf64_Addr d_ptr;
@@ -258,15 +258,19 @@ public class ElfDynamicSection extends ElfSection {
         super(parser, header);
 
         parser.seek(header.sh_offset);
-        int numEntries = (int) (header.sh_size / 8);
+        if (header.sh_entsize <= 0) {
+            throw new ElfException("Invalid dynamic entry size: " + header.sh_entsize);
+        }
+        // A trailing partial entry is ignored instead of rejected, since only whole entries can be read.
+        int numEntries = ElfFile.arraySize(header.sh_size / header.sh_entsize, "dynamic entry count");
 
         // Except for the DT_NULL element at the end of the array, and the relative order of DT_NEEDED elements, entries
         // may appear in any order. So important to use lazy evaluation to only evaluating e.g. DT_STRTAB after the
         // necessary DT_STRSZ is read.
         loop:
         for (int i = 0; i < numEntries; i++) {
-            long d_tag = parser.readIntOrLong();
-            final long d_val_or_ptr = parser.readIntOrLong();
+            long d_tag = parser.readSignedIntOrLong();
+            final long d_val_or_ptr = parser.readUnsignedIntOrLong();
             entries.add(new ElfDynamicStructure(d_tag, d_val_or_ptr));
             switch ((int) d_tag) {
                 case DT_NULL:
@@ -286,7 +290,9 @@ public class ElfDynamicSection extends ElfSection {
                     }
                     break;
                 case DT_STRSZ:
-                    if (d_val_or_ptr > Integer.MAX_VALUE) throw new ElfException("Too large DT_STRSZ: " + d_val_or_ptr);
+                    if (d_val_or_ptr < 0 || d_val_or_ptr > Integer.MAX_VALUE) {
+                        throw new ElfException("Too large DT_STRSZ: " + Long.toUnsignedString(d_val_or_ptr));
+                    }
                     dt_strtab_size = (int) d_val_or_ptr;
                     break;
             }
@@ -304,14 +310,14 @@ public class ElfDynamicSection extends ElfSection {
         ElfStringTable stringTable = dtStringTable.getValue();
         List<String> result = new ArrayList<>();
         for (ElfDynamicStructure entry : this.entries) {
-            if (entry.d_tag == DT_NEEDED) result.add(stringTable.get((int) entry.d_val_or_ptr));
+            if (entry.d_tag == DT_NEEDED) result.add(stringTable.get(entry.d_val_or_ptr));
         }
         return result;
     }
 
     public String getRunPath() {
         ElfDynamicStructure runPathEntry = firstEntryWithTag(DT_RUNPATH);
-        return runPathEntry == null ? null : dtStringTable.getValue().get((int) runPathEntry.d_val_or_ptr);
+        return runPathEntry == null ? null : dtStringTable.getValue().get(runPathEntry.d_val_or_ptr);
     }
 
     public long getFlags() {
